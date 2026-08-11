@@ -12,6 +12,15 @@ const providers: Array<{ id: NewsProvider; label: string; note: string; needsKey
   { id: 'guardian', label: 'Guardian Open Platform', note: 'User API key required', needsKey: true },
 ];
 
+function safeUrl(value: string) {
+  try {
+    const url = new URL(value);
+    return url.protocol === 'http:' || url.protocol === 'https:' ? url.toString() : '#';
+  } catch {
+    return '#';
+  }
+}
+
 export function NewsIntelPanel({ onContextReady }: { onContextReady: (context: string) => void }) {
   const [provider, setProvider] = useState<NewsProvider>('demo');
   const [company, setCompany] = useState(defaultCompany);
@@ -80,7 +89,7 @@ export function NewsIntelPanel({ onContextReady }: { onContextReady: (context: s
       <div className="news-summary"><strong>{result.headlineSummary}</strong><span>Active: {result.activeCount} direct articles · Passive: {result.passiveCount} competitor/market articles</span></div>
       <div className="news-query-pills"><span>Active: {result.activeQuery}</span><span>Passive: {result.passiveQuery}</span></div>
       <div className="news-list">
-        {result.articles.slice(0, 6).map((article) => <a key={article.url} href={article.url} target="_blank" rel="noreferrer" className={`news-card ${article.angle}`}>
+        {result.articles.slice(0, 6).map((article) => <a key={article.url} href={safeUrl(article.url)} target="_blank" rel="noreferrer" className={`news-card ${article.angle}`}>
           <span>{article.angle === 'active' ? 'Direct company news' : 'Competitor / market news'} · {article.sentiment}</span>
           <strong>{article.title}</strong>
           <small>{article.source}{article.publishedAt ? ` · ${article.publishedAt}` : ''}{article.tags.length ? ` · ${article.tags.join(', ')}` : ''}</small>
