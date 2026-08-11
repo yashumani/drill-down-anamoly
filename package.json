@@ -9,7 +9,6 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@vitejs/plugin-react": "latest",
     "echarts": "^5.6.0",
     "papaparse": "^5.5.3",
     "react": "^19.1.1",
