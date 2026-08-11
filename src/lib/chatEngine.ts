@@ -1,13 +1,14 @@
 import { investigate } from './anomaly';
 import type { DataQualityReport } from './dataQuality';
 import { labelFor, resolveDimension, semanticFor } from '../data/semanticModel';
-import type { DataRow, InvestigationResult, Predicate } from '../types';
+import type { DataRow, InvestigationResult, MetricPolarity, Predicate } from '../types';
 
 export interface ChatContext {
   rows: DataRow[];
   dimensions: string[];
   actualKey: string;
   expectedKey?: string;
+  metricPolarity: MetricPolarity;
   predicates: Predicate[];
   result: InvestigationResult;
   dataQuality?: DataQualityReport;
@@ -30,6 +31,12 @@ const compact = (value: number) => Intl.NumberFormat('en-US', { notation: 'compa
 
 function scopeText(predicates: Predicate[]) {
   return predicates.length ? predicates.map((predicate) => `${labelFor(predicate.dimension)} = ${predicate.value}`).join(' → ') : 'all data';
+}
+
+function businessPhrase(value: number) {
+  if (value < 0) return `${compact(Math.abs(value))} unfavorable`;
+  if (value > 0) return `${compact(Math.abs(value))} favorable`;
+  return 'neutral';
 }
 
 function suggestions(ctx: ChatContext) {
@@ -86,8 +93,8 @@ function explainExternal(ctx: ChatContext): ChatReply {
   }
   const top = ctx.result.dimensionScores[0];
   const topLine = top?.topCategory
-    ? `The observed data issue is concentrated around ${labelFor(top.dimension)} = ${top.topCategory.value}, with ${compact(Math.abs(top.topCategory.variance))} of category-level difference.`
-    : `The current data view differs from expectation by ${compact(Math.abs(ctx.result.variance))}.`;
+    ? `The observed data issue is concentrated around ${labelFor(top.dimension)} = ${top.topCategory.value}, with ${businessPhrase(top.topCategory.businessImpact)} category-level business impact.`
+    : `The current data view has ${businessPhrase(ctx.result.businessImpact)} business impact.`;
   return {
     text: `${topLine}\n\nExternal context available:\n${summarizeExternalContext(ctx.externalContext)}\n\nTreat the news and business context as possible explanations to validate. Compare affected groups against unaffected groups in the same period, or test whether the event overlaps the anomaly by time, product, channel, or geography.`,
     suggestions: ['What should I validate next?', 'Go deeper', 'What is driving the result?', 'Why this recommendation?'],
@@ -97,11 +104,11 @@ function explainExternal(ctx: ChatContext): ChatReply {
 function explain(ctx: ChatContext): ChatReply {
   const top = ctx.result.dimensionScores[0];
   const interaction = ctx.result.interactions[0];
-  const direction = ctx.result.variance < 0 ? 'below' : 'above';
-  let text = `For ${scopeText(ctx.predicates)}, the result is ${compact(Math.abs(ctx.result.variance))} ${direction} expectation.`;
+  const polarityText = ctx.metricPolarity === 'higher_is_better' ? 'Higher values are configured as better.' : 'Lower values are configured as better, so positive raw variance is unfavorable.';
+  let text = `For ${scopeText(ctx.predicates)}, the business impact is ${businessPhrase(ctx.result.businessImpact)}. ${polarityText}`;
   if (ctx.dataQuality?.blockers) text = `Caution: the dataset has ${ctx.dataQuality.blockers} data-quality blocker(s), so this interpretation may change after cleaning. ${text}`;
-  if (top?.topCategory) text += ` The clearest single factor is ${labelFor(top.dimension)}, led by ${top.topCategory.value}, which differs from expectation by ${compact(Math.abs(top.topCategory.variance))} and covers ${(top.topCategory.support * 100).toFixed(1)}% of valid rows.`;
-  if (interaction) text += ` The strongest combined pattern is ${interaction.predicates.map((predicate) => predicate.value).join(' + ')}, covering ${interaction.count.toLocaleString()} records.`;
+  if (top?.topCategory) text += ` The clearest single factor is ${labelFor(top.dimension)}, led by ${top.topCategory.value}, which contributes ${businessPhrase(top.topCategory.businessImpact)} and covers ${(top.topCategory.support * 100).toFixed(1)}% of valid rows.`;
+  if (interaction) text += ` The strongest combined pattern is ${interaction.predicates.map((predicate) => predicate.value).join(' + ')}, covering ${interaction.count.toLocaleString()} records with ${businessPhrase(interaction.businessImpact)} impact.`;
   if (ctx.externalContext) text += ' External context is loaded, so you can ask whether news or business events may explain the pattern.';
   return { text, suggestions: suggestions(ctx) };
 }
@@ -114,7 +121,7 @@ function goDeeper(ctx: ChatContext): ChatReply {
   if (!score || !candidate) return { text: 'I do not see a stable next drill for the current group. Try choosing one of the ranked business factors instead.', suggestions: suggestions(ctx) };
   const hierarchyText = hierarchicalChild ? `Following the ${labelFor(last!.dimension)} hierarchy, the next level is ${labelFor(score.dimension)}.` : `${labelFor(score.dimension)} is currently the strongest next explanation across the remaining factors.`;
   return {
-    text: `${hierarchyText} ${candidate.value} stands out most, so I can narrow the dashboard to that group and re-check every other quality-approved factor.`,
+    text: `${hierarchyText} ${candidate.value} stands out most with ${businessPhrase(candidate.businessImpact)}, so I can narrow the dashboard to that group and re-check every other quality-approved factor.`,
     action: { type: 'drill', predicates: [{ dimension: score.dimension, value: String(candidate.value) }] },
     suggestions: [`Drill into ${candidate.value}`, `Show me ${labelFor(score.dimension)}`, 'Why this recommendation?', 'Go back'],
   };
@@ -127,12 +134,12 @@ function compare(ctx: ChatContext, query: string): ChatReply | null {
     const matches = score.categories.filter((category) => lower.includes(String(category.value).toLowerCase())).slice(0, 2);
     if (matches.length === 2) {
       const parts = matches.map((match) => {
-        const result = investigate(ctx.rows, ctx.dimensions, ctx.actualKey, ctx.expectedKey, [...ctx.predicates.filter((predicate) => predicate.dimension !== score.dimension), { dimension: score.dimension, value: String(match.value) }]);
+        const result = investigate(ctx.rows, ctx.dimensions, ctx.actualKey, ctx.expectedKey, [...ctx.predicates.filter((predicate) => predicate.dimension !== score.dimension), { dimension: score.dimension, value: String(match.value) }], ctx.metricPolarity);
         return { value: match.value, result };
       });
-      const better = parts[0].result.variance >= parts[1].result.variance ? parts[0] : parts[1];
+      const better = parts[0].result.businessImpact >= parts[1].result.businessImpact ? parts[0] : parts[1];
       return {
-        text: `${parts[0].value} is ${compact(Math.abs(parts[0].result.variance))} ${parts[0].result.variance < 0 ? 'below' : 'above'} expectation, while ${parts[1].value} is ${compact(Math.abs(parts[1].result.variance))} ${parts[1].result.variance < 0 ? 'below' : 'above'} expectation. ${better.value} has the more favorable result in the current comparison.`,
+        text: `${parts[0].value} has ${businessPhrase(parts[0].result.businessImpact)} impact, while ${parts[1].value} has ${businessPhrase(parts[1].result.businessImpact)} impact. ${better.value} is more favorable under the current metric direction.`,
         suggestions: [`Show ${parts[0].value}`, `Show ${parts[1].value}`, 'What is driving the difference?'],
       };
     }
@@ -172,7 +179,7 @@ export function answerChat(question: string, ctx: ChatContext): ChatReply {
   if (resolved && (lower.includes('show') || lower.includes('which') || lower.includes('inside') || lower.includes('break down') || lower.includes('drill'))) {
     const score = ctx.result.dimensionScores.find((dimension) => dimension.dimension === resolved);
     if (score?.topCategory) return {
-      text: `${labelFor(resolved)} is currently ranked #${ctx.result.dimensionScores.indexOf(score) + 1} as an explanation. ${score.topCategory.value} has the largest difference from expectation at ${compact(Math.abs(score.topCategory.variance))}. I’ve highlighted that factor for you.`,
+      text: `${labelFor(resolved)} is currently ranked #${ctx.result.dimensionScores.indexOf(score) + 1} as an explanation. ${score.topCategory.value} has the largest business impact at ${businessPhrase(score.topCategory.businessImpact)}. I’ve highlighted that factor for you.`,
       action: { type: 'select-dimension', dimension: resolved },
       suggestions: [`Drill into ${score.topCategory.value}`, `What does ${labelFor(resolved)} mean?`, 'Go deeper'],
     };
@@ -188,12 +195,12 @@ export function answerChat(question: string, ctx: ChatContext): ChatReply {
   if (lower.includes('strongest combined') || lower.includes('interaction') || lower.includes('combination') || lower.includes('pattern')) {
     const interaction = ctx.result.interactions[0];
     if (!interaction) return { text: 'No stable multi-factor pattern passed the current support threshold.', suggestions: suggestions(ctx) };
-    return { text: `The strongest combined pattern is ${interaction.predicates.map((predicate) => `${labelFor(predicate.dimension)} = ${predicate.value}`).join(' + ')}. It covers ${interaction.count.toLocaleString()} records and differs from expectation by ${compact(Math.abs(interaction.variance))}.`, action: { type: 'drill', predicates: interaction.predicates }, suggestions: ['Explore this group', 'What is driving it?', 'Go back'] };
+    return { text: `The strongest combined pattern is ${interaction.predicates.map((predicate) => `${labelFor(predicate.dimension)} = ${predicate.value}`).join(' + ')}. It covers ${interaction.count.toLocaleString()} records and has ${businessPhrase(interaction.businessImpact)} impact.`, action: { type: 'drill', predicates: interaction.predicates }, suggestions: ['Explore this group', 'What is driving it?', 'Go back'] };
   }
 
   if (lower.includes('why this recommendation')) {
     const top = ctx.result.dimensionScores[0];
-    return top?.topCategory ? { text: `${labelFor(top.dimension)} is recommended because it ranks highest across grouped impact, distinctiveness, concentration, support, and a cardinality penalty in the current cohort. Within it, ${top.topCategory.value} is the largest supported category-level contributor.`, suggestions: [`Show me ${labelFor(top.dimension)}`, `Drill into ${top.topCategory.value}`] } : explain(ctx);
+    return top?.topCategory ? { text: `${labelFor(top.dimension)} is recommended because it ranks highest across grouped impact, distinctiveness, concentration, support, and a cardinality penalty in the current cohort. Within it, ${top.topCategory.value} is the largest supported category-level contributor with ${businessPhrase(top.topCategory.businessImpact)} impact.`, suggestions: [`Show me ${labelFor(top.dimension)}`, `Drill into ${top.topCategory.value}`] } : explain(ctx);
   }
 
   return explain(ctx);
