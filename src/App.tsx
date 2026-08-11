@@ -5,6 +5,8 @@ import { investigate } from './lib/anomaly';
 import { parseDataFile } from './lib/io';
 import { profileFields } from './lib/profile';
 import { ContributionBars, DimensionLandscape, DrillTree, InteractionList } from './components/Visuals';
+import { ChatPanel } from './components/ChatPanel';
+import type { ChatAction } from './lib/chatEngine';
 import type { DataRow, DimensionScore, Predicate } from './types';
 
 const format = (n: number) => Intl.NumberFormat('en-US', { notation: 'compact', maximumFractionDigits: 2 }).format(n);
@@ -42,6 +44,13 @@ export default function App() {
     }
     setPredicates(merged);
     setSelectedDimension('');
+  };
+
+  const handleChatAction = (action: ChatAction) => {
+    if (action.type === 'drill' && action.predicates?.length) drill(action.predicates);
+    if (action.type === 'reset') { setPredicates([]); setSelectedDimension('region'); }
+    if (action.type === 'back') setPredicates((prev) => prev.slice(0, -1));
+    if (action.type === 'select-dimension' && action.dimension) setSelectedDimension(action.dimension);
   };
 
   async function loadFile(file: File | undefined) {
@@ -104,33 +113,47 @@ export default function App() {
       <Metric label="How unusual?" value={plainAnomaly(result.anomalyScore)} helper="Compared with normal variation" tone={result.anomalyScore >= 2 ? 'warn' : undefined} />
     </section>
 
-    <section className={`story-banner ${tone}`}>
-      <div className="story-kicker">WHAT HAPPENED</div>
-      <h2>The result is <span>{format(Math.abs(result.variance))}</span> {direction} expectation.</h2>
-      <p>{plainSummary(result.variance, result.variancePct, result.anomalyScore)}</p>
-    </section>
+    <section className="guided-layout">
+      <div className="guided-main">
+        <section className={`story-banner ${tone}`}>
+          <div className="story-kicker">WHAT HAPPENED</div>
+          <h2>The result is <span>{format(Math.abs(result.variance))}</span> {direction} expectation.</h2>
+          <p>{plainSummary(result.variance, result.variancePct, result.anomalyScore)}</p>
+        </section>
 
-    <section className="story-grid">
-      <StoryCard
-        step="1"
-        title="Biggest area to investigate"
-        primary={topDriver ? humanize(topDriver.dimension) : 'No clear driver'}
-        detail={topDriver?.topCategory ? `${topDriver.topCategory.value} stands out most within ${humanize(topDriver.dimension)} and accounts for ${format(Math.abs(topDriver.topCategory.variance))} of the difference.` : 'No single category stands out strongly in this view.'}
-        action={topDriver ? <button onClick={() => setSelectedDimension(topDriver.dimension)}>Show me why</button> : null}
-      />
-      <StoryCard
-        step="2"
-        title="Most concentrated pattern"
-        primary={topInteraction ? topInteraction.predicates.map((p) => p.value).join(' + ') : 'No strong combination found'}
-        detail={topInteraction ? `${topInteraction.count.toLocaleString()} records share this pattern, with a combined difference of ${format(Math.abs(topInteraction.variance))}.` : 'The difference appears more broadly distributed rather than concentrated in one combination.'}
-        action={topInteraction ? <button onClick={() => drill(topInteraction.predicates)}>Explore this group</button> : null}
-      />
-      <StoryCard
-        step="3"
-        title="Recommended next step"
-        primary={topDriver?.topCategory ? `Look inside ${topDriver.topCategory.value}` : 'Compare another segment'}
-        detail={topDriver?.topCategory ? `Narrowing to this group will re-check every other available factor automatically and show what becomes important next.` : 'Select a business factor below to continue the investigation.'}
-        action={topDriver?.topCategory ? <button onClick={() => drill([{ dimension: topDriver.dimension, value: topDriver.topCategory!.value }])}>Drill into this group</button> : null}
+        <section className="story-grid">
+          <StoryCard
+            step="1"
+            title="Biggest area to investigate"
+            primary={topDriver ? humanize(topDriver.dimension) : 'No clear driver'}
+            detail={topDriver?.topCategory ? `${topDriver.topCategory.value} stands out most within ${humanize(topDriver.dimension)} and accounts for ${format(Math.abs(topDriver.topCategory.variance))} of the difference.` : 'No single category stands out strongly in this view.'}
+            action={topDriver ? <button onClick={() => setSelectedDimension(topDriver.dimension)}>Show me why</button> : null}
+          />
+          <StoryCard
+            step="2"
+            title="Most concentrated pattern"
+            primary={topInteraction ? topInteraction.predicates.map((p) => p.value).join(' + ') : 'No strong combination found'}
+            detail={topInteraction ? `${topInteraction.count.toLocaleString()} records share this pattern, with a combined difference of ${format(Math.abs(topInteraction.variance))}.` : 'The difference appears more broadly distributed rather than concentrated in one combination.'}
+            action={topInteraction ? <button onClick={() => drill(topInteraction.predicates)}>Explore this group</button> : null}
+          />
+          <StoryCard
+            step="3"
+            title="Recommended next step"
+            primary={topDriver?.topCategory ? `Look inside ${topDriver.topCategory.value}` : 'Compare another segment'}
+            detail={topDriver?.topCategory ? `Narrowing to this group will re-check every other available factor automatically and show what becomes important next.` : 'Select a business factor below to continue the investigation.'}
+            action={topDriver?.topCategory ? <button onClick={() => drill([{ dimension: topDriver.dimension, value: topDriver.topCategory!.value }])}>Drill into this group</button> : null}
+          />
+        </section>
+      </div>
+
+      <ChatPanel
+        rows={rows}
+        dimensions={dimensions}
+        actualKey={actualKey}
+        expectedKey={expectedKey || undefined}
+        predicates={predicates}
+        result={result}
+        onAction={handleChatAction}
       />
     </section>
 
