@@ -5,7 +5,7 @@ import type { ChatAction } from '../lib/chatEngine';
 import type { DataQualityReport } from '../lib/dataQuality';
 import { askLlm } from '../lib/llm';
 import type { LlmConfig } from '../lib/llm';
-import type { DataRow, InvestigationResult, Predicate } from '../types';
+import type { DataRow, InvestigationResult, MetricPolarity, Predicate } from '../types';
 
 interface Message { role: 'user' | 'assistant'; text: string; }
 
@@ -22,11 +22,12 @@ const initialLlm: LlmConfig = {
   authPrefix: stored('anomaly-llm-auth-prefix', 'Bearer '),
 };
 
-export function ChatPanel({ rows, dimensions, actualKey, expectedKey, predicates, result, dataQuality, externalContext, manualContext, onExternalContext, onAction }: {
+export function ChatPanel({ rows, dimensions, actualKey, expectedKey, metricPolarity, predicates, result, dataQuality, externalContext, manualContext, onExternalContext, onAction }: {
   rows: DataRow[];
   dimensions: string[];
   actualKey: string;
   expectedKey?: string;
+  metricPolarity: MetricPolarity;
   predicates: Predicate[];
   result: InvestigationResult;
   dataQuality: DataQualityReport;
@@ -69,7 +70,7 @@ export function ChatPanel({ rows, dimensions, actualKey, expectedKey, predicates
   async function ask(text: string) {
     const question = text.trim();
     if (!question || busy) return;
-    const deterministic = answerChat(question, { rows, dimensions, actualKey, expectedKey, predicates, result, dataQuality, externalContext });
+    const deterministic = answerChat(question, { rows, dimensions, actualKey, expectedKey, metricPolarity, predicates, result, dataQuality, externalContext });
     setMessages((previous) => [...previous, { role: 'user', text: question }]);
     setSuggestions(deterministic.suggestions);
     setInput('');
@@ -82,7 +83,7 @@ export function ChatPanel({ rows, dimensions, actualKey, expectedKey, predicates
 
     setBusy(true);
     try {
-      const output = await askLlm(question, llm, { actualKey, expectedKey, predicates, result, dataQuality, externalContext });
+      const output = await askLlm(question, llm, { actualKey, expectedKey, metricPolarity, predicates, result, dataQuality, externalContext });
       setMessages((previous) => [...previous, { role: 'assistant', text: output }]);
     } catch (requestError) {
       setMessages((previous) => [...previous, { role: 'assistant', text: `${deterministic.text}\n\nLLM connection note: ${requestError instanceof Error ? requestError.message : String(requestError)}` }]);
