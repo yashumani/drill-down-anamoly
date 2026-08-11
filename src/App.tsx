@@ -6,6 +6,7 @@ import { parseDataFile } from './lib/io';
 import { profileFields } from './lib/profile';
 import { ContributionBars, DimensionLandscape, DrillTree, InteractionList } from './components/Visuals';
 import { ChatPanel } from './components/ChatPanel';
+import { NewsIntelPanel } from './components/NewsIntelPanel';
 import { ThemePicker } from './components/ThemePicker';
 import type { PaletteId } from './components/ThemePicker';
 import type { ChatAction } from './lib/chatEngine';
@@ -24,12 +25,14 @@ export default function App() {
   const [expectedKey, setExpectedKey] = useState('target');
   const [predicates, setPredicates] = useState<Predicate[]>([]);
   const [selectedDimension, setSelectedDimension] = useState<string>('region');
-  const [externalContext, setExternalContext] = useState('');
+  const [manualContext, setManualContext] = useState('');
+  const [newsContext, setNewsContext] = useState('');
   const [palette, setPalette] = useState<PaletteId>(() => (localStorage.getItem('anomaly-palette') as PaletteId) || 'midnight');
   const [error, setError] = useState('');
 
   const dimensions = availableDimensions.map((p) => p.name);
   const dimensionKey = dimensions.join('|');
+  const externalContext = [manualContext, newsContext].filter(Boolean).join('\n\n');
   const result = useMemo(() => investigate(rows, dimensions, actualKey, expectedKey || undefined, predicates), [rows, dimensionKey, actualKey, expectedKey, predicates]);
   const selectedScore = result.dimensionScores.find((d) => d.dimension === selectedDimension) ?? result.dimensionScores[0] ?? null;
   const topDriver = result.dimensionScores[0] ?? null;
@@ -66,11 +69,11 @@ export default function App() {
     {error && <div className="error">{error}</div>}
 
     <section className="controls top-controls" aria-label="Analysis filters">
-      <label>Measure<select value={actualKey} onChange={(e) => { setActualKey(e.target.value); setPredicates([]); }}>{numeric.map((p) => <option key={p.name}>{humanize(p.name)}</option>)}</select></label>
-      <label>Compare with<select value={expectedKey} onChange={(e) => { setExpectedKey(e.target.value); setPredicates([]); }}><option value="">Typical value</option>{numeric.filter((p) => p.name !== actualKey).map((p) => <option key={p.name}>{humanize(p.name)}</option>)}</select></label>
+      <label>Measure<select value={actualKey} onChange={(e) => { setActualKey(e.target.value); setPredicates([]); }}>{numeric.map((p) => <option key={p.name} value={p.name}>{humanize(p.name)}</option>)}</select></label>
+      <label>Compare with<select value={expectedKey} onChange={(e) => { setExpectedKey(e.target.value); setPredicates([]); }}><option value="">Typical value</option>{numeric.filter((p) => p.name !== actualKey).map((p) => <option key={p.name} value={p.name}>{humanize(p.name)}</option>)}</select></label>
       <div className="filter-scope"><span>Scope</span><strong>{predicates.length ? predicates.map((p) => `${humanize(p.dimension)}: ${p.value}`).join(' • ') : 'All data'}</strong></div>
       {predicates.length > 0 && <button className="quiet-button" onClick={() => setPredicates([])}>Clear</button>}
-      <button className="quiet-button" onClick={() => { setRows(createSampleData()); setActualKey('actual'); setExpectedKey('target'); setPredicates([]); setSelectedDimension('region'); setExternalContext(''); }}>Reset demo</button>
+      <button className="quiet-button" onClick={() => { setRows(createSampleData()); setActualKey('actual'); setExpectedKey('target'); setPredicates([]); setSelectedDimension('region'); setManualContext(''); setNewsContext(''); }}>Reset demo</button>
     </section>
 
     <section className="executive-metrics">
@@ -85,7 +88,10 @@ export default function App() {
         <section className={`story-banner ${tone}`}><div className="story-kicker">BOTTOM LINE</div><h2>The result is <span>{format(Math.abs(result.variance))}</span> {direction} expectation.</h2><p>{plainSummary(result.variance, result.variancePct, result.anomalyScore)}</p>{topDriver?.topCategory && <div className="next-clue"><span>Strongest clue</span><strong>{humanize(topDriver.dimension)} → {topDriver.topCategory.value}</strong><button onClick={() => setSelectedDimension(topDriver.dimension)}>Explore</button></div>}</section>
         <Panel title="What is contributing most?" subtitle="Select a factor, then a group. Every drill automatically re-checks the other available factors."><div className="driver-split"><DimensionLandscape scores={result.dimensionScores} onSelect={(d: DimensionScore) => setSelectedDimension(d.dimension)} /><ContributionBars score={selectedScore} onDrill={(p) => drill([p])} /></div></Panel>
       </div>
-      <ChatPanel rows={rows} dimensions={dimensions} actualKey={actualKey} expectedKey={expectedKey || undefined} predicates={predicates} result={result} externalContext={externalContext} onExternalContext={setExternalContext} onAction={handleChatAction} />
+      <div className="insight-sidebar">
+        <NewsIntelPanel onContextReady={setNewsContext} />
+        <ChatPanel rows={rows} dimensions={dimensions} actualKey={actualKey} expectedKey={expectedKey || undefined} predicates={predicates} result={result} externalContext={externalContext} manualContext={manualContext} onExternalContext={setManualContext} onAction={handleChatAction} />
+      </div>
     </section>
 
     <details className="more-analysis"><summary>More analysis</summary><div className="grid two"><Panel title="Combined patterns" subtitle="Groups where several characteristics appear together."><InteractionList interactions={result.interactions} onDrill={drill} /></Panel><Panel title="Investigation trail" subtitle="The path you have taken so far."><DrillTree predicates={predicates} /></Panel></div><div className="breadcrumbs"><button onClick={() => setPredicates([])}>All data</button>{predicates.map((p, i) => <button key={`${p.dimension}-${p.value}`} onClick={() => setPredicates(predicates.slice(0, i + 1))}>→ {humanize(p.dimension)}: {p.value}</button>)}</div></details>
