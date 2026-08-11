@@ -1,40 +1,78 @@
-# Drill-Down Anomaly Research
+# Drill-down Anomaly Lab
 
-Research workspace for a React-based multidimensional anomaly investigation experience with agentic AI.
+A research prototype for **all-dimension anomaly investigation**. The app treats every drill as a cohort filter, then re-scores every remaining eligible dimension and searches for cross-dimensional interactions. The tree is the investigation history — not a fixed hierarchy.
 
-## Core product idea
+## What it demonstrates
 
-The visualization tree is a navigation surface, not the analytical engine.
+- Works with tabular **CSV or JSON** datasets.
+- Profiles fields and automatically classifies numeric measures, categorical dimensions, dates, booleans, and high-cardinality identifiers.
+- Lets the user choose an **Actual** numeric measure and an optional **Expected / Target** measure.
+- If no target exists, uses the current cohort mean as a basic baseline for exploratory anomaly detection.
+- Re-evaluates every eligible dimension after every drill.
+- Shows an all-dimension driver landscape, category contribution bars, dynamic drill path, interaction segments, KPI cards, and an exhaustive audit table.
+- Includes deterministic synthetic sample data with **26 categorical dimensions** plus date, identifier, and numeric measures.
+- Injects known anomalies such as `West + Store + Device`, `Promo B + 0-3m tenure`, and `Backorder + Device`, plus favorable patterns for validation.
 
-At every drill-down node, the backend re-evaluates **all eligible dimensions** against the currently filtered cohort, ranks dimensions and values, searches selected cross-dimensional interactions, and returns a compact set of recommended next branches plus a complete dimension-score landscape.
+## Run locally
 
-This avoids the main weakness of a conventional decomposition tree: selecting `Region` first must not cause `Product`, `Channel`, `Customer Type`, or the other dimensions to be ignored.
+```bash
+npm install
+npm run dev
+```
 
-## Proposed interaction loop
+Production build:
 
-1. Detect an anomaly or unfavorable/favorable target variance at the root scope.
-2. Scan all eligible dimensions.
-3. Score every dimension for impact, surprise, support, stability, compactness, and redundancy.
-4. Return the top recommended dimensions and top category values.
-5. User selects a branch such as `Region = West`.
-6. Apply that predicate to create a new cohort.
-7. **Re-run the entire all-dimension scan** inside that cohort.
-8. Search high-value 2-way / 3-way combinations using pruning rather than brute force.
-9. Generate evidence-backed AI insights and suggested next drill paths.
-10. Preserve parallel branches so users can compare alternative explanations.
+```bash
+npm run build
+npm run preview
+```
 
-## UI concept
+## Supported data contract
 
-The investigation workspace should combine:
+The prototype is intentionally schema-agnostic for **tabular data**. It cannot meaningfully analyze literally every possible data type. For a useful RCA/anomaly result, provide:
 
-- Dynamic investigation tree / branch graph
-- Current-node anomaly summary
-- Recommended next dimensions
-- All-dimension score landscape
-- Top multidimensional segments
-- Contribution view
-- Persistence / trend view
-- Evidence table
-- AI insight and conversational analytics panel
+1. At least one numeric measure (`actual`).
+2. Optionally another numeric measure (`target`, `forecast`, or expected value).
+3. Two or more categorical/date/boolean columns that can serve as dimensions.
 
-See `docs/all-dimension-investigation-tree.md` for the detailed design.
+CSV must have a header row. JSON can be either an array of objects or `{ "data": [...] }`.
+
+## Analytical model
+
+For the selected cohort:
+
+1. Calculate row residual = `actual - expected` (or `actual - cohortMean` without a target).
+2. Group every eligible dimension independently.
+3. Score dimensions using impact, residual surprise, concentration of variance, and support.
+4. Rank category values by absolute variance contribution.
+5. Build top 2-way and 3-way interactions from leading dimensions/categories with support pruning.
+6. Clicking any category/intersection creates a new cohort and repeats the complete scan.
+
+This is a client-side research implementation. For large enterprise data, keep the React API contract but move group-bys, statistical scoring, interaction search, authorization, and row-level evidence to the backend.
+
+## Important limitations
+
+- Current scoring is an interpretable research heuristic, not a causal model.
+- Client-side interaction search is intentionally pruned and should not be used on millions of rows.
+- Exact additive variance attribution assumes Actual and Target exist at compatible grain.
+- Rates/ratios need numerator/denominator-aware attribution before production use.
+- A negative variance is displayed as unfavorable in the demo; real implementations need metric polarity metadata because lower can be better for cost/error metrics.
+
+## Project structure
+
+```text
+src/
+  App.tsx                 # investigation UI + state
+  components/
+    EChart.tsx            # reusable ECharts wrapper
+    Visuals.tsx           # tree, all-dimension bars, contribution, interactions
+  data/
+    sampleData.ts         # 26-dimension deterministic demo dataset
+  lib/
+    anomaly.ts            # generic analytical engine
+    io.ts                 # CSV / JSON parser
+    profile.ts            # schema inference
+  types.ts                # shared contracts
+```
+
+See `docs/all-dimension-investigation-tree.md` for the design research and `docs/prototype-architecture.md` for implementation notes.
