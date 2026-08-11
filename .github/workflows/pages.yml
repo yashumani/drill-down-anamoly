@@ -1,10 +1,13 @@
-name: Deploy static dashboard to GitHub Pages
+name: Deploy interactive anomaly dashboard to GitHub Pages
 
 on:
   push:
     branches: ["main"]
     paths:
-      - "docs/**"
+      - "src/**"
+      - "index.html"
+      - "package.json"
+      - "tsconfig*.json"
       - ".github/workflows/pages.yml"
   workflow_dispatch:
 
@@ -18,24 +21,36 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  deploy:
+  build-and-deploy:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout
         uses: actions/checkout@v6
 
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: package.json
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Build React dashboard
+        run: npm run build -- --base=/drill-down-anamoly/
+
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
-        with:
-          enablement: true
 
-      - name: Upload static dashboard
+      - name: Upload React build
         uses: actions/upload-pages-artifact@v4
         with:
-          path: ./docs
+          path: ./dist
 
       - name: Deploy to GitHub Pages
         id: deployment
