@@ -1,7 +1,10 @@
 import type { DataRow } from '../types';
 
 const regions = ['Northeast', 'South', 'Midwest', 'West'] as const;
-const geography = {
+type Region = typeof regions[number];
+interface GeographyNode { market: string; stateGroup: string; }
+
+const geography: Record<Region, readonly GeographyNode[]> = {
   Northeast: [
     { market: 'Boston', stateGroup: 'Metro' },
     { market: 'New York', stateGroup: 'Metro' },
@@ -26,16 +29,21 @@ const geography = {
     { market: 'Seattle', stateGroup: 'Metro' },
     { market: 'Mountain West', stateGroup: 'Rural' },
   ],
-} as const;
+};
 
-const channelHierarchy = {
+const channels = ['Store', 'Online', 'Partner', 'Inside Sales'] as const;
+type Channel = typeof channels[number];
+const channelHierarchy: Record<Channel, readonly string[]> = {
   Store: ['Flagship', 'Standard', 'Kiosk'],
   Online: ['Website', 'Mobile App', 'Assisted Digital'],
   Partner: ['Dealer', 'Retail Partner', 'Agent'],
   'Inside Sales': ['Contact Center', 'Account Team', 'Telesales'],
-} as const;
+};
 
-const productHierarchy = {
+const productFamilies = ['Fiber', 'Wireless', 'Device', 'Accessories'] as const;
+type ProductFamily = typeof productFamilies[number];
+interface ProductFamilyNode { lines: Record<string, readonly string[]>; brands: readonly string[]; }
+const productHierarchy: Record<ProductFamily, ProductFamilyNode> = {
   Fiber: {
     lines: {
       'Home Fiber': ['Fiber 300', 'Fiber Gigabit'],
@@ -68,18 +76,19 @@ const productHierarchy = {
     },
     brands: ['Aster', 'Vertex'],
   },
-} as const;
+};
 
-const customerHierarchy = {
+const customerSegments = ['Consumer', 'SMB', 'Enterprise'] as const;
+type CustomerSegment = typeof customerSegments[number];
+const customerHierarchy: Record<CustomerSegment, readonly string[]> = {
   Consumer: ['Postpaid', 'Prepaid', 'Hybrid'],
   SMB: ['Business Standard', 'Business Plus', 'Owner Mobile'],
   Enterprise: ['Corporate', 'Strategic', 'Government'],
-} as const;
+};
 
 const dims = {
   productTier: ['Entry', 'Core', 'Premium'],
   offer: ['Base', 'Promo A', 'Promo B', 'Bundle'],
-  customerSegment: ['Consumer', 'SMB', 'Enterprise'],
   tenureBand: ['0-3m', '4-12m', '1-3y', '3y+'],
   paymentType: ['AutoPay', 'Card', 'Bank', 'Cash'],
   acquisitionSource: ['Organic', 'Paid Search', 'Social', 'Referral'],
@@ -115,15 +124,15 @@ export function createSampleData(rows = 1600): DataRow[] {
 
     const region = pick(regions, index, 1);
     const geographyRow = pick(geography[region], index, 2);
-    const channel = pick(Object.keys(channelHierarchy) as Array<keyof typeof channelHierarchy>, index, 3);
+    const channel = pick(channels, index, 3);
     const storeType = pick(channelHierarchy[channel], index, 4);
-    const productFamily = pick(Object.keys(productHierarchy) as Array<keyof typeof productHierarchy>, index, 5);
-    const productLines = Object.keys(productHierarchy[productFamily].lines) as Array<keyof typeof productHierarchy[typeof productFamily]['lines']>;
+    const productFamily = pick(productFamilies, index, 5);
+    const productLines = Object.keys(productHierarchy[productFamily].lines);
     const productLine = pick(productLines, index, 6);
-    const productName = pick(productHierarchy[productFamily].lines[productLine] as readonly string[], index, 7);
+    const productName = pick(productHierarchy[productFamily].lines[productLine], index, 7);
     const deviceBrand = pick(productHierarchy[productFamily].brands, index, 8);
     const productTier = pick(dims.productTier, index, 9);
-    const customerSegment = pick(dims.customerSegment, index, 10);
+    const customerSegment = pick(customerSegments, index, 10);
     const accountType = pick(customerHierarchy[customerSegment], index, 11);
     const offer = pick(dims.offer, index, 12);
     const inventoryStatus = pick(dims.inventoryStatus, index, 13);
