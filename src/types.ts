@@ -1,6 +1,9 @@
 export type DataValue = string | number | boolean | null;
 export type DataRow = Record<string, DataValue>;
 
+export type MetricPolarity = 'higher_is_better' | 'lower_is_better';
+export type ImpactDirection = 'favorable' | 'unfavorable' | 'neutral';
+
 export interface FieldProfile {
   name: string;
   kind: 'numeric' | 'categorical' | 'date' | 'boolean' | 'identifier';
@@ -21,7 +24,10 @@ export interface CategoryContribution {
   actual: number;
   expected: number;
   variance: number;
+  businessImpact: number;
+  impactDirection: ImpactDirection;
   variancePerRow: number;
+  businessImpactPerRow: number;
   shareOfAbsVariance: number;
   surprise: number;
   standardizedResidual: number;
@@ -47,7 +53,10 @@ export interface InteractionSegment {
   actual: number;
   expected: number;
   variance: number;
+  businessImpact: number;
+  impactDirection: ImpactDirection;
   variancePerRow: number;
+  businessImpactPerRow: number;
   lift: number;
   score: number;
 }
@@ -59,10 +68,13 @@ export interface InvestigationResult {
   actual: number;
   expected: number;
   variance: number;
+  businessImpact: number;
+  impactDirection: ImpactDirection;
   variancePct: number | null;
   anomalyScore: number;
   residualScale: number;
   baselineMethod: 'target' | 'robust-median';
+  metricPolarity: MetricPolarity;
   dimensionsScanned: number;
   dimensionScores: DimensionScore[];
   interactions: InteractionSegment[];
