@@ -1,4 +1,6 @@
-export type NewsProvider = 'gdelt' | 'newsapi' | 'guardian';
+import { demoNewsArticles } from '../data/demoNews';
+
+export type NewsProvider = 'demo' | 'gdelt' | 'newsapi' | 'guardian';
 export type NewsAngle = 'active' | 'passive';
 export type NewsSentiment = 'positive' | 'negative' | 'neutral';
 
@@ -33,16 +35,24 @@ export interface NewsAnalysisResult {
   headlineSummary: string;
 }
 
-const positiveWords = ['growth', 'upgrade', 'expansion', 'partnership', 'award', 'approval', 'beat', 'strong', 'launch', 'record', 'gain', 'improve'];
-const negativeWords = ['outage', 'lawsuit', 'investigation', 'fine', 'decline', 'miss', 'layoff', 'breach', 'complaint', 'strike', 'recall', 'shortage', 'disruption', 'downgrade', 'weak', 'fraud', 'settlement'];
+const positiveWords = [
+  'growth', 'upgrade', 'expansion', 'partnership', 'award', 'approval', 'beat', 'strong',
+  'launch', 'record', 'gain', 'improve', 'capacity', 'recovery', 'adds', 'opportunity',
+];
+
+const negativeWords = [
+  'outage', 'lawsuit', 'investigation', 'fine', 'decline', 'miss', 'layoff', 'breach',
+  'complaint', 'strike', 'recall', 'shortage', 'disruption', 'downgrade', 'weak',
+  'fraud', 'settlement', 'constraint', 'pressure', 'slow', 'slower', 'risk',
+];
 
 const tagRules: Array<[string, string[]]> = [
-  ['operations', ['outage', 'network', 'service disruption', 'availability', 'fulfillment', 'shipment', 'shortage', 'supply']],
-  ['competition/pricing', ['price', 'pricing', 'discount', 'promotion', 'bundle', 'competitor', 'market share']],
-  ['regulatory/legal', ['lawsuit', 'investigation', 'regulator', 'fcc', 'fine', 'settlement', 'court', 'antitrust']],
-  ['financial', ['earnings', 'revenue', 'profit', 'subscriber', 'guidance', 'forecast', 'quarter']],
+  ['operations', ['outage', 'network', 'service disruption', 'availability', 'fulfillment', 'shipment', 'shortage', 'supply', 'support', 'replenishment']],
+  ['competition/pricing', ['price', 'pricing', 'discount', 'promotion', 'bundle', 'competitor', 'market share', 'switcher', 'trade-in']],
+  ['regulatory/legal', ['lawsuit', 'investigation', 'regulator', 'fcc', 'fine', 'settlement', 'court', 'antitrust', 'policy']],
+  ['financial', ['earnings', 'revenue', 'profit', 'subscriber', 'guidance', 'forecast', 'quarter', 'adds']],
   ['labor/workforce', ['union', 'strike', 'layoff', 'hiring', 'workforce', 'contract']],
-  ['product/technology', ['5g', 'fiber', 'broadband', 'device', 'wireless', 'spectrum', 'network upgrade']],
+  ['product/technology', ['5g', 'fiber', 'broadband', 'device', 'wireless', 'spectrum', 'network upgrade', 'capacity']],
 ];
 
 function csvList(value: string) {
@@ -89,9 +99,33 @@ function normalizeDate(value: unknown) {
   return raw.slice(0, 19).replace('T', ' ');
 }
 
-function decorate(article: Omit<NewsArticle, 'sentiment' | 'tags'>): NewsArticle {
+function decorate(article: Omit<NewsArticle, 'sentiment' | 'tags'> & Partial<Pick<NewsArticle, 'sentiment' | 'tags'>>): NewsArticle {
   const text = `${article.title} ${article.snippet}`;
-  return { ...article, sentiment: toSentiment(text), tags: toTags(text) };
+  return {
+    ...article,
+    sentiment: article.sentiment ?? toSentiment(text),
+    tags: article.tags?.length ? article.tags : toTags(text),
+  };
+}
+
+function templateCompany(text: string, company: string) {
+  return text.replace(/\{\{company\}\}/g, company);
+}
+
+function fetchDemoNews(angle: NewsAngle, company: string): Promise<NewsArticle[]> {
+  const rows = demoNewsArticles
+    .filter((article) => article.angle === angle)
+    .map((article) => decorate({
+      title: templateCompany(article.title, company),
+      url: article.url,
+      source: article.source,
+      publishedAt: article.publishedAt,
+      snippet: templateCompany(article.snippet, company),
+      angle: article.angle,
+      sentiment: article.sentiment,
+      tags: [...article.tags],
+    }));
+  return Promise.resolve(rows);
 }
 
 async function fetchGdelt(query: string, angle: NewsAngle, days: number): Promise<NewsArticle[]> {
@@ -102,10 +136,12 @@ async function fetchGdelt(query: string, angle: NewsAngle, days: number): Promis
   url.searchParams.set('maxrecords', '30');
   url.searchParams.set('timespan', `${Math.max(1, Math.min(days, 90))}d`);
   url.searchParams.set('sort', 'hybridrel');
+
   const res = await fetch(url.toString());
   if (!res.ok) throw new Error(`GDELT request failed (${res.status}).`);
   const json = await res.json();
   const raw = Array.isArray(json.articles) ? json.articles : [];
+
   return raw.map((item: any) => decorate({
     title: String(item.title || 'Untitled article'),
     url: String(item.url || ''),
@@ -125,11 +161,12 @@ async function fetchNewsApi(query: string, angle: NewsAngle, days: number, apiKe
   url.searchParams.set('language', 'en');
   url.searchParams.set('sortBy', 'publishedAt');
   url.searchParams.set('pageSize', '30');
-  url.searchParams.set('apiKey', apiKey);
-  const res = await fetch(url.toString());
+
+  const res = await fetch(url.toString(), { headers: { 'X-Api-Key': apiKey } });
   if (!res.ok) throw new Error(`NewsAPI request failed (${res.status}).`);
   const json = await res.json();
   const raw = Array.isArray(json.articles) ? json.articles : [];
+
   return raw.map((item: any) => decorate({
     title: String(item.title || 'Untitled article'),
     url: String(item.url || ''),
@@ -150,10 +187,12 @@ async function fetchGuardian(query: string, angle: NewsAngle, days: number, apiK
   url.searchParams.set('page-size', '30');
   url.searchParams.set('show-fields', 'trailText');
   url.searchParams.set('api-key', apiKey);
+
   const res = await fetch(url.toString());
   if (!res.ok) throw new Error(`Guardian request failed (${res.status}).`);
   const json = await res.json();
   const raw = Array.isArray(json.response?.results) ? json.response.results : [];
+
   return raw.map((item: any) => decorate({
     title: String(item.webTitle || 'Untitled article'),
     url: String(item.webUrl || ''),
@@ -164,7 +203,8 @@ async function fetchGuardian(query: string, angle: NewsAngle, days: number, apiK
   })).filter((x: NewsArticle) => x.url && x.title);
 }
 
-async function fetchByProvider(provider: NewsProvider, query: string, angle: NewsAngle, days: number, apiKey?: string) {
+async function fetchByProvider(provider: NewsProvider, query: string, angle: NewsAngle, days: number, apiKey: string | undefined, company: string) {
+  if (provider === 'demo') return fetchDemoNews(angle, company);
   if (provider === 'newsapi') return fetchNewsApi(query, angle, days, apiKey);
   if (provider === 'guardian') return fetchGuardian(query, angle, days, apiKey);
   return fetchGdelt(query, angle, days);
@@ -192,25 +232,65 @@ function summarize(articles: NewsArticle[], company: string) {
   return `${company || 'Company'} news scan found ${active.length} direct company articles and ${passive.length} competitor/market articles. The public-news tone is ${tone}${topTags.length ? `, with recurring themes around ${topTags.join(', ')}` : ''}.`;
 }
 
-export async function analyzeExternalNews(options: NewsAnalysisOptions): Promise<NewsAnalysisResult> {
-  const company = options.company.trim() || 'Verizon';
-  const { activeQuery, passiveQuery } = buildQueries(company, options.competitors);
-  const [active, passive] = await Promise.all([
-    fetchByProvider(options.provider, activeQuery, 'active', options.days, options.apiKey),
-    fetchByProvider(options.provider, passiveQuery, 'passive', options.days, options.apiKey),
-  ]);
-  const articles = dedupe([...active, ...passive]).slice(0, 40);
+export function createDemoNewsAnalysis(company = 'Verizon', competitors = 'AT&T, T-Mobile, Comcast, Charter'): NewsAnalysisResult {
+  const { activeQuery, passiveQuery } = buildQueries(company, competitors);
+  const articles = dedupe(demoNewsArticles.map((article) => decorate({
+    title: templateCompany(article.title, company),
+    url: article.url,
+    source: article.source,
+    publishedAt: article.publishedAt,
+    snippet: templateCompany(article.snippet, company),
+    angle: article.angle,
+    sentiment: article.sentiment,
+    tags: [...article.tags],
+  })));
+  const activeCount = articles.filter((a) => a.angle === 'active').length;
+  const passiveCount = articles.filter((a) => a.angle === 'passive').length;
   const headlineSummary = summarize(articles, company);
-  const top = articles.slice(0, 8).map((a, i) => `${i + 1}. [${a.angle}] ${a.title} — ${a.source}${a.publishedAt ? ` (${a.publishedAt})` : ''}`).join('\n');
-  const contextText = [
+  const contextText = buildContextText({
+    provider: 'demo',
+    company,
+    activeQuery,
+    passiveQuery,
+    articles,
+    headlineSummary,
+  });
+  return { provider: 'demo', company, activeQuery, passiveQuery, activeCount, passiveCount, articles, contextText, headlineSummary };
+}
+
+function buildContextText({
+  provider,
+  company,
+  activeQuery,
+  passiveQuery,
+  articles,
+  headlineSummary,
+}: Pick<NewsAnalysisResult, 'provider' | 'company' | 'activeQuery' | 'passiveQuery' | 'articles' | 'headlineSummary'>) {
+  const top = articles.slice(0, 8).map((a, i) => `${i + 1}. [${a.angle}; ${a.sentiment}; ${a.tags.join(', ') || 'untagged'}] ${a.title} — ${a.source}${a.publishedAt ? ` (${a.publishedAt})` : ''}`).join('\n');
+  return [
     `PUBLIC NEWS CONTEXT FOR ${company}`,
-    `Provider: ${options.provider}`,
+    `Provider: ${provider}`,
     `Active/direct query: ${activeQuery}`,
     `Passive/competitor-market query: ${passiveQuery}`,
     headlineSummary,
     'Use this as external context only. Treat it as hypothesis material, not proof of causality.',
     top ? `Top articles:\n${top}` : 'No articles returned.',
   ].join('\n');
+}
+
+export async function analyzeExternalNews(options: NewsAnalysisOptions): Promise<NewsAnalysisResult> {
+  const company = options.company.trim() || 'Verizon';
+  const { activeQuery, passiveQuery } = buildQueries(company, options.competitors);
+
+  const [active, passive] = await Promise.all([
+    fetchByProvider(options.provider, activeQuery, 'active', options.days, options.apiKey, company),
+    fetchByProvider(options.provider, passiveQuery, 'passive', options.days, options.apiKey, company),
+  ]);
+
+  const articles = dedupe([...active, ...passive]).slice(0, 40);
+  const headlineSummary = summarize(articles, company);
+  const contextText = buildContextText({ provider: options.provider, company, activeQuery, passiveQuery, articles, headlineSummary });
+
   return {
     provider: options.provider,
     company,
