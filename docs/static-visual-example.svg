@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="1020" viewBox="0 0 1440 1020" role="img" aria-labelledby="title desc">
+  <title id="title">Drill-down anomaly investigation visual example</title>
+  <desc id="desc">A dark analytical dashboard showing KPI cards, a dynamic cohort tree, all-dimension driver ranking, category variance bars, and multidimensional interaction segments.</desc>
+  <rect width="1440" height="1020" fill="#07101d"/>
+  <text x="54" y="58" fill="#61d7ff" font-family="Arial, sans-serif" font-size="16" font-weight="700">MULTIDIMENSIONAL RCA PROTOTYPE</text>
+  <text x="54" y="101" fill="#f2f6fb" font-family="Arial, sans-serif" font-size="36" font-weight="700">Drill-down Anomaly Lab</text>
+  <text x="54" y="132" fill="#8fa3ba" font-family="Arial, sans-serif" font-size="16">Every drill creates a cohort and re-scores every remaining dimension.</text>
+
+  <g font-family="Arial, sans-serif">
+    <g transform="translate(54 170)"><rect width="202" height="88" rx="14" fill="#0c1725" stroke="#1d3043"/><text x="18" y="28" fill="#7f96ad" font-size="13">Rows</text><text x="18" y="61" fill="#f2f6fb" font-size="27" font-weight="700">1,600</text></g>
+    <g transform="translate(270 170)"><rect width="202" height="88" rx="14" fill="#0c1725" stroke="#1d3043"/><text x="18" y="28" fill="#7f96ad" font-size="13">Actual</text><text x="18" y="61" fill="#f2f6fb" font-size="27" font-weight="700">1.53M</text></g>
+    <g transform="translate(486 170)"><rect width="202" height="88" rx="14" fill="#0c1725" stroke="#1d3043"/><text x="18" y="28" fill="#7f96ad" font-size="13">Target</text><text x="18" y="61" fill="#f2f6fb" font-size="27" font-weight="700">1.61M</text></g>
+    <g transform="translate(702 170)"><rect width="202" height="88" rx="14" fill="#0c1725" stroke="#1d3043"/><text x="18" y="28" fill="#7f96ad" font-size="13">Variance</text><text x="18" y="61" fill="#ff7d87" font-size="27" font-weight="700">-81.4K</text></g>
+    <g transform="translate(918 170)"><rect width="202" height="88" rx="14" fill="#0c1725" stroke="#1d3043"/><text x="18" y="28" fill="#7f96ad" font-size="13">Anomaly score</text><text x="18" y="61" fill="#f2f6fb" font-size="27" font-weight="700">2.74σ</text></g>
+    <g transform="translate(1134 170)"><rect width="252" height="88" rx="14" fill="#0c1725" stroke="#1d3043"/><text x="18" y="28" fill="#7f96ad" font-size="13">Dimensions rescanned</text><text x="18" y="61" fill="#61d7ff" font-size="27" font-weight="700">26 / 26</text></g>
+  </g>
+
+  <rect x="54" y="278" width="1332" height="62" rx="12" fill="#0b2030"/>
+  <rect x="54" y="278" width="4" height="62" rx="2" fill="#61d7ff"/>
+  <text x="76" y="304" fill="#f2f6fb" font-family="Arial, sans-serif" font-size="15" font-weight="700">Automated insight</text>
+  <text x="76" y="327" fill="#b9c9d8" font-family="Arial, sans-serif" font-size="14">West + Store + Device is the strongest unfavorable interaction, while Northeast + Online + Fiber is a favorable offset.</text>
+
+  <g transform="translate(54 365)" font-family="Arial, sans-serif">
+    <rect width="650" height="265" rx="16" fill="#081320" stroke="#1b3045"/>
+    <text x="20" y="31" fill="#f2f6fb" font-size="17" font-weight="700">Dynamic investigation path</text>
+    <text x="20" y="53" fill="#7f96ad" font-size="13">Tree = investigation history, not a fixed hierarchy.</text>
+    <line x1="125" y1="150" x2="245" y2="150" stroke="#38546e" stroke-width="2"/>
+    <line x1="355" y1="150" x2="470" y2="150" stroke="#38546e" stroke-width="2"/>
+    <rect x="28" y="116" width="100" height="68" rx="12" fill="#102337" stroke="#34506b"/>
+    <text x="78" y="144" fill="#f2f6fb" font-size="14" text-anchor="middle" font-weight="700">All data</text><text x="78" y="166" fill="#8fa3ba" font-size="12" text-anchor="middle">26 dims scanned</text>
+    <rect x="245" y="116" width="110" height="68" rx="12" fill="#102337" stroke="#61d7ff"/>
+    <text x="300" y="143" fill="#f2f6fb" font-size="14" text-anchor="middle" font-weight="700">Region: West</text><text x="300" y="166" fill="#8fa3ba" font-size="12" text-anchor="middle">25 dims rescanned</text>
+    <rect x="470" y="116" width="145" height="68" rx="12" fill="#102337" stroke="#61d7ff"/>
+    <text x="542" y="143" fill="#f2f6fb" font-size="14" text-anchor="middle" font-weight="700">Channel: Store</text><text x="542" y="166" fill="#8fa3ba" font-size="12" text-anchor="middle">24 dims rescanned</text>
+  </g>
+
+  <g transform="translate(722 365)" font-family="Arial, sans-serif">
+    <rect width="664" height="265" rx="16" fill="#081320" stroke="#1b3045"/>
+    <text x="20" y="31" fill="#f2f6fb" font-size="17" font-weight="700">Top cross-dimensional segments</text>
+    <text x="20" y="53" fill="#7f96ad" font-size="13">2-way and 3-way combinations after support pruning.</text>
+    <g transform="translate(20 76)"><rect width="624" height="48" rx="10" fill="#0c1a29" stroke="#20384f"/><text x="14" y="21" fill="#e8eff7" font-size="13" font-weight="700">region=West ∧ channel=Store ∧ productFamily=Device</text><text x="596" y="21" fill="#ff7d87" font-size="14" text-anchor="end" font-weight="700">-47.8K</text><text x="14" y="39" fill="#7890a7" font-size="11">96 rows · lift 3.8×</text></g>
+    <g transform="translate(20 132)"><rect width="624" height="48" rx="10" fill="#0c1a29" stroke="#20384f"/><text x="14" y="21" fill="#e8eff7" font-size="13" font-weight="700">inventoryStatus=Backorder ∧ productFamily=Device</text><text x="596" y="21" fill="#ff7d87" font-size="14" text-anchor="end" font-weight="700">-31.5K</text><text x="14" y="39" fill="#7890a7" font-size="11">132 rows · lift 2.9×</text></g>
+    <g transform="translate(20 188)"><rect width="624" height="48" rx="10" fill="#0c1a29" stroke="#20384f"/><text x="14" y="21" fill="#e8eff7" font-size="13" font-weight="700">region=Northeast ∧ channel=Online ∧ productFamily=Fiber</text><text x="596" y="21" fill="#61e5ab" font-size="14" text-anchor="end" font-weight="700">+24.2K</text><text x="14" y="39" fill="#7890a7" font-size="11">88 rows · lift 2.2×</text></g>
+  </g>
+
+  <g transform="translate(54 650)" font-family="Arial, sans-serif">
+    <rect width="820" height="320" rx="16" fill="#081320" stroke="#1b3045"/>
+    <text x="20" y="31" fill="#f2f6fb" font-size="17" font-weight="700">All-dimension landscape</text>
+    <text x="20" y="53" fill="#7f96ad" font-size="13">Every eligible dimension is scored for the current cohort.</text>
+    <g fill="#a7bad0" font-size="12">
+      <text x="20" y="91">region</text><text x="20" y="119">channel</text><text x="20" y="147">productFamily</text><text x="20" y="175">inventoryStatus</text><text x="20" y="203">offer</text><text x="20" y="231">tenureBand</text><text x="20" y="259">productTier</text><text x="20" y="287">customerSegment</text>
+    </g>
+    <g fill="#173149"><rect x="145" y="78" width="600" height="14" rx="7"/><rect x="145" y="106" width="600" height="14" rx="7"/><rect x="145" y="134" width="600" height="14" rx="7"/><rect x="145" y="162" width="600" height="14" rx="7"/><rect x="145" y="190" width="600" height="14" rx="7"/><rect x="145" y="218" width="600" height="14" rx="7"/><rect x="145" y="246" width="600" height="14" rx="7"/><rect x="145" y="274" width="600" height="14" rx="7"/></g>
+    <g fill="#61d7ff"><rect x="145" y="78" width="568" height="14" rx="7"/><rect x="145" y="106" width="544" height="14" rx="7"/><rect x="145" y="134" width="514" height="14" rx="7"/><rect x="145" y="162" width="475" height="14" rx="7"/><rect x="145" y="190" width="418" height="14" rx="7"/><rect x="145" y="218" width="382" height="14" rx="7"/><rect x="145" y="246" width="347" height="14" rx="7"/><rect x="145" y="274" width="316" height="14" rx="7"/></g>
+    <g fill="#dbe7f3" font-size="12" text-anchor="end"><text x="785" y="90">94.7</text><text x="785" y="118">90.7</text><text x="785" y="146">85.7</text><text x="785" y="174">79.2</text><text x="785" y="202">69.7</text><text x="785" y="230">63.7</text><text x="785" y="258">57.8</text><text x="785" y="286">52.7</text></g>
+  </g>
+
+  <g transform="translate(892 650)" font-family="Arial, sans-serif">
+    <rect width="494" height="320" rx="16" fill="#081320" stroke="#1b3045"/>
+    <text x="20" y="31" fill="#f2f6fb" font-size="17" font-weight="700">region contribution</text>
+    <text x="20" y="53" fill="#7f96ad" font-size="13">Signed category variance. Click to create the next cohort.</text>
+    <line x1="250" y1="82" x2="250" y2="286" stroke="#365067"/>
+    <g fill="#a7bad0" font-size="12" text-anchor="end"><text x="136" y="105">West</text><text x="136" y="153">South</text><text x="136" y="201">Midwest</text><text x="136" y="249">Northeast</text></g>
+    <rect x="150" y="91" width="100" height="19" rx="6" fill="#ff7d87"/><rect x="182" y="139" width="68" height="19" rx="6" fill="#ff7d87"/><rect x="220" y="187" width="30" height="19" rx="6" fill="#ff7d87"/><rect x="250" y="235" width="106" height="19" rx="6" fill="#61e5ab"/>
+    <text x="142" y="306" fill="#7890a7" font-size="11">Unfavorable</text><text x="364" y="306" fill="#7890a7" font-size="11" text-anchor="end">Favorable</text>
+  </g>
+</svg>
