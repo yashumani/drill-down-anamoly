@@ -1,0 +1,40 @@
+.demo-actions,
+.context-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 14px 12px;
+}
+
+.demo-actions span,
+.context-actions span {
+  color: var(--muted);
+  font-size: 0.74rem;
+  line-height: 1.35;
+}
+
+.context-box .context-actions {
+  margin: 0 0 8px;
+}
+
+.news-form small,
+.context-status {
+  color: var(--muted);
+}
+
+.news-card[href^="https://example.com"] {
+  cursor: default;
+}
+
+.news-card[href^="https://example.com"]::after {
+  content: "Demo article";
+  width: fit-content;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 2px 6px;
+  color: var(--muted);
+  font-size: 0.64rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
