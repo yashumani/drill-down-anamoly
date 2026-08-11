@@ -9,6 +9,7 @@ export interface ChatContext {
   expectedKey?: string;
   predicates: Predicate[];
   result: InvestigationResult;
+  externalContext?: string;
 }
 
 export interface ChatAction {
@@ -32,6 +33,7 @@ function scopeText(predicates: Predicate[]) {
 function suggestions(ctx: ChatContext) {
   const top = ctx.result.dimensionScores[0];
   const out = ['What is driving the result?', 'What is the strongest combined pattern?'];
+  if (ctx.externalContext) out.push('Could external news explain this anomaly?');
   if (top) out.push(`Show me ${labelFor(top.dimension)}`);
   if (ctx.predicates.length) out.push('Go deeper', 'Go back');
   return out.slice(0, 5);
@@ -47,6 +49,31 @@ function categoryMatch(ctx: ChatContext, q: string) {
   return null;
 }
 
+function summarizeExternalContext(context: string) {
+  const lines = context.split('\n').map((line) => line.trim()).filter(Boolean);
+  const useful = lines.filter((line) => !line.toLowerCase().startsWith('provider:')).slice(0, 8);
+  return useful.length ? useful.join('\n') : context.slice(0, 700);
+}
+
+function explainExternal(ctx: ChatContext): ChatReply {
+  if (!ctx.externalContext) {
+    return {
+      text: 'I do not have external context loaded yet. Use the Public news context panel or load sample business context, then ask again. I will treat those signals as hypotheses, not proven causes.',
+      suggestions: ['What is driving the result?', 'What is the strongest combined pattern?'],
+    };
+  }
+
+  const top = ctx.result.dimensionScores[0];
+  const topLine = top?.topCategory
+    ? `The observed data issue is concentrated around ${labelFor(top.dimension)} = ${top.topCategory.value}, with ${compact(Math.abs(top.topCategory.variance))} of category-level difference.`
+    : `The current data view differs from expectation by ${compact(Math.abs(ctx.result.variance))}.`;
+
+  return {
+    text: `${topLine}\n\nExternal context available:\n${summarizeExternalContext(ctx.externalContext)}\n\nHow to use this: treat the news and business context as possible explanations to validate. A strong next step is to compare affected groups against unaffected groups during the same window, or test whether the external event overlaps the anomaly by time, product, channel, or geography.`,
+    suggestions: ['What should I validate next?', 'Go deeper', 'What is driving the result?', 'Why this recommendation?'],
+  };
+}
+
 function explain(ctx: ChatContext): ChatReply {
   const top = ctx.result.dimensionScores[0];
   const interaction = ctx.result.interactions[0];
@@ -54,6 +81,7 @@ function explain(ctx: ChatContext): ChatReply {
   let text = `For ${scopeText(ctx.predicates)}, the result is ${compact(Math.abs(ctx.result.variance))} ${direction} expectation.`;
   if (top?.topCategory) text += ` The clearest single factor is ${labelFor(top.dimension)}, led by ${top.topCategory.value}, which differs from expectation by ${compact(Math.abs(top.topCategory.variance))}.`;
   if (interaction) text += ` The strongest combined pattern is ${interaction.predicates.map((p) => p.value).join(' + ')}, covering ${interaction.count.toLocaleString()} records.`;
+  if (ctx.externalContext) text += ' External context is loaded, so you can ask whether news or business events may explain the pattern.';
   return { text, suggestions: suggestions(ctx) };
 }
 
@@ -98,6 +126,11 @@ export function answerChat(question: string, ctx: ChatContext): ChatReply {
   if (lower === 'reset' || lower.includes('start over') || lower.includes('all data')) return { text: 'I’ll return the dashboard to all available data.', action: { type: 'reset' }, suggestions: suggestions({ ...ctx, predicates: [] }) };
   if (lower.includes('go back') || lower === 'back') return { text: ctx.predicates.length ? 'I’ll move back one step in the investigation.' : 'You are already at the full-data view.', action: ctx.predicates.length ? { type: 'back' } : undefined, suggestions: suggestions(ctx) };
   if (lower.includes('go deeper') || lower === 'deeper' || lower.includes('next level')) return goDeeper(ctx);
+
+  if (lower.includes('external') || lower.includes('news') || lower.includes('competitor') || lower.includes('market context') || lower.includes('validate next')) {
+    return explainExternal(ctx);
+  }
+
   const comparison = compare(ctx, lower);
   if (comparison) return comparison;
 
