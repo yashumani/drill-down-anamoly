@@ -106,12 +106,22 @@ const dims = {
   employeeBand: ['Small', 'Mid', 'Large'],
 } as const;
 
+function hash(row: number, salt: number) {
+  let value = Math.imul(row + 1, 0x9e3779b1) ^ Math.imul(salt + 1, 0x85ebca6b);
+  value ^= value >>> 16;
+  value = Math.imul(value, 0x7feb352d);
+  value ^= value >>> 15;
+  value = Math.imul(value, 0x846ca68b);
+  value ^= value >>> 16;
+  return value >>> 0;
+}
+
 function pick<T>(values: readonly T[], row: number, salt: number): T {
-  return values[(row * (salt * 7 + 3) + salt * 11) % values.length];
+  return values[hash(row, salt) % values.length];
 }
 
 function noise(row: number) {
-  return ((row * 9301 + 49297) % 233280) / 233280 - 0.5;
+  return hash(row, 97) / 0x1_0000_0000 - 0.5;
 }
 
 export function createSampleData(rows = 1600): DataRow[] {
@@ -125,11 +135,16 @@ export function createSampleData(rows = 1600): DataRow[] {
     const quarter = `Q${Math.ceil(monthNumber / 3)}`;
     const month = `${year}-${String(monthNumber).padStart(2, '0')}`;
 
-    const region = pick(regions, index, 1);
+    // Seed enough supported records for the demo's known adverse and favorable
+    // cross-dimensional patterns, while keeping the remaining dimensions distributed.
+    const westDeviceIssue = index % 48 === 0;
+    const northeastFiberUpside = index % 57 === 1;
+    const region: Region = westDeviceIssue ? 'West' : northeastFiberUpside ? 'Northeast' : pick(regions, index, 1);
+    const channel: Channel = westDeviceIssue ? 'Store' : northeastFiberUpside ? 'Online' : pick(channels, index, 3);
+    const productFamily: ProductFamily = westDeviceIssue ? 'Device' : northeastFiberUpside ? 'Fiber' : pick(productFamilies, index, 5);
+
     const geographyRow = pick(geography[region], index, 2);
-    const channel = pick(channels, index, 3);
     const storeType = pick(channelHierarchy[channel], index, 4);
-    const productFamily = pick(productFamilies, index, 5);
     const productLines = Object.keys(productHierarchy[productFamily].lines);
     const productLine = pick(productLines, index, 6);
     const productName = pick(productHierarchy[productFamily].lines[productLine], index, 7);
