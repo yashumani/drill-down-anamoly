@@ -65,10 +65,10 @@ export function InteractionList({ interactions, onDrill }: { interactions: Inter
 }
 
 export function DrillTree({ predicates }: { predicates: Predicate[] }) {
-  const data: { name: string; children: Array<{ name: string; children: unknown[] }> } = { name: 'All data', children: [] };
-  let cursor = data as { children: Array<{ name: string; children: unknown[] }> };
+  const data: any = { name: 'All data', children: [] as any[] };
+  let cursor = data;
   for (const predicate of predicates) {
-    const node = { name: `${humanize(predicate.dimension)}: ${predicate.value}`, children: [] };
+    const node = { name: `${humanize(predicate.dimension)}: ${predicate.value}`, children: [] as any[] };
     cursor.children.push(node);
     cursor = node;
   }
