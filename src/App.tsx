@@ -5,7 +5,7 @@ import { investigate } from './lib/anomaly';
 import { parseDataFile } from './lib/io';
 import { profileFields } from './lib/profile';
 import { ContributionBars, DimensionLandscape, DrillTree, InteractionList } from './components/Visuals';
-import type { DataRow, DimensionScore, InteractionSegment, Predicate } from './types';
+import type { DataRow, DimensionScore, Predicate } from './types';
 
 const format = (n: number) => Intl.NumberFormat('en-US', { notation: 'compact', maximumFractionDigits: 2 }).format(n);
 const percent = (n: number | null) => n == null ? '—' : `${n >= 0 ? '+' : ''}${n.toFixed(1)}%`;
@@ -72,6 +72,22 @@ export default function App() {
     </header>
 
     {error && <div className="error">{error}</div>}
+
+    <section className="controls top-controls" aria-label="Analysis filters">
+      <label>What result should be analyzed?
+        <select value={actualKey} onChange={(e) => { setActualKey(e.target.value); setPredicates([]); }}>
+          {numeric.map((p) => <option key={p.name}>{p.name}</option>)}
+        </select>
+      </label>
+      <label>What should it be compared with?
+        <select value={expectedKey} onChange={(e) => { setExpectedKey(e.target.value); setPredicates([]); }}>
+          <option value="">Typical value in this group</option>
+          {numeric.filter((p) => p.name !== actualKey).map((p) => <option key={p.name}>{p.name}</option>)}
+        </select>
+      </label>
+      <button onClick={() => { setRows(createSampleData()); setActualKey('actual'); setExpectedKey('target'); setPredicates([]); setSelectedDimension('region'); }}>Reset sample data</button>
+      {predicates.length > 0 && <button className="quiet-button" onClick={() => setPredicates([])}>Clear drill filters</button>}
+    </section>
 
     <section className="scope-bar">
       <div>
@@ -140,13 +156,8 @@ export default function App() {
     </section>
 
     <details className="analyst-details">
-      <summary>Advanced controls & analyst details</summary>
-      <p className="details-intro">Use this section when you need to change measures, inspect scoring details, or validate how the story was generated.</p>
-      <section className="controls">
-        <label>What result should be analyzed?<select value={actualKey} onChange={(e) => { setActualKey(e.target.value); setPredicates([]); }}>{numeric.map((p) => <option key={p.name}>{p.name}</option>)}</select></label>
-        <label>What should it be compared with?<select value={expectedKey} onChange={(e) => { setExpectedKey(e.target.value); setPredicates([]); }}><option value="">Typical value in this group</option>{numeric.filter((p) => p.name !== actualKey).map((p) => <option key={p.name}>{p.name}</option>)}</select></label>
-        <button onClick={() => { setRows(createSampleData()); setActualKey('actual'); setExpectedKey('target'); setPredicates([]); setSelectedDimension('region'); }}>Reset sample data</button>
-      </section>
+      <summary>Analyst details</summary>
+      <p className="details-intro">Use this section to validate how the story was generated and inspect the underlying factor scoring.</p>
 
       <section className="technical-strip">
         <span><strong>{result.rowCount.toLocaleString()}</strong> records included</span>
