@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#07101d" />
+  <title>Drill-down Anomaly Dashboard</title>
+  <style>
+    :root { color-scheme: dark; }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: #07101d; color: #f2f6fb; font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    .shell { width: min(1600px, 100%); margin: 0 auto; padding: 18px; }
+    .topbar { display: flex; justify-content: space-between; gap: 16px; align-items: center; margin-bottom: 14px; flex-wrap: wrap; }
+    .eyebrow { color: #61d7ff; font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+    h1 { margin: 4px 0 4px; font-size: clamp(24px, 4vw, 40px); }
+    p { margin: 0; color: #9bb0c5; }
+    .badge { border: 1px solid #28435b; background: #0b1b2a; color: #cfe2f3; padding: 8px 12px; border-radius: 999px; font-size: 13px; }
+    .frame { border: 1px solid #1b3045; border-radius: 18px; overflow: hidden; background: #081320; }
+    .frame img { display: block; width: 100%; height: auto; }
+    .note { margin-top: 12px; color: #7890a7; font-size: 13px; }
+    a { color: #61d7ff; }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <div class="topbar">
+      <div>
+        <div class="eyebrow">Sample multidimensional RCA dashboard</div>
+        <h1>Drill-down Anomaly Lab</h1>
+        <p>Static GitHub Pages preview using the synthetic 26-dimension anomaly dataset.</p>
+      </div>
+      <div class="badge">26 dimensions · sample data · static preview</div>
+    </div>
+
+    <section class="frame" aria-label="Static anomaly detection dashboard preview">
+      <img src="static-visual-example.svg" alt="Dark anomaly detection dashboard showing KPI cards, a dynamic cohort drill tree, all-dimension ranking, category contribution bars, and cross-dimensional interactions." />
+    </section>
+
+    <p class="note">This page is the static visualization preview. The React research prototype remains in the repository root and can be deployed separately as an interactive app.</p>
+  </main>
+</body>
+</html>
