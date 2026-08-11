@@ -1,24 +1,40 @@
 import { useState } from 'react';
-import { analyzeExternalNews } from '../lib/newsIntel';
+import { analyzeExternalNews, createDemoNewsAnalysis } from '../lib/newsIntel';
 import type { NewsAnalysisResult, NewsProvider } from '../lib/newsIntel';
 
+const defaultCompany = 'Verizon';
+const defaultCompetitors = 'AT&T, T-Mobile, Comcast, Charter';
+
 const providers: Array<{ id: NewsProvider; label: string; note: string; needsKey: boolean }> = [
+  { id: 'demo', label: 'Demo news dataset', note: 'No network request; useful for demos and screenshots', needsKey: false },
   { id: 'gdelt', label: 'GDELT public news', note: 'No key, broad global coverage', needsKey: false },
   { id: 'newsapi', label: 'NewsAPI', note: 'User API key required', needsKey: true },
   { id: 'guardian', label: 'Guardian Open Platform', note: 'User API key required', needsKey: true },
 ];
 
 export function NewsIntelPanel({ onContextReady }: { onContextReady: (context: string) => void }) {
-  const [provider, setProvider] = useState<NewsProvider>('gdelt');
-  const [company, setCompany] = useState('Verizon');
-  const [competitors, setCompetitors] = useState('AT&T, T-Mobile, Comcast, Charter');
+  const [provider, setProvider] = useState<NewsProvider>('demo');
+  const [company, setCompany] = useState(defaultCompany);
+  const [competitors, setCompetitors] = useState(defaultCompetitors);
   const [days, setDays] = useState(30);
   const [apiKey, setApiKey] = useState('');
-  const [result, setResult] = useState<NewsAnalysisResult | null>(null);
+  const [result, setResult] = useState<NewsAnalysisResult | null>(() => createDemoNewsAnalysis(defaultCompany, defaultCompetitors));
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
 
   const selectedProvider = providers.find((p) => p.id === provider)!;
+
+  function loadDemo() {
+    const demo = createDemoNewsAnalysis(defaultCompany, defaultCompetitors);
+    setProvider('demo');
+    setCompany(defaultCompany);
+    setCompetitors(defaultCompetitors);
+    setDays(30);
+    setApiKey('');
+    setResult(demo);
+    setError('');
+    onContextReady(demo.contextText);
+  }
 
   async function scan() {
     setBusy(true);
@@ -37,10 +53,15 @@ export function NewsIntelPanel({ onContextReady }: { onContextReady: (context: s
   return <section className="news-panel" aria-label="External news intelligence">
     <div className="news-head">
       <div><span className="chat-kicker">EXTERNAL FACTORS</span><h2>Public news context</h2></div>
-      <button type="button" onClick={scan} disabled={busy}>{busy ? 'Scanning…' : 'Scan news'}</button>
+      <button type="button" onClick={scan} disabled={busy}>{busy ? 'Scanning…' : provider === 'demo' ? 'Load demo scan' : 'Scan news'}</button>
     </div>
 
     <p className="news-intro">Check direct company coverage and competitor / market coverage, then send the summary into Ask the Data as hypothesis context.</p>
+
+    <div className="demo-actions">
+      <button type="button" className="quiet-button" onClick={loadDemo}>Use Verizon demo news</button>
+      <span>Includes active company coverage and passive competitor-market examples.</span>
+    </div>
 
     <div className="news-form">
       <label>Company<input value={company} onChange={(e) => setCompany(e.target.value)} placeholder="Verizon" /></label>
@@ -50,7 +71,7 @@ export function NewsIntelPanel({ onContextReady }: { onContextReady: (context: s
         <label>Lookback days<input type="number" min={1} max={90} value={days} onChange={(e) => setDays(Number(e.target.value) || 30)} /></label>
       </div>
       {selectedProvider.needsKey && <label>API key<input type="password" value={apiKey} onChange={(e) => setApiKey(e.target.value)} placeholder="Not saved" autoComplete="off" /></label>}
-      <small>{selectedProvider.note}. Browser-based calls require the provider endpoint to allow CORS.</small>
+      <small>{selectedProvider.note}. Browser-based live calls require the provider endpoint to allow CORS.</small>
     </div>
 
     {error && <div className="inline-error">{error}</div>}
