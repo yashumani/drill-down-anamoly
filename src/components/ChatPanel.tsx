@@ -16,9 +16,9 @@ const initialLlm: LlmConfig = {
   authPrefix: localStorage.getItem('anomaly-llm-auth-prefix') ?? 'Bearer ',
 };
 
-export function ChatPanel({ rows, dimensions, actualKey, expectedKey, predicates, result, externalContext, onExternalContext, onAction }: {
+export function ChatPanel({ rows, dimensions, actualKey, expectedKey, predicates, result, externalContext, manualContext, onExternalContext, onAction }: {
   rows: DataRow[]; dimensions: string[]; actualKey: string; expectedKey?: string; predicates: Predicate[]; result: InvestigationResult;
-  externalContext: string; onExternalContext: (value: string) => void; onAction: (action: ChatAction) => void;
+  externalContext: string; manualContext: string; onExternalContext: (value: string) => void; onAction: (action: ChatAction) => void;
 }) {
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState<Message[]>([{ role: 'assistant', text: 'Ask what changed, why a group stands out, or tell me what to investigate next.' }]);
@@ -77,7 +77,7 @@ export function ChatPanel({ rows, dimensions, actualKey, expectedKey, predicates
       <p className="security-note">The API key stays only in this page's memory and is never saved. Because this demo runs in your browser, requests go directly to the endpoint you enter; that endpoint must allow browser CORS. For enterprise use, route LLM calls through a secured backend instead.</p>
     </div>}
 
-    <details className="context-box"><summary>Add business context</summary><p>Add known events the data cannot see—campaigns, outages, launches, policy changes, weather, competitor moves, or operational incidents. The LLM will treat them as hypotheses, not proven causes.</p><textarea value={externalContext} onChange={(e) => onExternalContext(e.target.value)} placeholder="Example: West stores had a device shortage from July 8–18; Promo B launched July 10..." /></details>
+    <details className="context-box"><summary>Add business context</summary><p>Add known events the data cannot see—campaigns, outages, launches, policy changes, weather, competitor moves, or operational incidents. News context from the external factor panel is included automatically when available.</p><textarea value={manualContext} onChange={(e) => onExternalContext(e.target.value)} placeholder="Example: West stores had a device shortage from July 8–18; Promo B launched July 10..." />{externalContext && <small className="context-status">Context available for LLM: {Math.round(externalContext.length / 100) / 10}k characters</small>}</details>
 
     <div className="chat-messages" aria-live="polite">{messages.slice(-8).map((m, i) => <div key={i} className={`chat-message ${m.role}`}><span>{m.role === 'assistant' ? (llm.enabled ? 'AI analyst' : 'Data guide') : 'You'}</span><p>{m.text}</p></div>)}</div>
     <div className="chat-suggestions">{suggestions.map((s) => <button key={s} type="button" onClick={() => ask(s)}>{s}</button>)}</div>
