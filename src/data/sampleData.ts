@@ -116,9 +116,12 @@ function noise(row: number) {
 
 export function createSampleData(rows = 1600): DataRow[] {
   return Array.from({ length: rows }, (_, index) => {
+    // The demo covers August 2024 through July 2026 so its dates remain historical
+    // relative to the July 2026 sample news and business-context storyline.
     const calendarIndex = index % 24;
-    const year = calendarIndex < 12 ? 2025 : 2026;
-    const monthNumber = calendarIndex % 12 + 1;
+    const absoluteMonth = 2024 * 12 + 7 + calendarIndex;
+    const year = Math.floor(absoluteMonth / 12);
+    const monthNumber = absoluteMonth % 12 + 1;
     const quarter = `Q${Math.ceil(monthNumber / 3)}`;
     const month = `${year}-${String(monthNumber).padStart(2, '0')}`;
 
@@ -155,7 +158,7 @@ export function createSampleData(rows = 1600): DataRow[] {
 
     return {
       recordId: `R-${String(index + 1).padStart(5, '0')}`,
-      year,
+      year: String(year),
       quarter,
       month,
       region,
