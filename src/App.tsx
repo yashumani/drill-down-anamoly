@@ -13,7 +13,7 @@ import { NewsIntelPanel } from './components/NewsIntelPanel';
 import { ThemePicker } from './components/ThemePicker';
 import type { PaletteId } from './components/ThemePicker';
 import type { ChatAction } from './lib/chatEngine';
-import type { DataRow, DimensionScore, Predicate } from './types';
+import type { DataRow, DimensionScore, MetricPolarity, Predicate } from './types';
 
 const format = (value: number) => Intl.NumberFormat('en-US', { notation: 'compact', maximumFractionDigits: 2 }).format(value);
 const percent = (value: number | null) => value == null ? '—' : `${value >= 0 ? '+' : ''}${(value * 100).toFixed(1)}%`;
@@ -26,6 +26,7 @@ export default function App() {
   const [workspace, setWorkspace] = useState<Workspace>('insights');
   const [actualKey, setActualKey] = useState('actual');
   const [expectedKey, setExpectedKey] = useState('target');
+  const [metricPolarity, setMetricPolarity] = useState<MetricPolarity>('higher_is_better');
   const [predicates, setPredicates] = useState<Predicate[]>([]);
   const [selectedDimension, setSelectedDimension] = useState<string>('region');
   const [manualContext, setManualContext] = useState('');
@@ -45,13 +46,12 @@ export default function App() {
   const dimensionKey = dimensions.join('|');
   const externalContext = [manualContext, newsContext].filter(Boolean).join('\n\n');
   const result = useMemo(
-    () => investigate(rows, dimensions, actualKey, expectedKey || undefined, predicates),
-    [rows, dimensionKey, actualKey, expectedKey, predicates],
+    () => investigate(rows, dimensions, actualKey, expectedKey || undefined, predicates, metricPolarity),
+    [rows, dimensionKey, actualKey, expectedKey, predicates, metricPolarity],
   );
   const selectedScore = result.dimensionScores.find((dimension) => dimension.dimension === selectedDimension) ?? result.dimensionScores[0] ?? null;
   const topDriver = result.dimensionScores[0] ?? null;
-  const direction = result.variance < 0 ? 'below' : 'above';
-  const tone = result.variance < 0 ? 'bad' : 'good';
+  const tone = result.businessImpact < 0 ? 'bad' : result.businessImpact > 0 ? 'good' : undefined;
 
   function changePalette(next: PaletteId) {
     setPalette(next);
@@ -70,6 +70,7 @@ export default function App() {
     setRows(nextRows);
     setActualKey(candidateActual);
     setExpectedKey(candidateExpected);
+    setMetricPolarity('higher_is_better');
     setPredicates([]);
     setSelectedDimension(nextQuality.dimensionCandidates[0] ?? '');
     setManualContext('');
@@ -138,6 +139,7 @@ export default function App() {
       {workspace === 'insights' && <>
         <label>Measure<select value={actualKey} onChange={(event) => { setActualKey(event.target.value); setPredicates([]); }}>{numeric.map((profile) => <option key={profile.name} value={profile.name}>{humanize(profile.name)}</option>)}</select></label>
         <label>Compare with<select value={expectedKey} onChange={(event) => { setExpectedKey(event.target.value); setPredicates([]); }}><option value="">Robust typical value</option>{numeric.filter((profile) => profile.name !== actualKey).map((profile) => <option key={profile.name} value={profile.name}>{humanize(profile.name)}</option>)}</select></label>
+        <label>Business direction<select value={metricPolarity} onChange={(event) => { setMetricPolarity(event.target.value as MetricPolarity); setPredicates([]); }}><option value="higher_is_better">Higher is better</option><option value="lower_is_better">Lower is better</option></select></label>
         <div className="filter-scope"><span>Scope</span><strong>{predicates.length ? predicates.map((predicate) => `${humanize(predicate.dimension)}: ${predicate.value}`).join(' • ') : 'All data'}</strong></div>
         {predicates.length > 0 && <button className="quiet-button" onClick={() => setPredicates([])}>Clear</button>}
       </>}
@@ -155,24 +157,24 @@ export default function App() {
       <section className="executive-metrics">
         <Metric label="Result" value={format(result.actual)} helper={`${humanize(actualKey)} · ${result.validRowCount.toLocaleString()} valid rows`} />
         <Metric label={expectedKey ? 'Expected' : 'Typical'} value={format(result.expected)} helper={expectedKey ? humanize(expectedKey) : 'Robust median baseline'} />
-        <Metric label="Difference" value={`${result.variance >= 0 ? '+' : ''}${format(result.variance)}`} helper={`${percent(result.variancePct)} vs expected`} tone={tone} />
+        <Metric label="Business impact" value={`${result.businessImpact >= 0 ? '+' : ''}${format(result.businessImpact)}`} helper={`${result.impactDirection} · raw variance ${format(result.variance)}`} tone={tone} />
         <Metric label="Signal" value={plainAnomaly(result.anomalyScore)} helper="Standardized movement strength" tone={result.anomalyScore >= 2 ? 'warn' : undefined} />
       </section>
 
       <section className="guided-layout">
         <div className="guided-main">
-          <section className={`story-banner ${tone}`}><div className="story-kicker">BOTTOM LINE</div><h2>The result is <span>{format(Math.abs(result.variance))}</span> {direction} expectation.</h2><p>{plainSummary(result.variance, result.variancePct, result.anomalyScore)}</p>{topDriver?.topCategory && <div className="next-clue"><span>Strongest clue</span><strong>{humanize(topDriver.dimension)} → {topDriver.topCategory.value}</strong><button onClick={() => setSelectedDimension(topDriver.dimension)}>Explore</button></div>}{result.warnings.length > 0 && <div className="analysis-warnings">{result.warnings.map((warning) => <span key={warning}>{warning}</span>)}</div>}</section>
+          <section className={`story-banner ${tone ?? ''}`}><div className="story-kicker">BOTTOM LINE</div><h2>The business impact is <span>{format(Math.abs(result.businessImpact))}</span> {result.impactDirection}.</h2><p>{plainSummary(result.businessImpact, result.variance, result.variancePct, result.anomalyScore, metricPolarity)}</p>{topDriver?.topCategory && <div className="next-clue"><span>Strongest clue</span><strong>{humanize(topDriver.dimension)} → {topDriver.topCategory.value}</strong><button onClick={() => setSelectedDimension(topDriver.dimension)}>Explore</button></div>}{result.warnings.length > 0 && <div className="analysis-warnings">{result.warnings.map((warning) => <span key={warning}>{warning}</span>)}</div>}</section>
           <Panel title="What is contributing most?" subtitle="Select a factor, then a group. Every drill automatically re-checks the other quality-approved factors."><div className="driver-split"><DimensionLandscape scores={result.dimensionScores} onSelect={(dimension: DimensionScore) => setSelectedDimension(dimension.dimension)} /><ContributionBars score={selectedScore} onDrill={(predicate) => drill([predicate])} /></div></Panel>
         </div>
         <div className="insight-sidebar">
           <NewsIntelPanel onContextReady={setNewsContext} />
-          <ChatPanel rows={rows} dimensions={dimensions} actualKey={actualKey} expectedKey={expectedKey || undefined} predicates={predicates} result={result} dataQuality={qualityReport} externalContext={externalContext} manualContext={manualContext} onExternalContext={setManualContext} onAction={handleChatAction} />
+          <ChatPanel rows={rows} dimensions={dimensions} actualKey={actualKey} expectedKey={expectedKey || undefined} metricPolarity={metricPolarity} predicates={predicates} result={result} dataQuality={qualityReport} externalContext={externalContext} manualContext={manualContext} onExternalContext={setManualContext} onAction={handleChatAction} />
         </div>
       </section>
 
       <details className="more-analysis"><summary>More analysis</summary><div className="grid two"><Panel title="Combined patterns" subtitle="Groups where several characteristics appear together."><InteractionList interactions={result.interactions} onDrill={drill} /></Panel><Panel title="Investigation trail" subtitle="The path you have taken so far."><DrillTree predicates={predicates} /></Panel></div><div className="breadcrumbs"><button onClick={() => setPredicates([])}>All data</button>{predicates.map((predicate, index) => <button key={`${predicate.dimension}-${predicate.value}`} onClick={() => setPredicates(predicates.slice(0, index + 1))}>→ {humanize(predicate.dimension)}: {predicate.value}</button>)}</div></details>
 
-      <details className="analyst-details"><summary>Analyst evidence</summary><section className="technical-strip"><span><strong>{result.validRowCount.toLocaleString()}</strong> valid measure rows</span><span><strong>{result.excludedMeasureRows.toLocaleString()}</strong> excluded measure rows</span><span><strong>{result.dimensionsScanned}</strong> quality-approved factors</span><span><strong>{result.anomalyScore.toFixed(2)}</strong> standardized deviation</span></section><section className="table-panel"><h2>Factor audit</h2><p>Detailed evidence for every factor reviewed.</p><div className="table-wrap"><table><thead><tr><th>#</th><th>Factor</th><th>Score</th><th>Leading group</th><th>Difference</th><th>Support</th><th>Impact</th></tr></thead><tbody>{result.dimensionScores.map((dimension, index) => <tr key={dimension.dimension} onClick={() => setSelectedDimension(dimension.dimension)}><td>{index + 1}</td><td>{humanize(dimension.dimension)}</td><td>{dimension.score.toFixed(1)}</td><td>{dimension.topCategory?.value}</td><td className={Number(dimension.topCategory?.variance) < 0 ? 'bad' : 'good'}>{format(dimension.topCategory?.variance ?? 0)}</td><td>{dimension.topCategory ? `${(dimension.topCategory.support * 100).toFixed(1)}%` : '—'}</td><td>{(dimension.impact * 100).toFixed(1)}%</td></tr>)}</tbody></table></div></section></details>
+      <details className="analyst-details"><summary>Analyst evidence</summary><section className="technical-strip"><span><strong>{result.validRowCount.toLocaleString()}</strong> valid measure rows</span><span><strong>{result.excludedMeasureRows.toLocaleString()}</strong> excluded measure rows</span><span><strong>{result.dimensionsScanned}</strong> quality-approved factors</span><span><strong>{result.anomalyScore.toFixed(2)}</strong> standardized deviation</span><span><strong>{metricPolarity === 'higher_is_better' ? 'Higher' : 'Lower'}</strong> is better</span></section><section className="table-panel"><h2>Factor audit</h2><p>Detailed evidence for every factor reviewed.</p><div className="table-wrap"><table><thead><tr><th>#</th><th>Factor</th><th>Score</th><th>Leading group</th><th>Business impact</th><th>Support</th><th>Impact</th></tr></thead><tbody>{result.dimensionScores.map((dimension, index) => <tr key={dimension.dimension} onClick={() => setSelectedDimension(dimension.dimension)}><td>{index + 1}</td><td>{humanize(dimension.dimension)}</td><td>{dimension.score.toFixed(1)}</td><td>{dimension.topCategory?.value}</td><td className={Number(dimension.topCategory?.businessImpact) < 0 ? 'bad' : 'good'}>{format(dimension.topCategory?.businessImpact ?? 0)}</td><td>{dimension.topCategory ? `${(dimension.topCategory.support * 100).toFixed(1)}%` : '—'}</td><td>{(dimension.impact * 100).toFixed(1)}%</td></tr>)}</tbody></table></div></section></details>
     </>}
   </main>;
 }
@@ -192,9 +194,10 @@ function plainAnomaly(score: number) {
   return 'Normal range';
 }
 
-function plainSummary(variance: number, variancePct: number | null, anomalyScore: number) {
-  const direction = variance < 0 ? 'under' : 'over';
-  const percentageText = variancePct == null ? '' : ` (${Math.abs(variancePct * 100).toFixed(1)}% ${direction})`;
+function plainSummary(businessImpact: number, rawVariance: number, variancePct: number | null, anomalyScore: number, metricPolarity: MetricPolarity) {
+  const direction = businessImpact < 0 ? 'unfavorable' : businessImpact > 0 ? 'favorable' : 'neutral';
+  const percentageText = variancePct == null ? '' : ` Raw actual-vs-expected variance is ${rawVariance >= 0 ? 'above' : 'below'} expectation by ${Math.abs(variancePct * 100).toFixed(1)}%.`;
+  const polarityText = metricPolarity === 'higher_is_better' ? 'Higher values are configured as better.' : 'Lower values are configured as better, so positive raw variance is unfavorable.';
   const unusual = anomalyScore >= 2 ? ' The movement stands out from normal variation.' : ' The movement is within a range that can occur through normal variation.';
-  return `Performance is ${direction} by ${format(Math.abs(variance))}${percentageText}.${unusual}`;
+  return `The current scope shows ${direction} business impact of ${format(Math.abs(businessImpact))}.${percentageText} ${polarityText}${unusual}`;
 }
