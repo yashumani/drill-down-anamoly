@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { demoBusinessContext, demoQuestions } from '../data/demoNews';
 import { answerChat } from '../lib/chatEngine';
 import type { ChatAction } from '../lib/chatEngine';
 import { askLlm } from '../lib/llm';
@@ -21,17 +22,17 @@ export function ChatPanel({ rows, dimensions, actualKey, expectedKey, predicates
   externalContext: string; manualContext: string; onExternalContext: (value: string) => void; onAction: (action: ChatAction) => void;
 }) {
   const [input, setInput] = useState('');
-  const [messages, setMessages] = useState<Message[]>([{ role: 'assistant', text: 'Ask what changed, why a group stands out, or tell me what to investigate next.' }]);
+  const [messages, setMessages] = useState<Message[]>([{ role: 'assistant', text: 'Ask what changed, why a group stands out, or tell me what to investigate next. Demo questions and sample business context are ready below.' }]);
   const [llm, setLlm] = useState<LlmConfig>(initialLlm);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [busy, setBusy] = useState(false);
 
   const starterSuggestions = useMemo(() => {
     const top = result.dimensionScores[0];
-    const s = ['What is driving the result?', 'What is the strongest combined pattern?'];
+    const s = [...demoQuestions.slice(0, 2), 'What is driving the result?', 'What is the strongest combined pattern?'];
     if (top) s.push(`Show me ${top.dimension}`);
     if (predicates.length) s.push('Go deeper');
-    return s.slice(0, 4);
+    return s.slice(0, 5);
   }, [result, predicates]);
   const [suggestions, setSuggestions] = useState<string[]>(starterSuggestions);
 
@@ -46,7 +47,7 @@ export function ChatPanel({ rows, dimensions, actualKey, expectedKey, predicates
   async function ask(text: string) {
     const q = text.trim();
     if (!q || busy) return;
-    const deterministic = answerChat(q, { rows, dimensions, actualKey, expectedKey, predicates, result });
+    const deterministic = answerChat(q, { rows, dimensions, actualKey, expectedKey, predicates, result, externalContext });
     setMessages((prev) => [...prev, { role: 'user', text: q }]);
     setSuggestions(deterministic.suggestions);
     setInput('');
@@ -77,10 +78,19 @@ export function ChatPanel({ rows, dimensions, actualKey, expectedKey, predicates
       <p className="security-note">The API key stays only in this page's memory and is never saved. Because this demo runs in your browser, requests go directly to the endpoint you enter; that endpoint must allow browser CORS. For enterprise use, route LLM calls through a secured backend instead.</p>
     </div>}
 
-    <details className="context-box"><summary>Add business context</summary><p>Add known events the data cannot see—campaigns, outages, launches, policy changes, weather, competitor moves, or operational incidents. News context from the external factor panel is included automatically when available.</p><textarea value={manualContext} onChange={(e) => onExternalContext(e.target.value)} placeholder="Example: West stores had a device shortage from July 8–18; Promo B launched July 10..." />{externalContext && <small className="context-status">Context available for LLM: {Math.round(externalContext.length / 100) / 10}k characters</small>}</details>
+    <details className="context-box" open>
+      <summary>Add business context</summary>
+      <p>Add known events the data cannot see—campaigns, outages, launches, policy changes, weather, competitor moves, or operational incidents. News context from the external factor panel is included automatically when available.</p>
+      <div className="context-actions">
+        <button type="button" className="quiet-button" onClick={() => onExternalContext(demoBusinessContext)}>Load sample context</button>
+        {manualContext && <button type="button" className="quiet-button" onClick={() => onExternalContext('')}>Clear context</button>}
+      </div>
+      <textarea value={manualContext} onChange={(e) => onExternalContext(e.target.value)} placeholder="Example: West stores had a device shortage from July 8–18; Promo B launched July 10..." />
+      {externalContext && <small className="context-status">External context is active for Ask the Data.</small>}
+    </details>
 
     <div className="chat-messages" aria-live="polite">{messages.slice(-8).map((m, i) => <div key={i} className={`chat-message ${m.role}`}><span>{m.role === 'assistant' ? (llm.enabled ? 'AI analyst' : 'Data guide') : 'You'}</span><p>{m.text}</p></div>)}</div>
     <div className="chat-suggestions">{suggestions.map((s) => <button key={s} type="button" onClick={() => ask(s)}>{s}</button>)}</div>
-    <div className="chat-input-row"><input value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') ask(input); }} placeholder="Ask: Why are we below target?" aria-label="Ask a question about the data" /><button type="button" disabled={busy} onClick={() => ask(input)}>{busy ? 'Thinking…' : 'Ask'}</button></div>
+    <div className="chat-input-row"><input value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') ask(input); }} placeholder="Ask: Could external news explain this?" aria-label="Ask a question about the data" /><button type="button" disabled={busy} onClick={() => ask(input)}>{busy ? 'Thinking…' : 'Ask'}</button></div>
   </aside>;
 }
