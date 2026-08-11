@@ -1,118 +1,192 @@
 import type { CategoryContribution, DataRow, DimensionScore, InteractionSegment, InvestigationResult, Predicate } from '../types';
 
-function num(v: unknown): number {
-  const n = Number(v);
-  return Number.isFinite(n) ? n : 0;
+function finiteNumber(value: unknown): number | null {
+  if (typeof value === 'number' && Number.isFinite(value)) return value;
+  if (typeof value === 'string' && value.trim() !== '' && Number.isFinite(Number(value))) return Number(value);
+  return null;
 }
 
-function sigmoid(x: number) {
-  return 1 / (1 + Math.exp(-x));
+function isMissing(value: unknown) {
+  return value === null || value === undefined || (typeof value === 'string' && value.trim() === '');
+}
+
+function categoryValue(value: unknown) {
+  return isMissing(value) ? '(missing)' : String(value).trim();
 }
 
 function mean(values: number[]) {
-  return values.reduce((a, b) => a + b, 0) / Math.max(values.length, 1);
+  return values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : 0;
 }
 
-function std(values: number[]) {
-  const m = mean(values);
-  return Math.sqrt(mean(values.map((v) => (v - m) ** 2))) || 1;
+function median(values: number[]) {
+  if (!values.length) return 0;
+  const sorted = [...values].sort((a, b) => a - b);
+  const middle = Math.floor(sorted.length / 2);
+  return sorted.length % 2 ? sorted[middle] : (sorted[middle - 1] + sorted[middle]) / 2;
+}
+
+function standardDeviation(values: number[]) {
+  if (values.length < 2) return 0;
+  const average = mean(values);
+  return Math.sqrt(values.reduce((sum, value) => sum + (value - average) ** 2, 0) / values.length);
+}
+
+function robustScale(values: number[]) {
+  if (!values.length) return 1;
+  const center = median(values);
+  const mad = median(values.map((value) => Math.abs(value - center)));
+  return mad * 1.4826 || standardDeviation(values) || 1;
 }
 
 export function applyPredicates(rows: DataRow[], predicates: Predicate[]) {
-  return rows.filter((row) => predicates.every((p) => String(row[p.dimension]) === p.value));
+  return rows.filter((row) => predicates.every((predicate) => categoryValue(row[predicate.dimension]) === predicate.value));
 }
 
-function groupDimension(rows: DataRow[], dimension: string, actualKey: string, expectedKey?: string): CategoryContribution[] {
+interface PreparedRow {
+  row: DataRow;
+  actual: number;
+  expected: number;
+  residual: number;
+}
+
+function prepareRows(rows: DataRow[], actualKey: string, expectedKey?: string) {
+  const actualRows = rows
+    .map((row) => ({ row, actual: finiteNumber(row[actualKey]) }))
+    .filter((item): item is { row: DataRow; actual: number } => item.actual !== null);
+  const baseline = expectedKey ? null : median(actualRows.map((item) => item.actual));
+  const prepared: PreparedRow[] = [];
+
+  for (const item of actualRows) {
+    const expected = expectedKey ? finiteNumber(item.row[expectedKey]) : baseline;
+    if (expected === null) continue;
+    prepared.push({ row: item.row, actual: item.actual, expected, residual: item.actual - expected });
+  }
+
+  return {
+    prepared,
+    excludedMeasureRows: rows.length - prepared.length,
+    baseline: baseline ?? 0,
+  };
+}
+
+function groupDimension(prepared: PreparedRow[], dimension: string, scale: number): CategoryContribution[] {
   const groups = new Map<string, { count: number; actual: number; expected: number; residuals: number[] }>();
-  const globalActualMean = mean(rows.map((r) => num(r[actualKey])));
-  for (const row of rows) {
-    const key = String(row[dimension] ?? '(null)');
-    const actual = num(row[actualKey]);
-    const expected = expectedKey ? num(row[expectedKey]) : globalActualMean;
+  for (const item of prepared) {
+    const key = categoryValue(item.row[dimension]);
     const current = groups.get(key) ?? { count: 0, actual: 0, expected: 0, residuals: [] };
     current.count += 1;
-    current.actual += actual;
-    current.expected += expected;
-    current.residuals.push(actual - expected);
+    current.actual += item.actual;
+    current.expected += item.expected;
+    current.residuals.push(item.residual);
     groups.set(key, current);
   }
-  const totalAbs = Array.from(groups.values()).reduce((s, g) => s + Math.abs(g.actual - g.expected), 0) || 1;
-  const residualStd = std(rows.map((r) => num(r[actualKey]) - (expectedKey ? num(r[expectedKey]) : globalActualMean)));
-  return Array.from(groups.entries()).map(([value, g]) => {
-    const variance = g.actual - g.expected;
-    const surprise = Math.min(1, Math.abs(mean(g.residuals)) / residualStd / 3);
+
+  const raw = [...groups.entries()].map(([value, group]) => {
+    const variance = group.actual - group.expected;
+    const support = group.count / Math.max(prepared.length, 1);
+    const standardizedResidual = Math.abs(mean(group.residuals)) / Math.max(scale, 1e-9);
+    const supportWeight = Math.min(1, Math.sqrt(support / 0.05));
     return {
       dimension,
       value,
-      count: g.count,
-      actual: g.actual,
-      expected: g.expected,
+      count: group.count,
+      support,
+      actual: group.actual,
+      expected: group.expected,
       variance,
-      shareOfAbsVariance: Math.abs(variance) / totalAbs,
-      surprise,
-    };
-  }).sort((a, b) => Math.abs(b.variance) - Math.abs(a.variance));
+      variancePerRow: variance / Math.max(group.count, 1),
+      shareOfAbsVariance: 0,
+      surprise: Math.min(1, standardizedResidual / 3) * supportWeight,
+      standardizedResidual,
+    } satisfies CategoryContribution;
+  });
+
+  const totalAbs = raw.reduce((sum, category) => sum + Math.abs(category.variance), 0) || 1;
+  return raw
+    .map((category) => ({ ...category, shareOfAbsVariance: Math.abs(category.variance) / totalAbs }))
+    .sort((a, b) => Math.abs(b.variance) - Math.abs(a.variance));
 }
 
-function scoreDimension(rows: DataRow[], dimension: string, actualKey: string, expectedKey?: string): DimensionScore {
-  const categories = groupDimension(rows, dimension, actualKey, expectedKey);
-  const totalAbs = categories.reduce((s, c) => s + Math.abs(c.variance), 0);
-  const totalExpected = Math.abs(categories.reduce((s, c) => s + c.expected, 0)) || 1;
-  const impact = Math.min(1, totalAbs / totalExpected);
-  const surprise = categories.reduce((s, c) => s + c.surprise * c.shareOfAbsVariance, 0);
-  const concentration = categories.slice(0, 3).reduce((s, c) => s + c.shareOfAbsVariance, 0);
-  const supportPenalty = Math.min(1, rows.length / 250);
-  const score = 100 * (0.42 * sigmoid(impact * 8) + 0.28 * surprise + 0.2 * concentration + 0.1 * supportPenalty);
+function scoreDimension(prepared: PreparedRow[], dimension: string, scale: number): DimensionScore {
+  const categories = groupDimension(prepared, dimension, scale);
+  const rowGrossMovement = prepared.reduce((sum, item) => sum + Math.abs(item.residual), 0) || 1;
+  const groupedGrossMovement = categories.reduce((sum, category) => sum + Math.abs(category.variance), 0);
+  const impact = Math.min(1, groupedGrossMovement / rowGrossMovement);
+  const surprise = categories.reduce((sum, category) => sum + category.surprise * category.shareOfAbsVariance, 0);
+  const concentration = categories.slice(0, 3).reduce((sum, category) => sum + category.shareOfAbsVariance, 0);
+  const minimumSupport = Math.max(20, prepared.length * 0.015);
+  const supportedGross = categories
+    .filter((category) => category.count >= minimumSupport)
+    .reduce((sum, category) => sum + Math.abs(category.variance), 0);
+  const supportQuality = groupedGrossMovement ? supportedGross / groupedGrossMovement : 0;
+  const cardinalityPenalty = 1 / (1 + Math.max(0, categories.length - 12) / 35);
+  const score = 100 * (
+    0.5 * impact
+    + 0.22 * surprise
+    + 0.18 * concentration
+    + 0.1 * supportQuality
+  ) * cardinalityPenalty;
+  const topCategory = categories.find((category) => category.count >= minimumSupport) ?? categories[0] ?? null;
+
   return {
     dimension,
-    score,
+    score: Math.max(0, Math.min(100, score)),
     impact,
     surprise,
     concentration,
+    supportQuality,
+    cardinalityPenalty,
     distinctCount: categories.length,
-    topCategory: categories[0] ?? null,
+    topCategory,
     categories,
   };
 }
 
-function interactionCandidates(scores: DimensionScore[], limitDims = 7) {
-  return scores.slice(0, limitDims).flatMap((s) => s.categories.slice(0, 2).map((c) => ({ dimension: s.dimension, value: c.value })));
+function interactionCandidates(scores: DimensionScore[], limitDimensions = 8) {
+  return scores
+    .slice(0, limitDimensions)
+    .flatMap((score) => score.categories.filter((category) => category.support >= 0.015 && category.count >= 20).slice(0, 2).map((category) => ({ dimension: score.dimension, value: category.value })));
 }
 
-function combinations<T>(arr: T[], size: number): T[][] {
-  const out: T[][] = [];
-  function walk(start: number, picked: T[]) {
-    if (picked.length === size) { out.push([...picked]); return; }
-    for (let i = start; i < arr.length; i += 1) walk(i + 1, [...picked, arr[i]]);
+function combinations<T>(values: T[], size: number): T[][] {
+  const output: T[][] = [];
+  function walk(start: number, selected: T[]) {
+    if (selected.length === size) {
+      output.push([...selected]);
+      return;
+    }
+    for (let index = start; index < values.length; index += 1) walk(index + 1, [...selected, values[index]]);
   }
   walk(0, []);
-  return out;
+  return output;
 }
 
-function findInteractions(rows: DataRow[], scores: DimensionScore[], actualKey: string, expectedKey?: string): InteractionSegment[] {
+function findInteractions(prepared: PreparedRow[], scores: DimensionScore[]): InteractionSegment[] {
   const candidates = interactionCandidates(scores);
   const all = [...combinations(candidates, 2), ...combinations(candidates, 3)];
   const unique = new Map<string, InteractionSegment>();
-  const fallbackMean = mean(rows.map((x) => num(x[actualKey])));
-  const globalMeanResidual = mean(rows.map((r) => num(r[actualKey]) - (expectedKey ? num(r[expectedKey]) : fallbackMean)));
+  const globalMeanAbsResidual = mean(prepared.map((item) => Math.abs(item.residual))) || 1;
+  const minimumSupport = Math.max(20, prepared.length * 0.015);
 
   for (const predicates of all) {
-    if (new Set(predicates.map((p) => p.dimension)).size !== predicates.length) continue;
-    const subset = applyPredicates(rows, predicates);
-    if (subset.length < Math.max(20, rows.length * 0.015)) continue;
-    const actual = subset.reduce((s, r) => s + num(r[actualKey]), 0);
-    const expected = expectedKey
-      ? subset.reduce((s, r) => s + num(r[expectedKey]), 0)
-      : fallbackMean * subset.length;
+    if (new Set(predicates.map((predicate) => predicate.dimension)).size !== predicates.length) continue;
+    const subset = prepared.filter((item) => predicates.every((predicate) => categoryValue(item.row[predicate.dimension]) === predicate.value));
+    if (subset.length < minimumSupport) continue;
+    const actual = subset.reduce((sum, item) => sum + item.actual, 0);
+    const expected = subset.reduce((sum, item) => sum + item.expected, 0);
     const variance = actual - expected;
-    const avgResidual = variance / subset.length;
-    const lift = Math.abs(avgResidual) / Math.max(Math.abs(globalMeanResidual), 1);
-    const support = subset.length / rows.length;
+    const variancePerRow = variance / subset.length;
+    const lift = Math.abs(variancePerRow) / globalMeanAbsResidual;
+    const support = subset.length / Math.max(prepared.length, 1);
     const score = Math.abs(variance) * Math.sqrt(support) * Math.log1p(lift);
-    const key = [...predicates].sort((a, b) => a.dimension.localeCompare(b.dimension)).map((p) => `${p.dimension}=${p.value}`).join('|');
-    unique.set(key, { predicates, count: subset.length, actual, expected, variance, lift, score });
+    const key = [...predicates]
+      .sort((a, b) => a.dimension.localeCompare(b.dimension))
+      .map((predicate) => `${predicate.dimension}=${predicate.value}`)
+      .join('|');
+    unique.set(key, { predicates, count: subset.length, support, actual, expected, variance, variancePerRow, lift, score });
   }
-  return Array.from(unique.values()).sort((a, b) => b.score - a.score).slice(0, 12);
+
+  return [...unique.values()].sort((a, b) => b.score - a.score).slice(0, 12);
 }
 
 export function investigate(
@@ -122,26 +196,42 @@ export function investigate(
   expectedKey: string | undefined,
   predicates: Predicate[] = [],
 ): InvestigationResult {
-  const rows = applyPredicates(sourceRows, predicates);
-  const actualValues = rows.map((r) => num(r[actualKey]));
-  const fallbackMean = mean(actualValues);
-  const residuals = rows.map((r) => num(r[actualKey]) - (expectedKey ? num(r[expectedKey]) : fallbackMean));
-  const actual = actualValues.reduce((a, b) => a + b, 0);
-  const expected = expectedKey ? rows.reduce((s, r) => s + num(r[expectedKey]), 0) : fallbackMean * rows.length;
+  const filteredRows = applyPredicates(sourceRows, predicates);
+  const { prepared, excludedMeasureRows } = prepareRows(filteredRows, actualKey, expectedKey);
+  const residuals = prepared.map((item) => item.residual);
+  const scale = robustScale(residuals);
+  const actual = prepared.reduce((sum, item) => sum + item.actual, 0);
+  const expected = prepared.reduce((sum, item) => sum + item.expected, 0);
   const variance = actual - expected;
-  const dimensionScores = dimensions
-    .filter((d) => !predicates.some((p) => p.dimension === d))
-    .map((d) => scoreDimension(rows, d, actualKey, expectedKey))
-    .sort((a, b) => b.score - a.score);
+  const warnings: string[] = [];
+
+  if (!expectedKey) warnings.push('No target or expected measure is selected. The app is using a robust median baseline, which is exploratory and not a time-series forecast.');
+  if (excludedMeasureRows > 0) warnings.push(`${excludedMeasureRows.toLocaleString()} rows were excluded because the selected measure${expectedKey ? ' or comparison' : ''} was missing or not numeric.`);
+  if (!prepared.length) warnings.push('No valid measure rows remain in the current scope.');
+  if (expected === 0 && prepared.length) warnings.push('The comparison total is zero, so percentage variance is not available.');
+
+  const dimensionScores = prepared.length
+    ? dimensions
+      .filter((dimension) => !predicates.some((predicate) => predicate.dimension === dimension))
+      .map((dimension) => scoreDimension(prepared, dimension, scale))
+      .filter((score) => score.distinctCount > 1)
+      .sort((a, b) => b.score - a.score)
+    : [];
+
   return {
-    rowCount: rows.length,
+    rowCount: filteredRows.length,
+    validRowCount: prepared.length,
+    excludedMeasureRows,
     actual,
     expected,
     variance,
     variancePct: expected === 0 ? null : variance / Math.abs(expected),
-    anomalyScore: Math.abs(mean(residuals)) / std(residuals),
+    anomalyScore: prepared.length ? Math.abs(mean(residuals)) / Math.max(scale, 1e-9) : 0,
+    residualScale: scale,
+    baselineMethod: expectedKey ? 'target' : 'robust-median',
     dimensionsScanned: dimensionScores.length,
     dimensionScores,
-    interactions: findInteractions(rows, dimensionScores, actualKey, expectedKey),
+    interactions: prepared.length ? findInteractions(prepared, dimensionScores) : [],
+    warnings,
   };
 }
