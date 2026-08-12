@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { analyzeExternalNews, createDemoNewsAnalysis } from '../lib/newsIntel';
 import type { NewsAnalysisResult, NewsProvider } from '../lib/newsIntel';
 
@@ -21,7 +21,13 @@ function safeUrl(value: string) {
   }
 }
 
-export function NewsIntelPanel({ onContextReady }: { onContextReady: (context: string) => void }) {
+export function NewsIntelPanel({
+  onContextReady,
+  onAnalysisReady,
+}: {
+  onContextReady: (context: string) => void;
+  onAnalysisReady?: (analysis: NewsAnalysisResult) => void;
+}) {
   const [provider, setProvider] = useState<NewsProvider>('demo');
   const [company, setCompany] = useState(defaultCompany);
   const [competitors, setCompetitors] = useState(defaultCompetitors);
@@ -33,6 +39,16 @@ export function NewsIntelPanel({ onContextReady }: { onContextReady: (context: s
 
   const selectedProvider = providers.find((p) => p.id === provider)!;
 
+  useEffect(() => {
+    if (result) onAnalysisReady?.(result);
+  }, [result, onAnalysisReady]);
+
+  function publish(analysis: NewsAnalysisResult) {
+    setResult(analysis);
+    onContextReady(analysis.contextText);
+    onAnalysisReady?.(analysis);
+  }
+
   function loadDemo() {
     const demo = createDemoNewsAnalysis(defaultCompany, defaultCompetitors);
     setProvider('demo');
@@ -40,9 +56,8 @@ export function NewsIntelPanel({ onContextReady }: { onContextReady: (context: s
     setCompetitors(defaultCompetitors);
     setDays(30);
     setApiKey('');
-    setResult(demo);
     setError('');
-    onContextReady(demo.contextText);
+    publish(demo);
   }
 
   async function scan() {
@@ -50,8 +65,7 @@ export function NewsIntelPanel({ onContextReady }: { onContextReady: (context: s
     setError('');
     try {
       const analysis = await analyzeExternalNews({ provider, company, competitors, days, apiKey });
-      setResult(analysis);
-      onContextReady(analysis.contextText);
+      publish(analysis);
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     } finally {
@@ -95,7 +109,7 @@ export function NewsIntelPanel({ onContextReady }: { onContextReady: (context: s
           <small>{article.source}{article.publishedAt ? ` · ${article.publishedAt}` : ''}{article.tags.length ? ` · ${article.tags.join(', ')}` : ''}</small>
         </a>)}
       </div>
-      <button className="quiet-button full-width" type="button" onClick={() => onContextReady(result.contextText)}>Send news context to Ask the Data</button>
+      <button className="quiet-button full-width" type="button" onClick={() => publish(result)}>Send news context to Ask the Data</button>
     </div>}
   </section>;
 }
