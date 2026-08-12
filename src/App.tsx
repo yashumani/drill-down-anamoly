@@ -4,11 +4,15 @@ import { createSampleData } from './data/sampleData';
 import { createQualityDemoData } from './data/qualityDemo';
 import { investigate } from './lib/anomaly';
 import { analyzeDataQuality } from './lib/dataQuality';
+import type { PlanningLens } from './lib/fpaInsights';
+import { planningLenses } from './lib/fpaInsights';
 import { parseDataFile } from './lib/io';
+import type { NewsAnalysisResult } from './lib/newsIntel';
 import { profileFields } from './lib/profile';
 import { ContributionBars, DimensionLandscape, DrillTree, InteractionList } from './components/Visuals';
 import { ChatPanel } from './components/ChatPanel';
 import { DataQualityPanel } from './components/DataQualityPanel';
+import { FpaInsightPanel } from './components/FpaInsightPanel';
 import { NewsIntelPanel } from './components/NewsIntelPanel';
 import { ThemePicker } from './components/ThemePicker';
 import type { PaletteId } from './components/ThemePicker';
@@ -27,10 +31,12 @@ export default function App() {
   const [actualKey, setActualKey] = useState('actual');
   const [expectedKey, setExpectedKey] = useState('target');
   const [metricPolarity, setMetricPolarity] = useState<MetricPolarity>('higher_is_better');
+  const [planningLens, setPlanningLens] = useState<PlanningLens>('revenue');
   const [predicates, setPredicates] = useState<Predicate[]>([]);
   const [selectedDimension, setSelectedDimension] = useState<string>('region');
   const [manualContext, setManualContext] = useState('');
   const [newsContext, setNewsContext] = useState('');
+  const [newsAnalysis, setNewsAnalysis] = useState<NewsAnalysisResult | null>(null);
   const [palette, setPalette] = useState<PaletteId>(() => {
     const saved = localStorage.getItem('anomaly-palette');
     return saved === 'slate' || saved === 'warm' || saved === 'light' ? saved : 'midnight';
@@ -71,10 +77,12 @@ export default function App() {
     setActualKey(candidateActual);
     setExpectedKey(candidateExpected);
     setMetricPolarity('higher_is_better');
+    setPlanningLens('revenue');
     setPredicates([]);
     setSelectedDimension(nextQuality.dimensionCandidates[0] ?? '');
     setManualContext('');
     setNewsContext('');
+    setNewsAnalysis(null);
   }
 
   function loadCleanDemo() {
@@ -124,7 +132,7 @@ export default function App() {
 
   return <main data-theme={palette}>
     <header className="hero compact-hero">
-      <div><span className="eyebrow">PERFORMANCE EXPLORER</span><h1>Understand the result. Trust the data.</h1><p>Explore data quality first, then investigate the business factors and external context behind unusual performance.</p></div>
+      <div><span className="eyebrow">FP&A PERFORMANCE EXPLORER</span><h1>Explain variance. Find the why. Act faster.</h1><p>Built for BAU finance workflows: analyze plan variance, identify the segments driving impact, and test external news or business events as potential why-factors.</p></div>
       <div className="header-tools"><ThemePicker value={palette} onChange={changePalette} /><label className="upload">Use my data<input type="file" accept=".csv,.json" onChange={(event) => loadFile(event.target.files?.[0])} /></label></div>
     </header>
 
@@ -137,6 +145,7 @@ export default function App() {
 
     <section className="controls top-controls" aria-label="Analysis filters">
       {workspace === 'insights' && <>
+        <label>FP&A lens<select value={planningLens} onChange={(event) => setPlanningLens(event.target.value as PlanningLens)}>{planningLenses.map((lens) => <option key={lens.id} value={lens.id}>{lens.label}</option>)}</select></label>
         <label>Measure<select value={actualKey} onChange={(event) => { setActualKey(event.target.value); setPredicates([]); }}>{numeric.map((profile) => <option key={profile.name} value={profile.name}>{humanize(profile.name)}</option>)}</select></label>
         <label>Compare with<select value={expectedKey} onChange={(event) => { setExpectedKey(event.target.value); setPredicates([]); }}><option value="">Robust typical value</option>{numeric.filter((profile) => profile.name !== actualKey).map((profile) => <option key={profile.name} value={profile.name}>{humanize(profile.name)}</option>)}</select></label>
         <label>Business direction<select value={metricPolarity} onChange={(event) => { setMetricPolarity(event.target.value as MetricPolarity); setPredicates([]); }}><option value="higher_is_better">Higher is better</option><option value="lower_is_better">Lower is better</option></select></label>
@@ -156,10 +165,12 @@ export default function App() {
 
       <section className="executive-metrics">
         <Metric label="Result" value={format(result.actual)} helper={`${humanize(actualKey)} · ${result.validRowCount.toLocaleString()} valid rows`} />
-        <Metric label={expectedKey ? 'Expected' : 'Typical'} value={format(result.expected)} helper={expectedKey ? humanize(expectedKey) : 'Robust median baseline'} />
+        <Metric label={expectedKey ? 'Plan / expected' : 'Typical'} value={format(result.expected)} helper={expectedKey ? humanize(expectedKey) : 'Robust median baseline'} />
         <Metric label="Business impact" value={`${result.businessImpact >= 0 ? '+' : ''}${format(result.businessImpact)}`} helper={`${result.impactDirection} · raw variance ${format(result.variance)}`} tone={tone} />
         <Metric label="Signal" value={plainAnomaly(result.anomalyScore)} helper="Standardized movement strength" tone={result.anomalyScore >= 2 ? 'warn' : undefined} />
       </section>
+
+      <FpaInsightPanel rows={rows} predicates={predicates} result={result} dataQuality={qualityReport} planningLens={planningLens} newsAnalysis={newsAnalysis} />
 
       <section className="guided-layout">
         <div className="guided-main">
@@ -167,7 +178,7 @@ export default function App() {
           <Panel title="What is contributing most?" subtitle="Select a factor, then a group. Every drill automatically re-checks the other quality-approved factors."><div className="driver-split"><DimensionLandscape scores={result.dimensionScores} onSelect={(dimension: DimensionScore) => setSelectedDimension(dimension.dimension)} /><ContributionBars score={selectedScore} onDrill={(predicate) => drill([predicate])} /></div></Panel>
         </div>
         <div className="insight-sidebar">
-          <NewsIntelPanel onContextReady={setNewsContext} />
+          <NewsIntelPanel onContextReady={setNewsContext} onAnalysisReady={setNewsAnalysis} />
           <ChatPanel rows={rows} dimensions={dimensions} actualKey={actualKey} expectedKey={expectedKey || undefined} metricPolarity={metricPolarity} predicates={predicates} result={result} dataQuality={qualityReport} externalContext={externalContext} manualContext={manualContext} onExternalContext={setManualContext} onAction={handleChatAction} />
         </div>
       </section>
