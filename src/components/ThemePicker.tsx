@@ -1,24 +1,45 @@
-const palettes = [
-  { id: 'midnight', label: 'Paper', swatches: ['#f3e5cf', '#b9f126', '#f7bb3d'] },
-  { id: 'slate', label: 'Ink', swatches: ['#171717', '#5bc7c1', '#f7bb3d'] },
-  { id: 'warm', label: 'Clay', swatches: ['#f2cfb1', '#dc5b51', '#f7bb3d'] },
-  { id: 'light', label: 'Mint', swatches: ['#dff2e8', '#b9f126', '#5bc7c1'] },
-] as const;
+import { useRef } from 'react';
+import { isPaletteId, paletteById, palettes } from '../data/palettes';
+import type { PaletteGroup, PaletteId } from '../data/palettes';
 
-export type PaletteId = typeof palettes[number]['id'];
+export type { PaletteId } from '../data/palettes';
+export { isPaletteId } from '../data/palettes';
+
+const groups: PaletteGroup[] = ['Editorial', 'Brand-inspired', 'Executive'];
 
 export function ThemePicker({ value, onChange }: { value: PaletteId; onChange: (value: PaletteId) => void }) {
-  return <div className="theme-picker" aria-label="Color palette">
-    {palettes.map((palette) => <button
-      key={palette.id}
-      type="button"
-      className={value === palette.id ? 'active' : ''}
-      onClick={() => onChange(palette.id)}
-      title={palette.label}
-      aria-label={`Use ${palette.label} palette`}
-    >
-      <span className="palette-dots">{palette.swatches.map((color) => <i key={color} style={{ background: color }} />)}</span>
-      <span>{palette.label}</span>
-    </button>)}
-  </div>;
+  const detailsRef = useRef<HTMLDetailsElement>(null);
+  const current = paletteById(value);
+
+  function choose(id: string) {
+    if (!isPaletteId(id)) return;
+    onChange(id);
+    detailsRef.current?.removeAttribute('open');
+  }
+
+  return <details ref={detailsRef} className="theme-picker-menu">
+    <summary aria-label={`Current color theme: ${current.label}`}>
+      <span className="theme-picker-copy"><small>Theme</small><strong>{current.label}</strong></span>
+      <span className="palette-dots" aria-hidden="true">{current.swatches.map((color) => <i key={color} style={{ background: color }} />)}</span>
+      <span className="theme-picker-chevron" aria-hidden="true">⌄</span>
+    </summary>
+    <div className="theme-picker-popover" role="dialog" aria-label="Choose a dashboard color theme">
+      <div className="theme-picker-heading"><div><strong>Choose a presentation theme</strong><span>18 curated palettes for executive reviews, demos, and brand-aligned showcases.</span></div><button type="button" onClick={() => detailsRef.current?.removeAttribute('open')} aria-label="Close theme picker">×</button></div>
+      {groups.map((group) => <section key={group} className="theme-group">
+        <h4>{group}</h4>
+        <div className="theme-grid">{palettes.filter((palette) => palette.group === group).map((palette) => <button
+          key={palette.id}
+          type="button"
+          className={value === palette.id ? 'active' : ''}
+          onClick={() => choose(palette.id)}
+          title={palette.description}
+          aria-pressed={value === palette.id}
+        >
+          <span className="palette-dots" aria-hidden="true">{palette.swatches.map((color) => <i key={color} style={{ background: color }} />)}</span>
+          <span><strong>{palette.label}</strong><small>{palette.description}</small></span>
+        </button>)}</div>
+      </section>)}
+      <p className="theme-trademark-note">Brand-inspired palettes use recognizable color families only. They do not use company logos and do not imply endorsement or affiliation.</p>
+    </div>
+  </details>;
 }
