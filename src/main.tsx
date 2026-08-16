@@ -7,6 +7,7 @@ import './demo.css';
 import './data-quality.css';
 import './fpa.css';
 import './time-intelligence.css';
+import './live-public-demo.css';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
