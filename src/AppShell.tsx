@@ -19,7 +19,7 @@ import { FpaInsightPanel } from './components/FpaInsightPanel';
 import { GuidedExperience } from './components/GuidedExperience';
 import { LivePublicFinanceDemo } from './components/LivePublicFinanceDemo';
 import { NewsIntelPanel } from './components/NewsIntelPanel';
-import { ThemePicker } from './components/ThemePicker';
+import { isPaletteId, ThemePicker } from './components/ThemePicker';
 import type { PaletteId } from './components/ThemePicker';
 import { TimeSeriesCockpit } from './components/TimeSeriesCockpit';
 import type { ChatAction } from './lib/chatEngine';
@@ -72,7 +72,7 @@ export default function AppShell() {
   const [newsAnalysis, setNewsAnalysis] = useState<NewsAnalysisResult | null>(null);
   const [palette, setPalette] = useState<PaletteId>(() => {
     const saved = localStorage.getItem('anomaly-palette');
-    return saved === 'slate' || saved === 'warm' || saved === 'light' ? saved : 'midnight';
+    return isPaletteId(saved) ? saved : 'midnight';
   });
   const [error, setError] = useState('');
 
@@ -117,6 +117,7 @@ export default function AppShell() {
   const currentPoint = timeSeries?.currentPeriod;
   const executiveImpact = currentPoint?.businessImpact ?? result.businessImpact;
   const executiveTone = executiveImpact < 0 ? 'bad' : executiveImpact > 0 ? 'good' : undefined;
+  const presentationWorkspace = workspace === 'guided' || workspace === 'public-demo';
 
   function changePalette(next: PaletteId) {
     setPalette(next);
@@ -219,22 +220,47 @@ export default function AppShell() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
+  const workspaceNavigation = <nav className={presentationWorkspace ? 'presentation-workspace-nav' : 'workspace-tabs'} aria-label="Experience depth">
+    <button type="button" className={workspace === 'guided' ? 'active' : ''} onClick={() => setWorkspace('guided')}>Quick answer <span>Slides</span></button>
+    <button type="button" className={workspace === 'advanced' ? 'active' : ''} onClick={() => setWorkspace('advanced')}>Advanced analysis</button>
+    <button type="button" className={workspace === 'public-demo' ? 'active' : ''} onClick={() => setWorkspace('public-demo')}>Live public demo <span>3.8M+</span></button>
+    <button type="button" className={workspace === 'quality' ? 'active' : ''} onClick={() => setWorkspace('quality')}>Data quality <span>{qualityReport.overallScore.toFixed(0)}</span></button>
+  </nav>;
+
+  const guidedAiPanel = <ChatPanel
+    rows={analysisRows}
+    dimensions={dimensions}
+    actualKey={actualKey}
+    expectedKey={expectedKey || undefined}
+    metricPolarity={metricPolarity}
+    predicates={predicates}
+    result={result}
+    dataQuality={qualityReport}
+    timeSeries={timeSeries}
+    externalContext={externalContext}
+    manualContext={manualContext}
+    onExternalContext={setManualContext}
+    onAction={handleChatAction}
+    defaultSettingsOpen
+    displayMode="presentation"
+  />;
+
   return <main data-theme={palette} data-workspace={workspace}>
-    <header className="hero compact-hero">
-      <div><span className="eyebrow">FP&A VARIANCE COPILOT</span><h1>Start with the answer. Drill deeper only when you need to.</h1><p>Quick Answer gives finance users a four-step path from data to decision. Advanced Analysis keeps every time, driver, evidence, news, and AI control available on a separate page.</p></div>
-      <div className="header-tools"><ThemePicker value={palette} onChange={changePalette} /><button type="button" className="quiet-button" onClick={() => setWorkspace('public-demo')}>Live 3.8M-row demo</button><label className="upload">Use my data<input type="file" accept=".csv,.json" onChange={(event) => loadFile(event.target.files?.[0])} /></label></div>
-    </header>
+    {presentationWorkspace ? <header className="presentation-appbar">
+      <button type="button" className="presentation-brand" onClick={() => setWorkspace('guided')}><span>FP&A</span><strong>Variance Copilot</strong></button>
+      {workspaceNavigation}
+      <div className="presentation-appbar-actions"><ThemePicker value={palette} onChange={changePalette} /><label className="presentation-upload">Use my data<input type="file" accept=".csv,.json" onChange={(event) => loadFile(event.target.files?.[0])} /></label></div>
+    </header> : <>
+      <header className="hero compact-hero">
+        <div><span className="eyebrow">FP&A VARIANCE COPILOT</span><h1>Start with the answer. Drill deeper only when you need to.</h1><p>Quick Answer is a page-by-page presentation. Advanced Analysis preserves every time, driver, evidence, news, and AI control for specialist investigation.</p></div>
+        <div className="header-tools"><ThemePicker value={palette} onChange={changePalette} /><button type="button" className="quiet-button" onClick={() => setWorkspace('public-demo')}>Live 3.8M-row demo</button><label className="upload">Use my data<input type="file" accept=".csv,.json" onChange={(event) => loadFile(event.target.files?.[0])} /></label></div>
+      </header>
+      {workspaceNavigation}
+    </>}
 
     {error && <div className="error">{error}</div>}
 
-    <nav className="workspace-tabs" aria-label="Experience depth">
-      <button type="button" className={workspace === 'guided' ? 'active' : ''} onClick={() => setWorkspace('guided')}>Quick answer <span>Simple</span></button>
-      <button type="button" className={workspace === 'advanced' ? 'active' : ''} onClick={() => setWorkspace('advanced')}>Advanced analysis</button>
-      <button type="button" className={workspace === 'public-demo' ? 'active' : ''} onClick={() => setWorkspace('public-demo')}>Live public demo <span>3.8M+</span></button>
-      <button type="button" className={workspace === 'quality' ? 'active' : ''} onClick={() => setWorkspace('quality')}>Data quality <span>{qualityReport.overallScore.toFixed(0)}</span></button>
-    </nav>
-
-    {workspace !== 'guided' && <section className="controls top-controls" aria-label="Analysis filters">
+    {(workspace === 'advanced' || workspace === 'quality') && <section className="controls top-controls" aria-label="Analysis filters">
       {workspace === 'advanced' && <>
         <label>FP&A lens<select value={planningLens} onChange={(event) => setPlanningLens(event.target.value as PlanningLens)}>{planningLenses.map((lens) => <option key={lens.id} value={lens.id}>{lens.label}</option>)}</select></label>
         <label>Measure<select value={actualKey} onChange={(event) => { setActualKey(event.target.value); setPredicates([]); }}>{numeric.map((profile) => <option key={profile.name} value={profile.name}>{humanize(profile.name)}</option>)}</select></label>
@@ -243,7 +269,6 @@ export default function AppShell() {
         <div className="filter-scope"><span>Analysis scope</span><strong>{windowLabel(timeWindow)}{predicates.length ? ` • ${predicates.map((predicate) => `${humanize(predicate.dimension)}: ${predicate.value}`).join(' • ')}` : ' • All business dimensions'}</strong></div>
         {predicates.length > 0 && <button className="quiet-button" onClick={() => setPredicates([])}>Clear drill</button>}
       </>}
-      {workspace === 'public-demo' && <div className="filter-scope"><span>Large-data architecture</span><strong>City of Los Angeles procurement · server-side aggregation · 3.8M+ live records · 10 finance dimensions</strong></div>}
       {workspace === 'quality' && <div className="filter-scope"><span>Dataset</span><strong>{qualityReport.rowCount.toLocaleString()} rows · {qualityReport.columnCount.toLocaleString()} columns · {qualityReport.status}</strong></div>}
       <button className="quiet-button" onClick={loadCleanDemo}>Reset clean demo</button>
       <button className="quiet-button" onClick={loadQualityDemo}>Load quality demo</button>
@@ -259,6 +284,7 @@ export default function AppShell() {
       result={result}
       timeSeries={timeSeries}
       dataQuality={qualityReport}
+      aiPanel={guidedAiPanel}
       onPlanningLens={setPlanningLens}
       onActualKey={(next) => { setActualKey(next); setPredicates([]); }}
       onExpectedKey={(next) => { setExpectedKey(next); setPredicates([]); }}
@@ -270,7 +296,7 @@ export default function AppShell() {
       onOpenPublic={() => setWorkspace('public-demo')}
       onOpenQuality={() => setWorkspace('quality')}
     /> : workspace === 'public-demo' ? <LivePublicFinanceDemo /> : workspace === 'quality' ? <DataQualityPanel rows={rows} report={qualityReport} onLoadCleanDemo={loadCleanDemo} onLoadQualityDemo={loadQualityDemo} /> : <>
-      <div className="advanced-mode-banner"><div><span className="eyebrow">ADVANCED ANALYSIS</span><strong>Every control, every evidence layer.</strong><small>Return to Quick Answer whenever the specialist detail is no longer useful.</small></div><button type="button" onClick={() => setWorkspace('guided')}>← Back to quick answer</button></div>
+      <div className="advanced-mode-banner"><div><span className="eyebrow">ADVANCED ANALYSIS</span><strong>Every control, every evidence layer.</strong><small>Return to Quick Answer whenever the specialist detail is no longer useful.</small></div><button type="button" onClick={() => setWorkspace('guided')}>← Back to slide presentation</button></div>
 
       {(qualityReport.blockers > 0 || qualityReport.warnings > 0) && <button type="button" className={`analysis-quality-warning ${qualityReport.blockers ? 'critical' : ''}`} onClick={() => setWorkspace('quality')}>
         <strong>Data quality: {qualityReport.overallScore.toFixed(0)}/100</strong>
