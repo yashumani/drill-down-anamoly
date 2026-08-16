@@ -5,6 +5,7 @@ on:
     branches: ["main"]
     paths:
       - "src/**"
+      - "scripts/**"
       - "index.html"
       - "package.json"
       - "package-lock.json"
@@ -44,6 +45,10 @@ jobs:
 
       - name: Run analytical regression tests
         run: npm test
+
+      - name: Verify live public dataset
+        continue-on-error: true
+        run: npm run smoke:public-data
 
       - name: Build React dashboard
         run: npm run build -- --base=/drill-down-anamoly/
