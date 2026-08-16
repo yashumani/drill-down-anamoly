@@ -105,12 +105,13 @@ interface RawMonthlyRow {
   transactions?: string | number;
 }
 
-interface RawSummaryRow {
+interface RawCountRow {
   row_count?: string | number;
-  total_amount?: string | number;
-  min_date?: string;
-  max_date?: string;
-  max_fiscal_year?: string | number;
+}
+
+interface RawLatestRow {
+  transaction_date?: string;
+  fiscal_year?: string | number;
 }
 
 interface SodaMetadata {
@@ -266,17 +267,6 @@ async function fetchJson<T>(url: string, appToken = '', signal?: AbortSignal): P
   throw lastError instanceof Error ? lastError : new Error(String(lastError));
 }
 
-function normalizeSummary(rows: RawSummaryRow[]): LiveSourceSummary {
-  const row = rows[0] ?? {};
-  return {
-    rowCount: numberValue(row.row_count),
-    totalAmount: numberValue(row.total_amount),
-    minDate: String(row.min_date ?? ''),
-    maxDate: String(row.max_date ?? ''),
-    maxFiscalYear: String(row.max_fiscal_year ?? ''),
-  };
-}
-
 function formatMonthLabel(periodStart: string, fiscalYear: number, fiscalMonth: number) {
   const parsed = new Date(periodStart);
   if (Number.isFinite(parsed.getTime())) {
@@ -382,6 +372,22 @@ function trendFrom(points: LiveMonthlyPoint[]) {
   return difference > 0 ? 'improving' as const : 'worsening' as const;
 }
 
+function monthlySummary(rows: RawMonthlyRow[]) {
+  const datedRows = rows.filter((row) => row.period_start);
+  const totalAmount = rows.reduce((sum, row) => sum + numberValue(row.amount), 0);
+  const transactionCount = rows.reduce((sum, row) => sum + numberValue(row.transactions), 0);
+  const starts = datedRows.map((row) => String(row.period_start)).sort();
+  const ends = datedRows.map((row) => String(row.period_end ?? row.period_start)).sort();
+  const fiscalYears = rows.map((row) => numberValue(row.fiscal_year)).filter((value) => value > 0);
+  return {
+    totalAmount,
+    transactionCount,
+    minDate: starts[0] ?? '',
+    maxDate: ends[ends.length - 1] ?? '',
+    maxFiscalYear: fiscalYears.length ? String(Math.max(...fiscalYears)) : '',
+  };
+}
+
 export async function loadLivePublicFinance(options: LoadLivePublicFinanceOptions = {}): Promise<LivePublicFinanceResult> {
   const started = performance.now();
   const scope = options.scope ?? 'all';
@@ -389,7 +395,7 @@ export async function loadLivePublicFinance(options: LoadLivePublicFinanceOption
   const appToken = options.appToken ?? '';
   let requestCount = 0;
   let completed = 0;
-  const totalSteps = 4 + LIVE_PUBLIC_DIMENSIONS.length;
+  const totalSteps = 5 + LIVE_PUBLIC_DIMENSIONS.length;
   const progress = (message: string) => options.onProgress?.(message, completed, totalSteps);
 
   const query = async <T,>(sodaQuery: SodaQuery) => {
@@ -397,11 +403,14 @@ export async function loadLivePublicFinance(options: LoadLivePublicFinanceOption
     return fetchJson<T>(buildSodaUrl(sodaQuery), appToken, options.signal);
   };
 
-  progress('Reading source metadata and full-dataset totals…');
-  const [fullRows, metadata] = await Promise.all([
-    query<RawSummaryRow[]>({
-      select: 'count(*) as row_count, sum(dollar_amount) as total_amount, min(transaction_date) as min_date, max(transaction_date) as max_date, max(fiscal_year) as max_fiscal_year',
-      where: 'dollar_amount is not null',
+  progress('Reading live row count, latest period, and source metadata…');
+  const [fullCountRows, latestRows, metadata] = await Promise.all([
+    query<RawCountRow[]>({ select: 'count(*) as row_count', where: 'dollar_amount is not null' }),
+    query<RawLatestRow[]>({
+      select: 'transaction_date, fiscal_year',
+      where: 'transaction_date is not null',
+      order: 'transaction_date DESC',
+      limit: 1,
     }),
     (async () => {
       requestCount += 1;
@@ -412,28 +421,46 @@ export async function loadLivePublicFinance(options: LoadLivePublicFinanceOption
       }
     })(),
   ]);
+  completed += 3;
+
+  const latest = latestRows[0] ?? {};
+  const fullRowCount = numberValue(fullCountRows[0]?.row_count);
+  const fullReference: LiveSourceSummary = {
+    rowCount: fullRowCount,
+    totalAmount: 0,
+    minDate: '',
+    maxDate: String(latest.transaction_date ?? ''),
+    maxFiscalYear: String(latest.fiscal_year ?? ''),
+  };
+  const where = buildScopeWhere(scope, fullReference, filter);
+
+  progress('Building exact monthly spend aggregates for the selected scope…');
+  const [monthlyRows, scopedCountRows] = await Promise.all([
+    query<RawMonthlyRow[]>({
+      select: 'fiscal_year, fiscal_month_number, min(transaction_date) as period_start, max(transaction_date) as period_end, sum(dollar_amount) as amount, count(*) as transactions',
+      where: `${where} AND fiscal_year is not null AND fiscal_month_number is not null AND transaction_date is not null`,
+      group: 'fiscal_year, fiscal_month_number',
+      limit: 500,
+    }),
+    scope === 'all' && !filter
+      ? Promise.resolve([{ row_count: fullRowCount } satisfies RawCountRow])
+      : query<RawCountRow[]>({ select: 'count(*) as row_count', where }).catch(() => []),
+  ]);
   completed += 2;
-  const fullSource = normalizeSummary(fullRows);
-  const where = buildScopeWhere(scope, fullSource, filter);
 
-  progress('Calculating exact totals for the selected live scope…');
-  const scopedSource = scope === 'all' && !filter
-    ? fullSource
-    : normalizeSummary(await query<RawSummaryRow[]>({
-      select: 'count(*) as row_count, sum(dollar_amount) as total_amount, min(transaction_date) as min_date, max(transaction_date) as max_date, max(fiscal_year) as max_fiscal_year',
-      where,
-    }));
-  completed += 1;
-
-  progress('Building the monthly spend and anomaly pulse…');
-  const monthlyRows = await query<RawMonthlyRow[]>({
-    select: 'fiscal_year, fiscal_month_number, min(transaction_date) as period_start, max(transaction_date) as period_end, sum(dollar_amount) as amount, count(*) as transactions',
-    where: `${where} AND fiscal_year is not null AND fiscal_month_number is not null AND transaction_date is not null`,
-    group: 'fiscal_year, fiscal_month_number',
-    limit: 500,
-  });
-  completed += 1;
-  const monthly = buildMonthlyBenchmark(monthlyRows, scopedSource.maxDate || fullSource.maxDate);
+  const aggregateSummary = monthlySummary(monthlyRows);
+  const scopedRowCount = numberValue(scopedCountRows[0]?.row_count) || aggregateSummary.transactionCount;
+  const scopedSource: LiveSourceSummary = {
+    rowCount: scopedRowCount,
+    totalAmount: aggregateSummary.totalAmount,
+    minDate: aggregateSummary.minDate,
+    maxDate: aggregateSummary.maxDate || fullReference.maxDate,
+    maxFiscalYear: aggregateSummary.maxFiscalYear || fullReference.maxFiscalYear,
+  };
+  const fullSource: LiveSourceSummary = scope === 'all' && !filter
+    ? { ...scopedSource, rowCount: fullRowCount }
+    : fullReference;
+  const monthly = buildMonthlyBenchmark(monthlyRows, scopedSource.maxDate || fullReference.maxDate);
 
   const dimensionWarnings: string[] = [];
   const dimensions = await mapWithConcurrency<LiveDimensionDefinition, LiveDimensionSummary>(
@@ -491,7 +518,8 @@ export async function loadLivePublicFinance(options: LoadLivePublicFinanceOption
   const updatedAt = updatedEpoch ? new Date(updatedEpoch * 1000).toISOString() : '';
   const warnings = [
     'The City of Los Angeles source contains actual procurement payments but no approved budget or forecast field. The monthly comparison uses a six-period rolling median benchmark.',
-    'The browser receives only exact server-side aggregates; the multi-million transaction table is not downloaded into browser memory.',
+    'The browser receives only server-side aggregates; the multi-million transaction table is not downloaded into browser memory.',
+    'Selected-scope payment totals are reconciled from fiscal-month aggregates. If source rows lack fiscal period or transaction date fields, they are excluded from the time-covered total.',
     'Dimension panels show the eight largest categories by total payment amount, not every category.',
     'The source documentation notes that older payment history may be summarized. Treat historical transaction counts accordingly.',
     ...dimensionWarnings,
