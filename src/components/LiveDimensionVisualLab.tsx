@@ -53,7 +53,7 @@ function waterfallOption(matrix: LiveDimensionMatrixResult): EChartsOption {
     };
   });
   const netImpact = contributions.reduce((sum, item) => sum + item.businessImpact, 0);
-  base.push(0);
+  base.push(Math.min(0, netImpact));
   bars.push({
     value: Math.abs(netImpact),
     signedValue: netImpact,
@@ -79,7 +79,7 @@ function waterfallOption(matrix: LiveDimensionMatrixResult): EChartsOption {
         const item = bars[items[0]?.dataIndex ?? 0];
         if (!item) return '';
         const c = item.contribution;
-        return `<strong>${c.category}</strong><br/>Business impact: ${money(c.businessImpact)} (${c.businessImpact < 0 ? 'unfavorable' : 'favorable'})${c.variancePct === null ? '' : `<br/>Variance: ${percent(c.variancePct)}`}<br/>Actual spend: ${money(c.actual)}<br/>Rolling benchmark: ${money(c.expected)}`;
+        return `<strong>${c.category}</strong><br/>Business impact: ${money(c.businessImpact)} (${c.businessImpact < 0 ? 'unfavorable' : 'favorable'})${c.variancePct === null ? '' : `<br/>Variance: ${percent(c.variancePct)}`}<br/>Actual spend: ${money(c.actual)}<br/>Allocated benchmark: ${money(c.expected)}`;
       },
     },
     grid: { left: 66, right: 26, top: 24, bottom: 88 },
@@ -135,7 +135,7 @@ function heatmapOption(matrix: LiveDimensionMatrixResult, metric: HeatMetric): E
         const item = params as { data?: { cell?: LiveDimensionMatrixResult['cells'][number] } };
         const cell = item.data?.cell;
         if (!cell) return '';
-        return `<strong>${cell.category}</strong><br/>${cell.periodLabel}${cell.partialPeriod ? ' · partial' : ''}<br/>Actual: ${money(cell.actual)}<br/>Benchmark: ${money(cell.expected)}<br/>Business impact: ${money(cell.businessImpact)} (${cell.businessImpact < 0 ? 'unfavorable' : 'favorable'})<br/>Variance: ${percent(cell.variancePct)}<br/>Transactions: ${cell.transactions.toLocaleString()}`;
+        return `<strong>${cell.category}</strong><br/>${cell.periodLabel}${cell.partialPeriod ? ' · partial' : ''}<br/>Actual: ${money(cell.actual)}<br/>Allocated benchmark: ${money(cell.expected)}<br/>Business impact: ${money(cell.businessImpact)} (${cell.businessImpact < 0 ? 'unfavorable' : 'favorable'})<br/>Variance: ${percent(cell.variancePct)}<br/>Transactions: ${cell.transactions.toLocaleString()}`;
       },
     },
     toolbox: { right: 14, feature: { dataZoom: { yAxisIndex: 'none' }, restore: {}, saveAsImage: { name: `${matrix.dimension.field}-heatmap` } } },
@@ -235,6 +235,7 @@ export function LiveDimensionVisualLab({
 
     {matrixLoading && mode !== 'concentration' && <div className="live-matrix-loading">Loading the category-by-month matrix from the public source…</div>}
     {matrixError && mode !== 'concentration' && <div className="inline-error">{matrixError}</div>}
+    {matrix && mode !== 'concentration' && <div className={matrix.warning ? 'live-chart-method warning' : 'live-chart-method'}>{matrix.benchmarkDescription}{matrix.warning ? ` ${matrix.warning}` : ''}</div>}
     <div className={mode === 'heatmap' ? 'live-driver-chart live-driver-heatmap' : 'live-driver-chart'}><EChart option={option} height={mode === 'heatmap' ? 350 : 330} ariaLabel={`${summary.label} ${title}`} /></div>
 
     <div className="live-dimension-table"><table><thead><tr><th>Category</th><th>Total payments</th><th>Share</th><th>Transactions</th><th>Latest impact</th><th>Latest variance</th><th /></tr></thead><tbody>{summary.values.map((value) => {
