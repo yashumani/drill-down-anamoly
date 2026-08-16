@@ -23,7 +23,23 @@ const initialLlm: LlmConfig = {
   authPrefix: stored('anomaly-llm-auth-prefix', 'Bearer '),
 };
 
-export function ChatPanel({ rows, dimensions, actualKey, expectedKey, metricPolarity, predicates, result, dataQuality, timeSeries, externalContext, manualContext, onExternalContext, onAction }: {
+export function ChatPanel({
+  rows,
+  dimensions,
+  actualKey,
+  expectedKey,
+  metricPolarity,
+  predicates,
+  result,
+  dataQuality,
+  timeSeries,
+  externalContext,
+  manualContext,
+  onExternalContext,
+  onAction,
+  defaultSettingsOpen = false,
+  displayMode = 'sidebar',
+}: {
   rows: DataRow[];
   dimensions: string[];
   actualKey: string;
@@ -37,11 +53,13 @@ export function ChatPanel({ rows, dimensions, actualKey, expectedKey, metricPola
   manualContext: string;
   onExternalContext: (value: string) => void;
   onAction: (action: ChatAction) => void;
+  defaultSettingsOpen?: boolean;
+  displayMode?: 'sidebar' | 'presentation';
 }) {
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState<Message[]>([{ role: 'assistant', text: 'Ask about MTD, QTD, YTD, pacing, material variance, business drivers, or external why-factor hypotheses.' }]);
   const [llm, setLlm] = useState<LlmConfig>(initialLlm);
-  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(defaultSettingsOpen);
   const [busy, setBusy] = useState(false);
 
   const starterSuggestions = useMemo(() => {
@@ -98,8 +116,10 @@ export function ChatPanel({ rows, dimensions, actualKey, expectedKey, metricPola
     }
   }
 
-  return <aside className="chat-panel" aria-label="Ask FP&A">
-    <div className="chat-head"><div><span className="chat-kicker">ASK FP&A</span><h2>Explain performance and pacing</h2></div><button className="icon-button" type="button" onClick={() => setSettingsOpen((value) => !value)}>{llm.enabled ? 'LLM on' : 'Connect LLM'}</button></div>
+  return <aside className={`chat-panel chat-${displayMode}`} aria-label="Ask FP&A">
+    <div className="chat-head"><div><span className="chat-kicker">AI / LLM ANALYST</span><h2>Explain performance and pacing</h2></div><button className="icon-button" type="button" onClick={() => setSettingsOpen((value) => !value)}>{llm.enabled ? 'LLM connected' : settingsOpen ? 'LLM setup visible' : 'Connect LLM'}</button></div>
+
+    {displayMode === 'presentation' && <div className="llm-visibility-callout"><div><strong>Use the built-in finance guide now</strong><span>Or connect your own OpenAI-compatible endpoint below for richer conversational analysis.</span></div><b>{llm.enabled ? 'LLM ON' : 'DETERMINISTIC MODE'}</b></div>}
 
     {settingsOpen && <div className="llm-settings">
       <div className="settings-title"><strong>Bring your own LLM</strong><label><input type="checkbox" checked={llm.enabled} onChange={(event) => saveNonSecretConfig({ ...llm, enabled: event.target.checked })} /> Enable</label></div>
