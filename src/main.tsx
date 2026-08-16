@@ -12,6 +12,7 @@ import './depo-inspired.css';
 import './guided.css';
 import './presentation.css';
 import './presentation-fit.css';
+import './final-enhancements.css';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
