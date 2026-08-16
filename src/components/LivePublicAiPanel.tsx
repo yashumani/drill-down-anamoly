@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
-import { askEvidenceLlm } from '../lib/llm';
+import { askEvidenceLlm, testLlmConnection } from '../lib/llm';
 import type { LlmConfig } from '../lib/llm';
+import { LOCAL_OLLAMA_SETUP_STEPS, localOllamaOriginCommand, localOllamaPreset } from '../lib/llmPresets';
 import type { LivePublicFinanceResult } from '../lib/livePublicFinance';
 
 interface Message { role: 'user' | 'assistant'; text: string; }
@@ -93,8 +94,10 @@ export function LivePublicAiPanel({ result }: { result: LivePublicFinanceResult 
   const [llm, setLlm] = useState<LlmConfig>(() => initialConfig());
   const [input, setInput] = useState('');
   const [busy, setBusy] = useState(false);
+  const [testing, setTesting] = useState(false);
+  const [connectionStatus, setConnectionStatus] = useState('');
   const [messages, setMessages] = useState<Message[]>([
-    { role: 'assistant', text: 'The finance guide is ready. Connect an LLM below for a richer executive review of the same verified live aggregates.' },
+    { role: 'assistant', text: 'The finance guide is ready. Connect the local FP&A model or another OpenAI-compatible endpoint for a richer executive review of the same verified live aggregates.' },
   ]);
   const suggestions = useMemo(() => [
     'Summarize this live dataset for a CFO',
@@ -106,6 +109,7 @@ export function LivePublicAiPanel({ result }: { result: LivePublicFinanceResult 
 
   function saveConfig(next: LlmConfig) {
     setLlm(next);
+    setConnectionStatus('');
     try {
       localStorage.setItem('anomaly-llm-endpoint', next.endpoint);
       localStorage.setItem('anomaly-llm-model', next.model);
@@ -113,6 +117,24 @@ export function LivePublicAiPanel({ result }: { result: LivePublicFinanceResult 
       localStorage.setItem('anomaly-llm-auth-prefix', next.authPrefix);
     } catch {
       // The live demo remains usable if browser storage is unavailable.
+    }
+  }
+
+  function useLocalModel() {
+    saveConfig(localOllamaPreset());
+    setConnectionStatus('Local FP&A preset loaded. Start Ollama with this site origin allowed, then test the connection.');
+  }
+
+  async function testConnection() {
+    setTesting(true);
+    setConnectionStatus('Testing the model endpoint…');
+    try {
+      const output = await testLlmConnection(llm);
+      setConnectionStatus(output.message);
+    } catch (error) {
+      setConnectionStatus(error instanceof Error ? error.message : String(error));
+    } finally {
+      setTesting(false);
     }
   }
 
@@ -148,13 +170,16 @@ export function LivePublicAiPanel({ result }: { result: LivePublicFinanceResult 
   }
 
   return <section className="live-ai-panel" aria-label="AI review for the live public dataset">
-    <div className="live-ai-intro"><div><span>VISIBLE AI / LLM OPTION</span><h3>Review 3.8M live records through verified aggregates.</h3><p>The built-in finance guide works immediately. Enable your own OpenAI-compatible endpoint to generate an executive narrative from the live monthly and ten-dimension evidence.</p></div><b>{llm.enabled ? 'LLM ON' : 'GUIDE MODE'}</b></div>
+    <div className="live-ai-intro"><div><span>VISIBLE AI / LLM OPTION</span><h3>Review 3.8M live records through verified aggregates.</h3><p>The built-in finance guide works immediately. Load the local FP&A Ollama preset or provide another OpenAI-compatible endpoint.</p></div><b>{llm.enabled ? 'LLM ON' : 'GUIDE MODE'}</b></div>
 
     <div className="live-ai-settings">
-      <div className="live-ai-settings-head"><strong>Bring your own LLM</strong><label><input type="checkbox" checked={llm.enabled} onChange={(event) => saveConfig({ ...llm, enabled: event.target.checked })} /> Enable LLM</label></div>
+      <div className="live-ai-settings-head"><strong>Model connection</strong><label><input type="checkbox" checked={llm.enabled} onChange={(event) => saveConfig({ ...llm, enabled: event.target.checked })} /> Enable LLM</label></div>
+      <div className="live-ai-preset-actions"><button type="button" onClick={useLocalModel}>Use local FP&A model</button><button type="button" onClick={testConnection} disabled={testing}>{testing ? 'Testing…' : 'Test connection'}</button></div>
       <label>Chat-completions endpoint<input value={llm.endpoint} onChange={(event) => saveConfig({ ...llm, endpoint: event.target.value })} placeholder="https://your-host/.../chat/completions" /></label>
       <div><label>Model<input value={llm.model} onChange={(event) => saveConfig({ ...llm, model: event.target.value })} placeholder="model-name" /></label><label>API key<input type="password" value={llm.apiKey} onChange={(event) => setLlm({ ...llm, apiKey: event.target.value })} placeholder="Not saved" autoComplete="off" /></label></div>
       <div><label>Auth header<input value={llm.authHeader} onChange={(event) => saveConfig({ ...llm, authHeader: event.target.value })} /></label><label>Auth prefix<input value={llm.authPrefix} onChange={(event) => saveConfig({ ...llm, authPrefix: event.target.value })} placeholder="Bearer " /></label></div>
+      {connectionStatus && <p className="llm-connection-status">{connectionStatus}</p>}
+      <details className="local-llm-guide"><summary>Local setup commands</summary><code>{LOCAL_OLLAMA_SETUP_STEPS[0]}</code><code>{LOCAL_OLLAMA_SETUP_STEPS[1]}</code><code>{localOllamaOriginCommand()}</code></details>
       <small>The API key stays in page memory only. Browser requests require CORS. A production deployment should use a secured server-side LLM gateway.</small>
     </div>
 
