@@ -3,8 +3,9 @@ import { demoBusinessContext, demoQuestions } from '../data/demoNews';
 import { answerChat } from '../lib/chatEngine';
 import type { ChatAction } from '../lib/chatEngine';
 import type { DataQualityReport } from '../lib/dataQuality';
-import { askLlm } from '../lib/llm';
+import { askLlm, testLlmConnection } from '../lib/llm';
 import type { LlmConfig } from '../lib/llm';
+import { LOCAL_OLLAMA_SETUP_STEPS, localOllamaOriginCommand, localOllamaPreset } from '../lib/llmPresets';
 import type { FinanceTimeSeriesResult } from '../lib/timeIntelligence';
 import type { DataRow, InvestigationResult, MetricPolarity, Predicate } from '../types';
 
@@ -61,6 +62,8 @@ export function ChatPanel({
   const [llm, setLlm] = useState<LlmConfig>(initialLlm);
   const [settingsOpen, setSettingsOpen] = useState(defaultSettingsOpen);
   const [busy, setBusy] = useState(false);
+  const [testing, setTesting] = useState(false);
+  const [connectionStatus, setConnectionStatus] = useState('');
 
   const starterSuggestions = useMemo(() => {
     const top = result.dimensionScores[0];
@@ -81,6 +84,7 @@ export function ChatPanel({
 
   function saveNonSecretConfig(next: LlmConfig) {
     setLlm(next);
+    setConnectionStatus('');
     try {
       localStorage.setItem('anomaly-llm-endpoint', next.endpoint);
       localStorage.setItem('anomaly-llm-model', next.model);
@@ -88,6 +92,25 @@ export function ChatPanel({
       localStorage.setItem('anomaly-llm-auth-prefix', next.authPrefix);
     } catch {
       // The dashboard remains usable when storage is blocked by the browser.
+    }
+  }
+
+  function useLocalModel() {
+    saveNonSecretConfig(localOllamaPreset());
+    setSettingsOpen(true);
+    setConnectionStatus('Local FP&A preset loaded. Start Ollama with this site origin allowed, then test the connection.');
+  }
+
+  async function testConnection() {
+    setTesting(true);
+    setConnectionStatus('Testing the model endpoint…');
+    try {
+      const output = await testLlmConnection(llm);
+      setConnectionStatus(output.message);
+    } catch (error) {
+      setConnectionStatus(error instanceof Error ? error.message : String(error));
+    } finally {
+      setTesting(false);
     }
   }
 
@@ -119,14 +142,16 @@ export function ChatPanel({
   return <aside className={`chat-panel chat-${displayMode}`} aria-label="Ask FP&A">
     <div className="chat-head"><div><span className="chat-kicker">AI / LLM ANALYST</span><h2>Explain performance and pacing</h2></div><button className="icon-button" type="button" onClick={() => setSettingsOpen((value) => !value)}>{llm.enabled ? 'LLM connected' : settingsOpen ? 'LLM setup visible' : 'Connect LLM'}</button></div>
 
-    {displayMode === 'presentation' && <div className="llm-visibility-callout"><div><strong>Use the built-in finance guide now</strong><span>Or connect your own OpenAI-compatible endpoint below for richer conversational analysis.</span></div><b>{llm.enabled ? 'LLM ON' : 'DETERMINISTIC MODE'}</b></div>}
+    {displayMode === 'presentation' && <div className="llm-visibility-callout"><div><strong>Use the built-in finance guide now</strong><span>Or connect the local FP&A Ollama preset or another OpenAI-compatible endpoint.</span></div><b>{llm.enabled ? 'LLM ON' : 'DETERMINISTIC MODE'}</b></div>}
 
     {settingsOpen && <div className="llm-settings">
-      <div className="settings-title"><strong>Bring your own LLM</strong><label><input type="checkbox" checked={llm.enabled} onChange={(event) => saveNonSecretConfig({ ...llm, enabled: event.target.checked })} /> Enable</label></div>
+      <div className="settings-title"><strong>Model connection</strong><div className="llm-settings-actions"><button type="button" onClick={useLocalModel}>Use local FP&A model</button><button type="button" onClick={testConnection} disabled={testing}>{testing ? 'Testing…' : 'Test connection'}</button><label><input type="checkbox" checked={llm.enabled} onChange={(event) => saveNonSecretConfig({ ...llm, enabled: event.target.checked })} /> Enable</label></div></div>
       <label>Chat-completions endpoint<input value={llm.endpoint} onChange={(event) => saveNonSecretConfig({ ...llm, endpoint: event.target.value })} placeholder="https://your-host/.../chat/completions" /></label>
       <div className="settings-row"><label>Model<input value={llm.model} onChange={(event) => saveNonSecretConfig({ ...llm, model: event.target.value })} placeholder="model-name" /></label><label>Auth header<input value={llm.authHeader} onChange={(event) => saveNonSecretConfig({ ...llm, authHeader: event.target.value })} /></label></div>
       <div className="settings-row"><label>Auth prefix<input value={llm.authPrefix} onChange={(event) => saveNonSecretConfig({ ...llm, authPrefix: event.target.value })} placeholder="Bearer " /></label><label>API key<input type="password" value={llm.apiKey} onChange={(event) => setLlm({ ...llm, apiKey: event.target.value })} placeholder="Not saved" autoComplete="off" /></label></div>
-      <p className="security-note">The key remains only in this page's memory. Browser calls require CORS; production deployments should proxy approved LLM providers through a secured backend, redact sensitive values, and retain an auditable calculation snapshot.</p>
+      {connectionStatus && <p className="llm-connection-status">{connectionStatus}</p>}
+      <details className="local-llm-guide"><summary>Local model setup</summary><code>{LOCAL_OLLAMA_SETUP_STEPS[0]}</code><code>{LOCAL_OLLAMA_SETUP_STEPS[1]}</code><code>{localOllamaOriginCommand()}</code><small>The deployed page calls the local OpenAI-compatible Ollama endpoint. Allow only this site origin rather than every website.</small></details>
+      <p className="security-note">The API key remains only in this page's memory. Production deployments should proxy approved providers through a secured backend, redact sensitive values, and retain an auditable calculation snapshot.</p>
     </div>}
 
     <details className="context-box">
