@@ -1,5 +1,6 @@
 import Papa from 'papaparse';
 import type { DataRow } from '../types';
+import { normalizeFinanceDataRows } from './financeDataContract';
 
 const MAX_FILE_BYTES = 25 * 1024 * 1024;
 const MAX_BROWSER_ROWS = 100_000;
@@ -63,6 +64,14 @@ function normalizeRows(rows: unknown[]): DataRow[] {
   });
 }
 
+function applyFinanceContract(rows: DataRow[]) {
+  const normalized = normalizeFinanceDataRows(rows);
+  if (normalized.report.errors.length) {
+    throw new Error(`Finance Data Contract v${normalized.report.version}: ${normalized.report.errors.join(' ')}`);
+  }
+  return normalized.rows;
+}
+
 export async function parseDataFile(file: File): Promise<DataRow[]> {
   if (file.size > MAX_FILE_BYTES) {
     throw new Error(`File is ${(file.size / 1024 / 1024).toFixed(1)} MB. The public browser demo accepts files up to 25 MB.`);
@@ -78,7 +87,7 @@ export async function parseDataFile(file: File): Promise<DataRow[]> {
     }
     const rows = Array.isArray(parsed) ? parsed : (parsed as { data?: unknown })?.data;
     if (!Array.isArray(rows)) throw new Error('JSON must be an array of objects or an object shaped like { data: [...] }.');
-    return normalizeRows(rows);
+    return applyFinanceContract(normalizeRows(rows));
   }
 
   const parsed = Papa.parse<Record<string, unknown>>(text, {
@@ -93,5 +102,5 @@ export async function parseDataFile(file: File): Promise<DataRow[]> {
   if (!parsed.meta.fields?.length) throw new Error('CSV needs a header row with at least one named column.');
   const duplicateHeaders = parsed.meta.fields.filter((field, index, fields) => fields.indexOf(field) !== index);
   if (duplicateHeaders.length) throw new Error(`CSV contains duplicate header names: ${[...new Set(duplicateHeaders)].join(', ')}.`);
-  return normalizeRows(parsed.data);
+  return applyFinanceContract(normalizeRows(parsed.data));
 }
