@@ -1,16 +1,24 @@
 const palettes = [
-  { id: 'midnight', label: 'Midnight', swatches: ['#07101d', '#70ddff', '#61e5ab'] },
-  { id: 'slate', label: 'Slate', swatches: ['#15191f', '#9cc4ff', '#9ee6b4'] },
-  { id: 'warm', label: 'Warm', swatches: ['#18130f', '#ffbd70', '#9de0bd'] },
-  { id: 'light', label: 'Light', swatches: ['#f5f7fa', '#2463eb', '#138a63'] },
+  { id: 'midnight', label: 'Paper', swatches: ['#f3e5cf', '#b9f126', '#f7bb3d'] },
+  { id: 'slate', label: 'Ink', swatches: ['#171717', '#5bc7c1', '#f7bb3d'] },
+  { id: 'warm', label: 'Clay', swatches: ['#f2cfb1', '#dc5b51', '#f7bb3d'] },
+  { id: 'light', label: 'Mint', swatches: ['#dff2e8', '#b9f126', '#5bc7c1'] },
 ] as const;
 
 export type PaletteId = typeof palettes[number]['id'];
 
 export function ThemePicker({ value, onChange }: { value: PaletteId; onChange: (value: PaletteId) => void }) {
   return <div className="theme-picker" aria-label="Color palette">
-    {palettes.map((p) => <button key={p.id} type="button" className={value === p.id ? 'active' : ''} onClick={() => onChange(p.id)} title={p.label} aria-label={`Use ${p.label} palette`}>
-      <span className="palette-dots">{p.swatches.map((c) => <i key={c} style={{ background: c }} />)}</span><span>{p.label}</span>
+    {palettes.map((palette) => <button
+      key={palette.id}
+      type="button"
+      className={value === palette.id ? 'active' : ''}
+      onClick={() => onChange(palette.id)}
+      title={palette.label}
+      aria-label={`Use ${palette.label} palette`}
+    >
+      <span className="palette-dots">{palette.swatches.map((color) => <i key={color} style={{ background: color }} />)}</span>
+      <span>{palette.label}</span>
     </button>)}
   </div>;
 }
