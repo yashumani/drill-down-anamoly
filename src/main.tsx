@@ -8,6 +8,7 @@ import './data-quality.css';
 import './fpa.css';
 import './time-intelligence.css';
 import './live-public-demo.css';
+import './depo-inspired.css';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
