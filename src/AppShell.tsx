@@ -4,6 +4,7 @@ import { createSampleData } from './data/sampleData';
 import { createQualityDemoData } from './data/qualityDemo';
 import { investigate } from './lib/anomaly';
 import { analyzeDataQuality } from './lib/dataQuality';
+import { inferDatasetDefaults } from './lib/datasetDefaults';
 import type { PlanningLens } from './lib/fpaInsights';
 import { planningLenses } from './lib/fpaInsights';
 import { parseDataFile } from './lib/io';
@@ -127,25 +128,28 @@ export default function AppShell() {
   function applyDataset(nextRows: DataRow[], preferredActual?: string, preferredExpected?: string) {
     const nextQuality = analyzeDataQuality(nextRows);
     const nextProfiles = profileFields(nextRows);
+    const defaults = inferDatasetDefaults(nextRows, nextQuality.measureCandidates);
     const candidateActual = preferredActual && nextQuality.measureCandidates.includes(preferredActual)
       ? preferredActual
-      : nextQuality.measureCandidates[0] ?? nextProfiles.find((profile) => profile.kind === 'numeric')?.name ?? '';
+      : defaults.actualKey || nextQuality.measureCandidates[0] || nextProfiles.find((profile) => profile.kind === 'numeric')?.name || '';
     const candidateExpected = preferredExpected && nextQuality.measureCandidates.includes(preferredExpected) && preferredExpected !== candidateActual
       ? preferredExpected
-      : nextQuality.measureCandidates.find((name) => name !== candidateActual) ?? '';
+      : defaults.expectedKey && defaults.expectedKey !== candidateActual
+        ? defaults.expectedKey
+        : nextQuality.measureCandidates.find((name) => name !== candidateActual) ?? '';
     const candidateTime = detectTimeFields(nextRows)[0];
     setRows(nextRows);
     setActualKey(candidateActual);
     setExpectedKey(candidateExpected);
-    setMetricPolarity('higher_is_better');
-    setPlanningLens('revenue');
+    setMetricPolarity(defaults.metricPolarity);
+    setPlanningLens(defaults.planningLens);
     setPredicates([]);
     setSelectedDimension(nextQuality.dimensionCandidates[0] ?? '');
     setTimeField(candidateTime?.field ?? '');
     setTimeGrain(candidateTime?.suggestedGrain ?? 'month');
     setTimeWindow(defaultWindow(candidateTime?.suggestedGrain ?? 'month'));
-    setAggregation('sum');
-    setFiscalYearStartMonth(1);
+    setAggregation(defaults.aggregation);
+    setFiscalYearStartMonth(defaults.fiscalYearStartMonth);
     setMaterialityPercent(0.03);
     setManualContext('');
     setNewsContext('');
