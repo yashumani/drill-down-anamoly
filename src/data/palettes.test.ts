@@ -8,7 +8,7 @@ describe('presentation palettes', () => {
   });
 
   it('includes every requested brand-inspired palette', () => {
-    const ids = new Set(palettes.map((palette) => palette.id));
+    const ids = new Set<string>(palettes.map((palette) => palette.id));
     for (const required of ['verizon', 'att', 'tmobile', 'nvidia', 'meta', 'google']) {
       expect(ids.has(required)).toBe(true);
       expect(isPaletteId(required)).toBe(true);
