@@ -10,6 +10,7 @@ import './time-intelligence.css';
 import './live-public-demo.css';
 import './depo-inspired.css';
 import './guided.css';
+import './presentation.css';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
