@@ -91,7 +91,16 @@ function waterfallOption(matrix: LiveDimensionMatrixResult): EChartsOption {
         type: 'bar',
         stack: 'waterfall',
         barMaxWidth: 40,
-        label: { show: true, position: 'top', formatter: (params: { data?: { signedValue?: number } }) => compact(params.data?.signedValue ?? 0) },
+        label: {
+          show: true,
+          position: 'top',
+          formatter: (params: unknown) => {
+            const raw = (params as { data?: unknown }).data;
+            if (!raw || typeof raw !== 'object' || !('signedValue' in raw)) return '0';
+            const signed = Number((raw as { signedValue?: unknown }).signedValue);
+            return compact(Number.isFinite(signed) ? signed : 0);
+          },
+        },
         data: bars,
         markLine: { symbol: 'none', lineStyle: { type: 'dashed' }, data: [{ yAxis: 0 }] },
       },
@@ -141,7 +150,6 @@ function heatmapOption(matrix: LiveDimensionMatrixResult, metric: HeatMetric): E
       left: 'center',
       bottom: 5,
       inRange: { color: ['#fffdf7', '#f7bb3d', '#dc5b51'] },
-      formatter: (value: number) => metric === 'actual' ? compact(value) : value.toFixed(1),
     } : {
       min: -max,
       max,
@@ -150,7 +158,6 @@ function heatmapOption(matrix: LiveDimensionMatrixResult, metric: HeatMetric): E
       left: 'center',
       bottom: 5,
       inRange: { color: ['#c9473f', '#f2b9b4', '#fffdf7', '#bfe7cf', '#188451'] },
-      formatter: (value: number) => metric === 'variancePct' ? `${value.toFixed(0)}%` : compact(value),
     },
     dataZoom: [
       { type: 'inside', xAxisIndex: 0, filterMode: 'filter', zoomOnMouseWheel: true, moveOnMouseMove: true },
@@ -203,7 +210,7 @@ export function LiveDimensionVisualLab({
       setMatrixLoading(false);
     });
     return () => controller.abort();
-  }, [result.scope, result.filter?.field, result.filter?.value, summary.field, categoriesKey, result.currentMonth?.key]);
+  }, [result.scope, result.filter?.field, result.filter?.value, summary.field, categoriesKey, result.currentMonth?.key, appToken]);
 
   const option = useMemo(() => {
     if (mode === 'concentration') return concentrationOption(summary);
