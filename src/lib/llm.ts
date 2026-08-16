@@ -28,6 +28,14 @@ export interface EvidenceLlmContext {
   instructions?: string[];
 }
 
+export interface LlmConnectionResult {
+  ok: boolean;
+  endpoint: string;
+  model: string;
+  availableModels: string[];
+  message: string;
+}
+
 interface ChatMessage {
   role: 'system' | 'user';
   content: string;
@@ -164,17 +172,70 @@ function validatedEndpoint(value: string) {
   return url.toString();
 }
 
-async function requestChatCompletion(config: LlmConfig, messages: ChatMessage[], maxTokens = 1100) {
-  if (!config.endpoint.trim()) throw new Error('Add an API endpoint first.');
+function requestHeaders(config: LlmConfig) {
   const headers: Record<string, string> = { 'Content-Type': 'application/json' };
   if (config.apiKey.trim()) headers[config.authHeader.trim() || 'Authorization'] = `${config.authPrefix}${config.apiKey}`;
+  return headers;
+}
+
+function modelsEndpoint(chatEndpoint: string) {
+  const url = new URL(validatedEndpoint(chatEndpoint));
+  const path = url.pathname.replace(/\/+$/, '');
+  if (/\/chat\/completions$/i.test(path)) url.pathname = path.replace(/\/chat\/completions$/i, '/models');
+  else if (/\/v1$/i.test(path)) url.pathname = `${path}/models`;
+  else url.pathname = `${path}/models`;
+  url.search = '';
+  return url.toString();
+}
+
+export async function testLlmConnection(config: LlmConfig): Promise<LlmConnectionResult> {
+  if (!config.endpoint.trim()) throw new Error('Add an API endpoint first.');
+  const endpoint = modelsEndpoint(config.endpoint);
+  const controller = new AbortController();
+  const timeout = globalThis.setTimeout(() => controller.abort(), 8_000);
+  try {
+    const response = await fetch(endpoint, {
+      method: 'GET',
+      headers: requestHeaders(config),
+      signal: controller.signal,
+    });
+    if (!response.ok) throw new Error(`Model discovery failed (${response.status}). Check the endpoint, CORS, and authentication.`);
+    const payload = await response.json() as {
+      data?: Array<{ id?: unknown }>;
+      models?: Array<{ name?: unknown; model?: unknown }>;
+    };
+    const availableModels = [
+      ...(payload.data ?? []).map((item) => String(item.id ?? '')).filter(Boolean),
+      ...(payload.models ?? []).map((item) => String(item.name ?? item.model ?? '')).filter(Boolean),
+    ];
+    const configuredModel = config.model.trim();
+    const modelFound = !configuredModel || availableModels.includes(configuredModel);
+    return {
+      ok: modelFound,
+      endpoint,
+      model: configuredModel,
+      availableModels,
+      message: modelFound
+        ? `Connection succeeded${configuredModel ? ` and ${configuredModel} is available` : ''}.`
+        : `The endpoint is reachable, but ${configuredModel} was not returned by the models endpoint.`,
+    };
+  } catch (error) {
+    if (controller.signal.aborted) throw new Error('The LLM connection test timed out after 8 seconds.');
+    throw error;
+  } finally {
+    globalThis.clearTimeout(timeout);
+  }
+}
+
+async function requestChatCompletion(config: LlmConfig, messages: ChatMessage[], maxTokens = 1100) {
+  if (!config.endpoint.trim()) throw new Error('Add an API endpoint first.');
 
   const controller = new AbortController();
-  const timeout = window.setTimeout(() => controller.abort(), 45_000);
+  const timeout = globalThis.setTimeout(() => controller.abort(), 45_000);
   try {
     const response = await fetch(validatedEndpoint(config.endpoint), {
       method: 'POST',
-      headers,
+      headers: requestHeaders(config),
       signal: controller.signal,
       body: JSON.stringify({
         model: config.model || undefined,
@@ -194,7 +255,7 @@ async function requestChatCompletion(config: LlmConfig, messages: ChatMessage[],
     if (error instanceof DOMException && error.name === 'AbortError') throw new Error('The LLM request timed out after 45 seconds.');
     throw error;
   } finally {
-    window.clearTimeout(timeout);
+    globalThis.clearTimeout(timeout);
   }
 }
 
