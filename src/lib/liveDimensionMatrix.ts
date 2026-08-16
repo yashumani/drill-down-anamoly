@@ -12,6 +12,7 @@ import type {
 
 const DATASET_ID = 'v5c4-aqci';
 const API_ENDPOINT = `https://controllerdata.lacity.org/resource/${DATASET_ID}.json`;
+const OTHER_CATEGORY = 'Other categories';
 
 interface RawDimensionMonthRow {
   value?: string;
@@ -57,6 +58,7 @@ export interface LiveDimensionMatrixResult {
   maxAbsImpact: number;
   queryDurationMs: number;
   requestCount: number;
+  benchmarkDescription: string;
   warning?: string;
 }
 
@@ -118,6 +120,35 @@ async function fetchJson<T>(url: string, appToken = '', signal?: AbortSignal): P
   }
 }
 
+function cell({
+  category,
+  period,
+  actual,
+  expected,
+  transactions,
+}: {
+  category: string;
+  period: LiveMonthlyPoint;
+  actual: number;
+  expected: number;
+  transactions: number;
+}): LiveDimensionMatrixCell {
+  const variance = actual - expected;
+  return {
+    category,
+    periodKey: period.key,
+    periodLabel: period.label,
+    periodStart: period.periodStart,
+    actual,
+    expected,
+    variance,
+    businessImpact: -variance,
+    variancePct: expected === 0 ? null : variance / Math.abs(expected),
+    transactions,
+    partialPeriod: period.partialPeriod,
+  };
+}
+
 export function buildLiveDimensionMatrix({
   dimension,
   categories,
@@ -148,77 +179,81 @@ export function buildLiveDimensionMatrix({
     });
   }
 
-  const cells: LiveDimensionMatrixCell[] = [];
+  const topCells: LiveDimensionMatrixCell[] = [];
   for (const category of categories) {
-    const actuals = periodMeta.map((period) => rowMap.get(`${category}\u0000${period.key}`)?.amount ?? 0);
-    const globalMedian = median(actuals);
-    periodMeta.forEach((period, index) => {
+    const actuals = periods.map((period) => rowMap.get(`${category}\u0000${period.key}`)?.amount ?? 0);
+    const totalCategoryActual = actuals.reduce((sum, value) => sum + value, 0);
+    const totalScopeActual = periods.reduce((sum, period) => sum + period.actual, 0);
+    const globalShare = totalScopeActual === 0 ? 0 : totalCategoryActual / totalScopeActual;
+
+    periods.forEach((period, index) => {
+      const historyShares = periods
+        .slice(Math.max(0, index - 6), index)
+        .map((historicalPeriod, historyIndex) => {
+          const actualIndex = Math.max(0, index - 6) + historyIndex;
+          return historicalPeriod.actual === 0 ? null : actuals[actualIndex] / historicalPeriod.actual;
+        })
+        .filter((value): value is number => value !== null && Number.isFinite(value));
+      const expectedShare = historyShares.length >= 3 ? median(historyShares) : globalShare;
       const raw = rowMap.get(`${category}\u0000${period.key}`);
-      const history = actuals.slice(Math.max(0, index - 6), index);
-      let expected = history.length >= 3 ? median(history) : globalMedian;
-      if (period.partialPeriod) {
-        const end = new Date(period.periodEnd || period.periodStart);
-        const start = new Date(period.periodStart);
-        if (Number.isFinite(end.getTime()) && Number.isFinite(start.getTime())) {
-          const daysInMonth = new Date(Date.UTC(start.getUTCFullYear(), start.getUTCMonth() + 1, 0)).getUTCDate();
-          expected *= Math.min(1, Math.max(1, end.getUTCDate()) / daysInMonth);
-        }
-      }
-      const actual = actuals[index];
-      const variance = actual - expected;
-      cells.push({
+      topCells.push(cell({
         category,
-        periodKey: period.key,
-        periodLabel: period.label,
-        periodStart: period.periodStart,
-        actual,
-        expected,
-        variance,
-        businessImpact: -variance,
-        variancePct: expected === 0 ? null : variance / Math.abs(expected),
+        period,
+        actual: actuals[index],
+        expected: period.expected * expectedShare,
         transactions: raw?.transactions ?? 0,
-        partialPeriod: period.partialPeriod,
-      });
+      }));
     });
   }
 
+  const cells = [...topCells];
+  for (const period of periods) {
+    const periodTopCells = topCells.filter((item) => item.periodKey === period.key);
+    const topActual = periodTopCells.reduce((sum, item) => sum + item.actual, 0);
+    const topExpected = periodTopCells.reduce((sum, item) => sum + item.expected, 0);
+    const topTransactions = periodTopCells.reduce((sum, item) => sum + item.transactions, 0);
+    cells.push(cell({
+      category: OTHER_CATEGORY,
+      period,
+      actual: period.actual - topActual,
+      expected: period.expected - topExpected,
+      transactions: Math.max(0, period.transactions - topTransactions),
+    }));
+  }
+
+  const matrixCategories = [...categories, OTHER_CATEGORY];
   const latestPeriod = periodMeta.at(-1)?.key ?? '';
-  const latestCells = cells.filter((cell) => cell.periodKey === latestPeriod);
+  const latestCells = cells.filter((item) => item.periodKey === latestPeriod);
   const latestContributions: LiveDimensionLatestContribution[] = latestCells
-    .map((cell) => ({
-      category: cell.category,
-      actual: cell.actual,
-      expected: cell.expected,
-      businessImpact: cell.businessImpact,
-      variancePct: cell.variancePct,
-      transactions: cell.transactions,
+    .map((item) => ({
+      category: item.category,
+      actual: item.actual,
+      expected: item.expected,
+      businessImpact: item.businessImpact,
+      variancePct: item.variancePct,
+      transactions: item.transactions,
+      isOther: item.category === OTHER_CATEGORY,
     }))
     .sort((left, right) => Math.abs(right.businessImpact) - Math.abs(left.businessImpact));
 
-  const topImpact = latestContributions.reduce((sum, contribution) => sum + contribution.businessImpact, 0);
-  const otherImpact = currentTotalImpact - topImpact;
-  if (Math.abs(otherImpact) > 0.005) {
-    latestContributions.push({
-      category: 'Other categories',
-      actual: 0,
-      expected: 0,
-      businessImpact: otherImpact,
-      variancePct: null,
-      transactions: 0,
-      isOther: true,
-    });
-  }
+  const reconciledImpact = latestContributions.reduce((sum, contribution) => sum + contribution.businessImpact, 0);
+  const tolerance = Math.max(0.01, Math.abs(currentTotalImpact) * 1e-9);
+  const warning = Math.abs(reconciledImpact - currentTotalImpact) > tolerance
+    ? `The dimension waterfall differs from the selected-scope latest impact by ${Math.abs(reconciledImpact - currentTotalImpact).toFixed(2)} because the public monthly result and category matrix were returned from separate live queries.`
+    : undefined;
 
   return {
     dimension,
-    categories,
+    categories: matrixCategories,
     periods: periodMeta,
     cells,
     latestPeriod,
     latestContributions,
-    maxAbsImpact: Math.max(1, ...cells.map((cell) => Math.abs(cell.businessImpact))),
+    maxAbsImpact: Math.max(1, ...cells.map((item) => Math.abs(item.businessImpact))),
     queryDurationMs: 0,
     requestCount: 1,
+    benchmarkDescription: 'The total rolling benchmark is allocated to each category using its median share of selected-scope spend over the preceding six periods; Other categories is the exact residual.',
+    warning,
   };
 }
 
@@ -250,6 +285,6 @@ export async function loadLiveDimensionMatrix(options: LoadLiveDimensionMatrixOp
   return {
     ...matrix,
     queryDurationMs: performance.now() - started,
-    warning: rows.length ? undefined : 'The public source returned no monthly category rows for this dimension and scope.',
+    warning: matrix.warning ?? (rows.length ? undefined : 'The public source returned no monthly category rows for this dimension and scope.'),
   };
 }
