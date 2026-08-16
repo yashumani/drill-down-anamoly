@@ -1,0 +1,9 @@
+/* Exact viewport fit for the desktop slide shell.
+   100vh - 20px main padding - 68px app bar - 10px deck gap = remaining deck height. */
+@media (min-width: 901px) {
+  .presentation-deck,
+  .live-public-demo.live-presentation {
+    height: calc(100vh - 98px);
+    max-height: calc(100vh - 98px);
+  }
+}
