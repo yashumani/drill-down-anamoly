@@ -1,0 +1,50 @@
+name: Architecture hardening branch CI
+
+on:
+  push:
+    branches: ["architecture-hardening-v1"]
+  pull_request:
+    branches: ["main"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate-and-package:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: package.json
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Run tests
+        run: npm test
+
+      - name: Build
+        run: npm run build -- --base=/drill-down-anamoly/
+
+      - name: Package branch source
+        uses: actions/upload-artifact@v4
+        with:
+          name: architecture-hardening-source
+          path: |
+            .github
+            docs
+            local-ai
+            scripts
+            src
+            index.html
+            package.json
+            tsconfig.app.json
+            tsconfig.json
+          retention-days: 1
