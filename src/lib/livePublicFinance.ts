@@ -19,10 +19,7 @@ export interface LiveDimensionValue {
   averageTransaction: number;
 }
 
-export interface LiveDimensionSummary {
-  field: string;
-  label: string;
-  description: string;
+export interface LiveDimensionSummary extends LiveDimensionDefinition {
   values: LiveDimensionValue[];
   error?: string;
 }
@@ -114,6 +111,16 @@ interface RawSummaryRow {
   min_date?: string;
   max_date?: string;
   max_fiscal_year?: string | number;
+}
+
+interface SodaMetadata {
+  name?: unknown;
+  attribution?: unknown;
+  rowsUpdatedAt?: unknown;
+  columns?: unknown[];
+  license?: {
+    name?: unknown;
+  } | null;
 }
 
 const DATASET_ID = 'v5c4-aqci';
@@ -211,10 +218,10 @@ export function buildScopeWhere(
 
 function delay(milliseconds: number, signal?: AbortSignal) {
   return new Promise<void>((resolve, reject) => {
-    const timer = window.setTimeout(resolve, milliseconds);
+    const timer = globalThis.setTimeout(resolve, milliseconds);
     if (signal) {
       signal.addEventListener('abort', () => {
-        window.clearTimeout(timer);
+        globalThis.clearTimeout(timer);
         reject(new Error('Live public-data request was cancelled.'));
       }, { once: true });
     }
@@ -225,7 +232,7 @@ async function fetchJson<T>(url: string, appToken = '', signal?: AbortSignal): P
   let lastError: unknown;
   for (let attempt = 0; attempt < 2; attempt += 1) {
     const controller = new AbortController();
-    const timeout = window.setTimeout(() => controller.abort(), 45_000);
+    const timeout = globalThis.setTimeout(() => controller.abort(), 45_000);
     const abort = () => controller.abort();
     signal?.addEventListener('abort', abort, { once: true });
     try {
@@ -252,7 +259,7 @@ async function fetchJson<T>(url: string, appToken = '', signal?: AbortSignal): P
       else lastError = error;
       if (attempt === 0) await delay(600, signal);
     } finally {
-      window.clearTimeout(timeout);
+      globalThis.clearTimeout(timeout);
       signal?.removeEventListener('abort', abort);
     }
   }
@@ -336,7 +343,7 @@ export function buildMonthlyBenchmark(rows: RawMonthlyRow[], maxDate: string): L
     const anomalyScore = prior.length >= 4 && scale > 0 ? Math.abs(point.businessImpact - center) / scale : 0;
     const materialityThreshold = Math.abs(point.expected) * MATERIALITY_PERCENT;
     const material = Math.abs(point.businessImpact) >= materialityThreshold && materialityThreshold > 0;
-    const alertSeverity = point.businessImpact < 0 && (Math.abs(point.businessImpact) >= materialityThreshold * 2 || anomalyScore >= 3)
+    const alertSeverity: LiveMonthlyPoint['alertSeverity'] = point.businessImpact < 0 && (Math.abs(point.businessImpact) >= materialityThreshold * 2 || anomalyScore >= 3)
       ? 'critical'
       : point.businessImpact < 0 && (material || anomalyScore >= 2)
         ? 'watch'
@@ -399,7 +406,7 @@ export async function loadLivePublicFinance(options: LoadLivePublicFinanceOption
     (async () => {
       requestCount += 1;
       try {
-        return await fetchJson<Record<string, unknown>>(METADATA_ENDPOINT, appToken, options.signal);
+        return await fetchJson<SodaMetadata>(METADATA_ENDPOINT, appToken, options.signal);
       } catch {
         return null;
       }
@@ -423,43 +430,46 @@ export async function loadLivePublicFinance(options: LoadLivePublicFinanceOption
     select: 'fiscal_year, fiscal_month_number, min(transaction_date) as period_start, max(transaction_date) as period_end, sum(dollar_amount) as amount, count(*) as transactions',
     where: `${where} AND fiscal_year is not null AND fiscal_month_number is not null AND transaction_date is not null`,
     group: 'fiscal_year, fiscal_month_number',
-    order: 'min(transaction_date) ASC',
     limit: 500,
   });
   completed += 1;
   const monthly = buildMonthlyBenchmark(monthlyRows, scopedSource.maxDate || fullSource.maxDate);
 
   const dimensionWarnings: string[] = [];
-  const dimensions = await mapWithConcurrency(LIVE_PUBLIC_DIMENSIONS, 3, async (dimension) => {
-    progress(`Scanning ${dimension.label} across the live source…`);
-    try {
-      const rows = await query<Array<{ value?: string; amount?: string | number; transactions?: string | number }>>({
-        select: `${dimension.field} as value, sum(dollar_amount) as amount, count(*) as transactions`,
-        where: `${where} AND ${dimension.field} is not null`,
-        group: dimension.field,
-        order: 'sum(dollar_amount) DESC',
-        limit: 8,
-      });
-      const values = rows.map((row) => {
-        const amount = numberValue(row.amount);
-        const transactions = numberValue(row.transactions);
-        return {
-          value: String(row.value ?? '(missing)'),
-          amount,
-          transactions,
-          shareOfSpend: scopedSource.totalAmount === 0 ? 0 : amount / scopedSource.totalAmount,
-          averageTransaction: transactions === 0 ? 0 : amount / transactions,
-        };
-      });
-      return { ...dimension, values } satisfies LiveDimensionSummary;
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      dimensionWarnings.push(`${dimension.label} query could not be completed: ${message}`);
-      return { ...dimension, values: [], error: message } satisfies LiveDimensionSummary;
-    } finally {
-      completed += 1;
-    }
-  });
+  const dimensions = await mapWithConcurrency<LiveDimensionDefinition, LiveDimensionSummary>(
+    LIVE_PUBLIC_DIMENSIONS,
+    3,
+    async (dimension) => {
+      progress(`Scanning ${dimension.label} across the live source…`);
+      try {
+        const rows = await query<Array<{ value?: string; amount?: string | number; transactions?: string | number }>>({
+          select: `${dimension.field} as value, sum(dollar_amount) as amount, count(*) as transactions`,
+          where: `${where} AND ${dimension.field} is not null`,
+          group: dimension.field,
+          order: 'sum(dollar_amount) DESC',
+          limit: 8,
+        });
+        const values: LiveDimensionValue[] = rows.map((row) => {
+          const amount = numberValue(row.amount);
+          const transactions = numberValue(row.transactions);
+          return {
+            value: String(row.value ?? '(missing)'),
+            amount,
+            transactions,
+            shareOfSpend: scopedSource.totalAmount === 0 ? 0 : amount / scopedSource.totalAmount,
+            averageTransaction: transactions === 0 ? 0 : amount / transactions,
+          };
+        });
+        return { ...dimension, values };
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        dimensionWarnings.push(`${dimension.label} query could not be completed: ${message}`);
+        return { ...dimension, values: [], error: message };
+      } finally {
+        completed += 1;
+      }
+    },
+  );
 
   const recent12 = monthly.slice(-12);
   const trailing12Amount = recent12.reduce((sum, point) => sum + point.actual, 0);
