@@ -1,4 +1,4 @@
-name: Deploy interactive anomaly dashboard to GitHub Pages
+name: Test and deploy FP&A intelligence dashboard
 
 on:
   push:
@@ -7,6 +7,7 @@ on:
       - "src/**"
       - "index.html"
       - "package.json"
+      - "package-lock.json"
       - "tsconfig*.json"
       - ".github/workflows/pages.yml"
   workflow_dispatch:
@@ -40,6 +41,9 @@ jobs:
 
       - name: Install dependencies
         run: npm install --no-audit --no-fund
+
+      - name: Run analytical regression tests
+        run: npm test
 
       - name: Build React dashboard
         run: npm run build -- --base=/drill-down-anamoly/
