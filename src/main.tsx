@@ -11,6 +11,7 @@ import './live-public-demo.css';
 import './depo-inspired.css';
 import './guided.css';
 import './presentation.css';
+import './presentation-fit.css';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
