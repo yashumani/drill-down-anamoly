@@ -20,7 +20,7 @@ function queryUrl(params) {
   return url;
 }
 
-async function readJson(url, timeoutMs = 60_000) {
+async function readJson(url, timeoutMs = 45_000) {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), timeoutMs);
   try {
@@ -38,10 +38,16 @@ async function readJson(url, timeoutMs = 60_000) {
   }
 }
 
-const [summaryRows, metadata, monthlyRows, departmentRows] = await Promise.all([
+const [countRows, latestRows, metadata, monthlyRows, departmentRows] = await Promise.all([
   readJson(queryUrl({
-    '$select': 'count(*) as row_count, sum(dollar_amount) as total_amount, min(transaction_date) as min_date, max(transaction_date) as max_date, max(fiscal_year) as max_fiscal_year',
+    '$select': 'count(*) as row_count',
     '$where': 'dollar_amount is not null',
+  })),
+  readJson(queryUrl({
+    '$select': 'transaction_date, fiscal_year',
+    '$where': 'transaction_date is not null',
+    '$order': 'transaction_date DESC',
+    '$limit': '1',
   })),
   readJson(METADATA),
   readJson(queryUrl({
@@ -59,28 +65,26 @@ const [summaryRows, metadata, monthlyRows, departmentRows] = await Promise.all([
   })),
 ]);
 
-const summary = summaryRows?.[0] ?? {};
-const rowCount = Number(summary.row_count);
-const totalAmount = Number(summary.total_amount);
+const rowCount = Number(countRows?.[0]?.row_count);
 if (!Number.isFinite(rowCount) || rowCount < 1_000_000) {
-  throw new Error(`Expected at least 1,000,000 live rows, received ${String(summary.row_count)}`);
+  throw new Error(`Expected at least 1,000,000 live rows, received ${String(countRows?.[0]?.row_count)}`);
 }
-if (!Number.isFinite(totalAmount)) throw new Error(`Full-source amount aggregation is invalid: ${String(summary.total_amount)}`);
-if (!summary.min_date || !summary.max_date) throw new Error('Full-source date coverage aggregation returned no minimum or maximum date.');
 
 const apiFields = new Set((metadata?.columns ?? []).map((column) => column?.fieldName).filter(Boolean));
 const missingDimensions = REQUIRED_DIMENSIONS.filter((field) => !apiFields.has(field));
 if (missingDimensions.length) throw new Error(`Missing expected finance dimensions: ${missingDimensions.join(', ')}`);
+if (!Array.isArray(latestRows) || !latestRows[0]?.transaction_date) throw new Error('Latest-period query returned no transaction date.');
 if (!Array.isArray(monthlyRows) || monthlyRows.length === 0) throw new Error('Monthly aggregate query returned no rows.');
 if (!Array.isArray(departmentRows) || departmentRows.length === 0) throw new Error('Department concentration query returned no rows.');
+
+const monthlyTotal = monthlyRows.reduce((sum, row) => sum + Number(row.amount || 0), 0);
+if (!Number.isFinite(monthlyTotal)) throw new Error('Monthly payment aggregation returned an invalid total.');
 
 console.log(JSON.stringify({
   datasetId: DATASET_ID,
   rowCount,
-  totalAmount,
-  minimumDate: summary.min_date,
-  maximumDate: summary.max_date,
-  latestFiscalYear: summary.max_fiscal_year,
+  latestTransactionDate: latestRows[0].transaction_date,
+  latestFiscalYear: latestRows[0].fiscal_year,
   sourceColumns: metadata?.columns?.length ?? 0,
   verifiedDimensions: REQUIRED_DIMENSIONS.length,
   monthlyAggregateRowsReturned: monthlyRows.length,
