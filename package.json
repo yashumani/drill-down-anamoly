@@ -10,6 +10,7 @@
     "typecheck": "tsc -b",
     "build": "tsc -b && vite build",
     "check": "npm run test && npm run build",
+    "smoke:public-data": "node scripts/live-public-smoke.mjs",
     "preview": "vite preview"
   },
   "dependencies": {
