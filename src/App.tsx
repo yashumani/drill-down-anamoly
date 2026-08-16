@@ -16,6 +16,7 @@ import { ContributionBars, DimensionLandscape, DrillTree, InteractionList } from
 import { ChatPanel } from './components/ChatPanel';
 import { DataQualityPanel } from './components/DataQualityPanel';
 import { FpaInsightPanel } from './components/FpaInsightPanel';
+import { LivePublicFinanceDemo } from './components/LivePublicFinanceDemo';
 import { NewsIntelPanel } from './components/NewsIntelPanel';
 import { ThemePicker } from './components/ThemePicker';
 import type { PaletteId } from './components/ThemePicker';
@@ -26,7 +27,7 @@ import type { DataRow, DimensionScore, MetricPolarity, Predicate } from './types
 const format = (value: number) => Intl.NumberFormat('en-US', { notation: 'compact', maximumFractionDigits: 2 }).format(value);
 const humanize = (value: string) => value.replace(/([a-z0-9])([A-Z])/g, '$1 $2').replace(/[_-]+/g, ' ').replace(/\b\w/g, (letter) => letter.toUpperCase());
 
-type Workspace = 'insights' | 'quality';
+type Workspace = 'insights' | 'public-demo' | 'quality';
 
 function defaultWindow(grain: TimeGrain): TimeWindow {
   if (grain === 'day') return '90d';
@@ -214,13 +215,14 @@ export default function App() {
   return <main data-theme={palette}>
     <header className="hero compact-hero">
       <div><span className="eyebrow">FP&A PERFORMANCE EXPLORER</span><h1>Explain variance. Find the why. Act faster.</h1><p>Built for CFO and SVP operating reviews: monitor plan performance across time, identify material business drivers, test external hypotheses, and preserve a reproducible analytical trail.</p></div>
-      <div className="header-tools"><ThemePicker value={palette} onChange={changePalette} /><label className="upload">Use my data<input type="file" accept=".csv,.json" onChange={(event) => loadFile(event.target.files?.[0])} /></label></div>
+      <div className="header-tools"><ThemePicker value={palette} onChange={changePalette} /><button type="button" className="quiet-button" onClick={() => setWorkspace('public-demo')}>Live 3.8M-row demo</button><label className="upload">Use my data<input type="file" accept=".csv,.json" onChange={(event) => loadFile(event.target.files?.[0])} /></label></div>
     </header>
 
     {error && <div className="error">{error}</div>}
 
     <nav className="workspace-tabs" aria-label="Workspace">
       <button type="button" className={workspace === 'insights' ? 'active' : ''} onClick={() => setWorkspace('insights')}>Insights</button>
+      <button type="button" className={workspace === 'public-demo' ? 'active' : ''} onClick={() => setWorkspace('public-demo')}>Live public demo <span>3.8M+</span></button>
       <button type="button" className={workspace === 'quality' ? 'active' : ''} onClick={() => setWorkspace('quality')}>Data quality <span>{qualityReport.overallScore.toFixed(0)}</span></button>
     </nav>
 
@@ -233,12 +235,13 @@ export default function App() {
         <div className="filter-scope"><span>Analysis scope</span><strong>{windowLabel(timeWindow)}{predicates.length ? ` • ${predicates.map((predicate) => `${humanize(predicate.dimension)}: ${predicate.value}`).join(' • ')}` : ' • All business dimensions'}</strong></div>
         {predicates.length > 0 && <button className="quiet-button" onClick={() => setPredicates([])}>Clear drill</button>}
       </>}
+      {workspace === 'public-demo' && <div className="filter-scope"><span>Large-data architecture</span><strong>City of Los Angeles procurement · server-side aggregation · 3.8M+ live records · 10 finance dimensions</strong></div>}
       {workspace === 'quality' && <div className="filter-scope"><span>Dataset</span><strong>{qualityReport.rowCount.toLocaleString()} rows · {qualityReport.columnCount.toLocaleString()} columns · {qualityReport.status}</strong></div>}
       <button className="quiet-button" onClick={loadCleanDemo}>Reset clean demo</button>
       <button className="quiet-button" onClick={loadQualityDemo}>Load quality demo</button>
     </section>
 
-    {workspace === 'quality' ? <DataQualityPanel rows={rows} report={qualityReport} onLoadCleanDemo={loadCleanDemo} onLoadQualityDemo={loadQualityDemo} /> : <>
+    {workspace === 'public-demo' ? <LivePublicFinanceDemo /> : workspace === 'quality' ? <DataQualityPanel rows={rows} report={qualityReport} onLoadCleanDemo={loadCleanDemo} onLoadQualityDemo={loadQualityDemo} /> : <>
       {(qualityReport.blockers > 0 || qualityReport.warnings > 0) && <button type="button" className={`analysis-quality-warning ${qualityReport.blockers ? 'critical' : ''}`} onClick={() => setWorkspace('quality')}>
         <strong>Data quality: {qualityReport.overallScore.toFixed(0)}/100</strong>
         <span>{qualityReport.blockers ? `${qualityReport.blockers} blocker(s) can change or invalidate the analysis.` : `${qualityReport.warnings} warning(s) should be reviewed.`} Open the supporting Data Quality Explorer.</span>
