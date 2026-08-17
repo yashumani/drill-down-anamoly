@@ -64,6 +64,48 @@ export class BrowserAnalyticsProvider implements AnalyticsProvider {
   }
 }
 
+export interface RemoteAnalyticsTransport {
+  getInvestigation(query: InvestigationQuery): Promise<InvestigationResult>;
+  getTimeSeries(query: Omit<BuildFinanceTimeSeriesOptions, 'rows'>): Promise<FinanceTimeSeriesResult | null>;
+}
+
+export interface RemoteAnalyticsProviderOptions {
+  providerId: string;
+  executionMode?: Extract<AnalyticsExecutionMode, 'remote-aggregate' | 'warehouse'>;
+  capabilities?: Partial<AnalyticsCapabilities>;
+  transport: RemoteAnalyticsTransport;
+}
+
+export class RemoteAggregateAnalyticsProvider implements AnalyticsProvider {
+  readonly providerId: string;
+  readonly executionMode: Extract<AnalyticsExecutionMode, 'remote-aggregate' | 'warehouse'>;
+  readonly capabilities: AnalyticsCapabilities;
+  private readonly transport: RemoteAnalyticsTransport;
+
+  constructor(options: RemoteAnalyticsProviderOptions) {
+    if (!options.providerId.trim()) throw new Error('Remote analytics providers require a stable provider ID.');
+    this.providerId = options.providerId;
+    this.executionMode = options.executionMode ?? 'remote-aggregate';
+    this.transport = options.transport;
+    this.capabilities = {
+      serverSideAggregation: true,
+      timeSeries: true,
+      dimensionScan: true,
+      interactions: true,
+      evidenceRows: false,
+      ...options.capabilities,
+    };
+  }
+
+  getInvestigation(query: InvestigationQuery) {
+    return this.transport.getInvestigation(query);
+  }
+
+  getTimeSeries(query: Omit<BuildFinanceTimeSeriesOptions, 'rows'>) {
+    return this.transport.getTimeSeries(query);
+  }
+}
+
 export interface ProviderRunMetadata {
   providerId: string;
   executionMode: AnalyticsExecutionMode;
