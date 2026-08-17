@@ -6,13 +6,13 @@ on:
     paths:
       - "src/**"
       - "scripts/**"
+      - "services/**"
       - "local-ai/**"
-      - "docs/adr/**"
-      - "docs/ai-model-card.md"
-      - "docs/threat-model.md"
+      - "docs/**"
       - "index.html"
       - "package.json"
       - "package-lock.json"
+      - "vite.config.ts"
       - "tsconfig*.json"
       - "SECURITY.md"
       - ".github/CODEOWNERS"
@@ -55,6 +55,9 @@ jobs:
 
       - name: Build production application
         run: npm run build -- --base=/drill-down-anamoly/
+
+      - name: Enforce production bundle budget
+        run: npm run check:bundle
 
       - name: Monitor live public adapter
         continue-on-error: true
