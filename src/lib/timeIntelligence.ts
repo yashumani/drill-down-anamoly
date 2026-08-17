@@ -228,10 +228,17 @@ export function parseTimeValue(value: unknown): ParsedTime | null {
   match = text.match(/^(19\d{2}|20\d{2}|21\d{2})$/);
   if (match) return { date: new Date(Date.UTC(Number(match[1]), 0, 1)), precision: 'quarter' };
 
-  match = text.match(/^(19\d{2}|20\d{2}|21\d{2})[-/](0?[1-9]|1[0-2])[-/](0?[1-9]|[12]\d|3[01])/);
+  match = text.match(/^(19\d{2}|20\d{2}|21\d{2})[-/](0?[1-9]|1[0-2])[-/](0?[1-9]|[12]\d|3[01])$/);
   if (match) {
-    const date = new Date(Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3])));
-    return Number.isFinite(date.getTime()) ? { date, precision: 'day' } : null;
+    const year = Number(match[1]);
+    const month = Number(match[2]);
+    const day = Number(match[3]);
+    const date = new Date(Date.UTC(year, month - 1, day));
+    const valid = Number.isFinite(date.getTime())
+      && date.getUTCFullYear() === year
+      && date.getUTCMonth() === month - 1
+      && date.getUTCDate() === day;
+    return valid ? { date, precision: 'day' } : null;
   }
 
   const timestamp = Date.parse(text);
