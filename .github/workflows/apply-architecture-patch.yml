@@ -24,6 +24,10 @@ jobs:
           cat .architecture/patch.part-* | base64 --decode | gzip --decompress > /tmp/architecture-hardening.patch
           git apply --check /tmp/architecture-hardening.patch
           git apply --index /tmp/architecture-hardening.patch
+          # The GitHub Actions token cannot update workflow files. Keep the
+          # existing branch-CI workflow in this commit and update it separately
+          # through the repository API after the source patch lands.
+          git restore --staged --worktree .github/workflows/architecture-branch-ci.yml
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git commit -m "[architecture-applied] Implement evidence-first FP&A architecture hardening"
