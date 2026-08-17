@@ -1,0 +1,49 @@
+ine-height: 1.12;
++  }
++  main[data-layout="phone"] .quality-tabs button:last-child:nth-child(odd) { grid-column: 1 / -1; }
++  main[data-layout="phone"] .quality-tab-content { padding: 10px; }
++  main[data-layout="phone"] .quality-dimensions-grid,
++  main[data-layout="phone"] .quality-framework-grid,
++  main[data-layout="phone"] .relationships-grid,
++  main[data-layout="phone"] .column-explorer-layout,
++  main[data-layout="phone"] .quality-overview-split { grid-template-columns: 1fr !important; }
++  main[data-layout="phone"] .quality-column-list,
++  main[data-layout="phone"] .column-detail,
++  main[data-layout="phone"] .relationship-section { width: 100%; min-width: 0; }
++  main[data-layout="phone"] .quality-column-table-wrap,
++  main[data-layout="phone"] .preview-table-wrap,
++  main[data-layout="phone"] .table-wrap,
++  main[data-layout="phone"] .time-table-wrap {
++    width: 100%;
++    max-width: 100%;
++    overfow-x: auto;
++    overscroll-behavior-x: contain;
++    -webkit-overflow-scrolling: touch;
++  }
++  /* Chat settings: no cramped inline actions or command overflow. */
++  main[data-layout="phone"] .chat-head { align-items: flex-start; }
++  main[data-layout="phone"] .chat-head .icon-button { width: 100%; }
++  main[data-layout="phone"] .llm-visibility-callout { grid-template-columns: 1fr; }
++  main[data-layout="phone"] .chat-presentation .llm-settings { max-height: none; overflow: visible; }
++  main[data-layout="phone"] .settings-title { display: grid; grid-template-columns: 1fr; gap: 8px; }
++  main[data-layout="phone"] .llm-settings-actions { width: 100%; display: grid; grid-template-columns: 1fr; gap: 7px; }
++  main[data-layout="phone"] .llm-settings-actions button,
++  main[data-layout="phone"] .llm-enable-toggle { width: 100%; min-height: 43px; justify-content: center; }
++  main[data-layout="phone"] .settings-row { grid-template-columns: 1fr; }
++  main[data-layout="phone"] .local-llm-guide code { max-width: 100%; overflow-x: auto; white-space: pre; }
++  main[data-layout="phone"] .local-llm-guide small { overflow-wrap: anywhere; }
++  main[data-layout="phone"] .chat-input-row { grid-template-columns: minmax(0, 1fr) auto; }
++  main[data-layout="phone"] .chat-suggestions { max-height: none; }
++  /* Theme chooser stays inside the viewport on narrow devices. */
++  main[data-layout="phone"] .theme-picker-menu { min-width: 0; width: 100%; }
++  main[data-layout="phone"] .theme-picker-popover { left: 7px; right: 7px; width: auto; max-width: calc(100vw - 14px); }
++  main[data-layout="phone"] .theme-grid { grid-template-columns: 1fr; }
++}
++@media (max-width: 380px) {
++  main[data-layout="phone"] .presentation-workspace-nav,
++  main[data-layout="phone"] .workspace-tabs { grid-template-columns: 1fr; }
++  main[data-layout="phone"] .presentation-brand strong { display: none; }
++  main[data-layout="phone"] .deck-progress { grid-template-columns: 1fr; }
++  main[data-layout="phone"] .quality-tabs { grid-template-columns: 1fr; }
++  main[data-layout="phone"] .quality-tabs button:last-child:nth-child(odd) { grid-column: auto; }
++}

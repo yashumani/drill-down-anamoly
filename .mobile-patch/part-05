@@ -1,0 +1,160 @@
+ne"] .header-tools > button,
++  main[data-layout="phone"] .header-tools > label { width: 100%; min-height: 45px; margin: 0; }
++
++  /* The presentation navs grow to their real number of rows instead of overlapping the page. */
++  body:has(main[data-layout="phone"][data-workspace="guided"]),
++  body:has(main[data-layout="phone"][data-workspace="public-demo"]) { overflow: auto !important; }
++  main[data-layout="phone"][data-workspace="guided"],
++  main[data-layout="phone"][data-workspace="public-demo"] { min-height: 100dvh; height: auto !important; overflow: visible !important; }
++  main[data-layout="phone"] .presentation-deck {
++    height: auto !important;
++    min-height: 0 !important;
++    grid-template-rows: auto auto auto !important;
++    gap: 8px;
++    overflow: visible !important;
++  }
++  main[data-layout="phone"] .deck-progress {
++    grid-template-columns: repeat(2, minmax(0, 1fr));
++    grid-auto-rows: minmax(44px, auto);
++  }
++  main[data-layout="phone"] .deck-progress button { min-height: 44px; padding: 5px 7px; }
++  main[data-layout="phone"] .deck-progress button strong { white-space: normal; line-height: 1.08; }
++  main[data-layout="phone"] .deck-stage,
++  main[data-layout="phone"] .live-stage {
++    min-height: 0 !important;
++    height: auto !important;
++    overflow: visible !important;
++  }
++  main[data-layout="phone"] .deck-page,
++  main[data-layout="phone"] .live-slide-page {
++    height: auto !important;
++    min-height: 0 !important;
++    overflow: visible !important;
++    padding: 16px;
++    border-radius: 18px;
++    box-shadow: 3px 4px 0 var(--ink);
++  }
++  main[data-layout="phone"] .deck-copy { grid-template-columns: 1fr; gap: 10px; align-items: start; }
++  main[data-layout="phone"] .deck-copy h2 { font-size: clamp(2.15rem, 11vw, 3.25rem); line-height: .9; }
++  main[data-layout="phone"] .deck-choice-grid-three,
++  main[data-layout="phone"] .deck-question-grid,
++  main[data-layout="phone"] .deck-setup-grid,
++  main[data-layout="phone"] .deck-answer-cards,
++  main[data-layout="phone"] .deck-driver-grid { grid-template-columns: 1fr; }
++  main[data-layout="phone"] .deck-choice-card { min-height: 150px; padding: 15px; }
++  main[data-layout="phone"] .deck-answer-page { grid-template-rows: auto auto auto; }
++  main[data-layout="phone"] .deck-answer-hero,
++  main[data-layout="phone"] .deck-answer-body,
++  main[data-layout="phone"] .deck-driver-layout,
++  main[data-layout="phone"] .deck-ai-page,
++  main[data-layout="phone"] .deck-assumption-row { grid-template-columns: 1fr !important; overflow: visible !important; }
++  main[data-layout="phone"] .deck-answer-body { padding: 10px; }
++  main[data-layout="phone"] .deck-mini-chart [role="img"] { height: 310px !important; }
++  main[data-layout="phone"] .deck-footer,
++  main[data-layout="phone"] .live-slide-footer {
++    position: sticky;
++    bottom: 5px;
++    z-index: 20;
++    grid-template-columns: auto minmax(0, 1fr) auto;
++    box-shadow: 0 0 0 5px var(--paper);
++  }
++  main[data-layout="phone"] .deck-footer button,
++  main[data-layout="phone"] .live-slide-footer button { min-width: 78px; }
++
++  main[data-layout="phone"] .live-public-demo.live-presentation {
++    height: auto !important;
++    min-height: 0 !important;
++    grid-template-rows: auto auto auto auto auto !important;
++    overflow: visible !important;
++  }
++  main[data-layout="phone"] .live-slide-nav {
++    grid-template-columns: repeat(2, minmax(0, 1fr));
++    grid-auto-rows: minmax(42px, auto);
++  }
++  main[data-layout="phone"] .live-slide-nav button { min-height: 42px; }
++  main[data-layout="phone"] .live-slide-nav button:last-child:nth-child(odd) { grid-column: 1 / -1; }
++  main[data-layout="phone"] .live-slide-nav strong { white-space: normal; line-height: 1.08; }
++  main[data-layout="phone"] .live-presentation-controls { display: grid !important; grid-template-columns: 1fr !important; gap: 7px; }
++  main[data-layout="phone"] .live-presentation-controls > label,
++  main[data-layout="phone"] .live-presentation-controls .live-token-settings,
++  main[data-layout="phone"] .live-presentation-controls .live-filter-scope { width: 100% !important; min-width: 0; }
++  main[data-layout="phone"] .live-overview-page .live-source-grid,
++  main[data-layout="phone"] .live-overview-page .live-executive-strip,
++  main[data-layout="phone"] .live-alert-row,
++  main[data-layout="phone"] .live-ai-panel,
++  main[data-layout="phone"] .live-method-page .live-method-grid { grid-template-columns: 1fr !important; }
++  main[data-layout="phone"] .live-drivers-page .live-analysis-grid,
++  main[data-layout="phone"] .live-ai-panel,
++  main[data-layout="phone"] .live-method-page .live-method-grid { height: auto; overflow: visible; }
++  main[data-layout="phone"] .live-ai-intro,
++  main[data-layout="phone"] .live-ai-settings,
++  main[data-layout="phone"] .live-ai-conversation { height: auto; overflow: visible; }
++  main[data-layout="phone"] .live-ai-settings > div:not(.live-ai-settings-head) { grid-template-columns: 1fr; }
++
++  /* Advanced controls and evidence cards become true single-column phone modules. */
++  main[data-layout="phone"] .dataset-contract-banner,
++  main[data-layout="phone"] .controls.top-controls,
++  main[data-layout="phone"] .executive-metrics,
++  main[data-layout="phone"] .time-controls,
++  main[data-layout="phone"] .time-summary-grid,
++  main[data-layout="phone"] .model-governance-strip,
++  main[data-layout="phone"] .external-validation-controls,
++  main[data-layout="phone"] .external-validation-result,
++  main[data-layout="phone"] .quality-summary-grid { grid-template-columns: 1fr !important; }
++  main[data-layout="phone"] .dataset-contract-banner { margin-right: 3px; }
++  main[data-layout="phone"] .dataset-contract-banner strong,
++  main[data-layout="phone"] .dataset-contract-banner small { white-space: normal; overflow: visible; text-overflow: clip; }
++  main[data-layout="phone"] .controls.top-controls { display: grid !important; gap: 7px; padding: 8px; }
++  main[data-layout="phone"] .controls.top-controls > *,
++  main[data-layout="phone"] .controls.top-controls label,
++  main[data-layout="phone"] .controls.top-controls .filter-scope { width: 100%; min-width: 0; }
++  main[data-layout="phone"] .advanced-mode-banner { grid-template-columns: 1fr; padding: 10px; }
++  main[data-layout="phone"] .advanced-mode-actions { width: 100%; display: grid; grid-template-columns: 1fr; }
++  main[data-layout="phone"] .advanced-mode-actions button { width: 100%; white-space: normal; }
++  main[data-layout="phone"] .analysis-quality-warning { width: 100%; text-align: left; }
++  main[data-layout="phone"] .friendly-metric { min-height: 0; }
++
++  main[data-layout="phone"] .time-cockpit,
++  main[data-layout="phone"] .fpa-command-center,
++  main[data-layout="phone"] .external-validation-panel,
++  main[data-layout="phone"] .panel,
++  main[data-layout="phone"] .chat-panel,
++  main[data-layout="phone"] .news-panel,
++  main[data-layout="phone"] .quality-workspace { width: 100%; margin-right: 0; overflow: hidden; }
++  main[data-layout="phone"] .time-cockpit-head,
++  main[data-layout="phone"] .time-section-head,
++  main[data-layout="phone"] .fpa-command-head,
++  main[data-layout="phone"] .external-validation-head { display: grid; grid-template-columns: 1fr; gap: 8px; }
++  main[data-layout="phone"] .time-cockpit-head > button,
++  main[data-layout="phone"] .external-validation-head > button { width: 100%; white-space: normal; }
++  main[data-layout="phone"] .time-chart-grid { padding: 10px; }
++  main[data-layout="phone"] .time-chart-panel,
++  main[data-layout="phone"] .time-alerts { min-width: 0; overflow: hidden; }
++  main[data-layout="phone"] .time-alert-list { max-height: none; }
++  main[data-layout="phone"] .fpa-time-strip,
++  main[data-layout="phone"] .fpa-story-grid,
++  main[data-layout="phone"] .fpa-lower-grid { grid-template-columns: 1fr !important; }
++  main[data-layout="phone"] .external-validation-head { align-items: stretch; }
++
++  /* Charts get a smaller responsive option from EChart.tsx; wrappers must also be shrinkable. */
++  main[data-layout="phone"] .echart,
++  main[data-layout="phone"] [role="img"] { max-width: 100%; }
++  main[data-layout="phone"] .driver-split { grid-template-columns: 1fr !important; }
++  main[data-layout="phone"] .live-driver-chart,
++  main[data-layout="phone"] .live-chart-frame { width: 100%; min-width: 0; overflow: hidden; }
++
++  /* Data Quality tabs are all visible; large tables scroll inside their own containers. */
++  main[data-layout="phone"] .quality-header { grid-template-columns: 1fr; }
++  main[data-layout="phone"] .quality-actions { width: 100%; display: grid; grid-template-columns: 1fr; }
++  main[data-layout="phone"] .quality-tabs {
++    width: 100%;
++    display: grid;
++    grid-template-columns: repeat(2, minmax(0, 1fr));
++    overflow: visible;
++  }
++  main[data-layout="phone"] .quality-tabs button {
++    min-width: 0;
++    min-height: 44px;
++    padding: 9px 7px;
++    white-space: normal;
++    l
