@@ -3,7 +3,7 @@ name: Apply architecture hardening patch
 on:
   push:
     branches: ["architecture-hardening-v1"]
-    paths: [".architecture/APPLY"]
+    paths: [".architecture/FIX_BUILD_1"]
 
 permissions:
   contents: write
@@ -18,17 +18,14 @@ jobs:
           ref: architecture-hardening-v1
           fetch-depth: 0
 
-      - name: Apply reviewed architecture patch
+      - name: Apply build correction
         run: |
           set -euo pipefail
-          cat .architecture/patch.part-* | base64 --decode | gzip --decompress > /tmp/architecture-hardening.patch
-          git apply --check /tmp/architecture-hardening.patch
-          git apply --index /tmp/architecture-hardening.patch
-          # The GitHub Actions token cannot update workflow files. Keep the
-          # existing branch-CI workflow in this commit and update it separately
-          # through the repository API after the source patch lands.
-          git restore --staged --worktree .github/workflows/architecture-branch-ci.yml
+          if ! grep -q "import { analyzeDataQuality } from './lib/dataQuality';" src/AppShell.tsx; then
+            sed -i "/import { investigate } from '.\/lib\/anomaly';/a import { analyzeDataQuality } from '.\/lib\/dataQuality';" src/AppShell.tsx
+          fi
+          git add src/AppShell.tsx
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git commit -m "[architecture-applied] Implement evidence-first FP&A architecture hardening"
+          git commit -m "Fix data-quality import in hardened application shell"
           git push origin HEAD:architecture-hardening-v1
