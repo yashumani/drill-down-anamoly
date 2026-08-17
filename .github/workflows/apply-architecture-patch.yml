@@ -1,15 +1,15 @@
-name: Integrate external event-study lab
+name: Refresh reproducible dependency lock
 
 on:
   push:
     branches: ["architecture-hardening-v1"]
-    paths: [".architecture/INTEGRATE_EXTERNAL_LAB"]
+    paths: [".architecture/COMMIT_LOCK_FINAL"]
 
 permissions:
   contents: write
 
 jobs:
-  integrate-external-lab:
+  refresh-lock:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout branch
@@ -18,12 +18,19 @@ jobs:
           ref: architecture-hardening-v1
           fetch-depth: 0
 
-      - name: Apply external validation UI and commit
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Refresh and commit the lock file
         run: |
           set -euo pipefail
-          python .architecture/integrate_external_lab.py
-          git add src/AppShell.tsx src/final-enhancements.css
+          npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+          git add package-lock.json
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git commit -m "Add affected-versus-control external event validation lab"
+          git diff --cached --quiet || git commit -m "Refresh reproducible dependency lock"
           git push origin HEAD:architecture-hardening-v1
