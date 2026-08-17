@@ -1,0 +1,33 @@
+name: Apply validated mobile-responsive and local-LLM patch
+
+on:
+  push:
+    branches: ["mobile-responsive-local-llm-v1"]
+    paths: [".mobile-patch/APPLY"]
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout implementation branch
+        uses: actions/checkout@v6
+        with:
+          ref: mobile-responsive-local-llm-v1
+          fetch-depth: 0
+
+      - name: Apply validated implementation and remove transfer artifacts
+        run: |
+          set -euo pipefail
+          cat .mobile-patch/part-* > /tmp/mobile-responsive.patch
+          git apply --check /tmp/mobile-responsive.patch
+          git apply --whitespace=fix /tmp/mobile-responsive.patch
+          rm -rf .mobile-patch
+          rm .github/workflows/apply-mobile-responsive.yml
+          git add -A
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Add mobile-responsive layouts and one-click local LLM connection"
+          git push origin HEAD:mobile-responsive-local-llm-v1
