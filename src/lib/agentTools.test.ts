@@ -13,6 +13,7 @@ const context = {
   result: {
     calculationVersion: 'test',
     runId: 'run-1',
+    generatedAt: '2026-01-01T00:00:00.000Z',
     rowCount: 10,
     validRowCount: 10,
     excludedMeasureRows: 0,
@@ -27,9 +28,8 @@ const context = {
     baselineMethod: 'target',
     metricPolarity: 'higher_is_better',
     aggregationMethod: 'sum',
-    attributionBasis: 'additive-total',
+    attributionBasis: 'total',
     attributionReconciles: true,
-    attributionPopulationDate: null,
     dimensionsScanned: 1,
     dimensionScores: [{
       dimension: 'region',
@@ -55,6 +55,7 @@ const context = {
         shareOfAbsVariance: 1,
         surprise: 1,
         standardizedResidual: 2,
+        attributionBasis: 'total',
       },
       categories: [],
     }],
@@ -66,12 +67,11 @@ const context = {
 const ledger = {
   schemaVersion: 'finance-evidence-v1',
   ledgerId: 'ledger-1',
-  calculationRunId: 'run-1',
-  datasetSessionId: 'session-1',
   createdAt: '2026-01-01T00:00:00.000Z',
+  calculationRunId: 'run-1',
   items: [
-    { id: 'scope-1', kind: 'scope', title: 'Scope', summary: 'All rows', source: 'configuration', runId: 'run-1', payload: {} },
-    { id: 'metric-1', kind: 'metric-definition', title: 'Metric', summary: 'Revenue', source: 'semantic-layer', payload: {} },
+    { id: 'scope-1', kind: 'scope', title: 'Scope', summary: 'All rows', source: 'deterministic-calculation', runId: 'run-1', payload: {} },
+    { id: 'metric-1', kind: 'metric-definition', title: 'Metric', summary: 'Revenue', source: 'dataset-contract', payload: {} },
     { id: 'time-1', kind: 'time-series', title: 'Time', summary: 'YTD is unfavorable', source: 'deterministic-calculation', runId: 'run-1', payload: {} },
     { id: 'forecast-1', kind: 'forecast-model', title: 'Forecast', summary: 'Backtest is ready', source: 'deterministic-calculation', runId: 'run-1', payload: {} },
     { id: 'driver-1', kind: 'driver', title: 'Region', summary: 'West is leading', source: 'deterministic-calculation', runId: 'run-1', payload: {} },
