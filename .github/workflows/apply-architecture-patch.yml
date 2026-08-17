@@ -1,15 +1,15 @@
-name: Correct strict finance date parsing
+name: Integrate forecast evidence and UI
 
 on:
   push:
     branches: ["architecture-hardening-v1"]
-    paths: [".architecture/FIX_DATE_PARSING"]
+    paths: [".architecture/INTEGRATE_FORECAST"]
 
 permissions:
   contents: write
 
 jobs:
-  fix-date-parsing:
+  integrate-forecast:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout branch
@@ -18,38 +18,134 @@ jobs:
           ref: architecture-hardening-v1
           fetch-depth: 0
 
-      - name: Correct ISO date parsing and commit regression test
+      - name: Integrate backtested baseline forecast evidence
         run: |
           set -euo pipefail
           python - <<'PY'
           from pathlib import Path
-          path = Path('src/lib/timeIntelligence.ts')
-          source = path.read_text()
-          old = """  match = text.match(/^(19\\d{2}|20\\d{2}|21\\d{2})[-/](0?[1-9]|1[0-2])[-/](0?[1-9]|[12]\\d|3[01])/);\n  if (match) {\n    const date = new Date(Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3])));\n    return Number.isFinite(date.getTime()) ? { date, precision: 'day' } : null;\n  }\n"""
-          new = """  match = text.match(/^(19\\d{2}|20\\d{2}|21\\d{2})[-/](0?[1-9]|1[0-2])[-/](0?[1-9]|[12]\\d|3[01])$/);\n  if (match) {\n    const year = Number(match[1]);\n    const month = Number(match[2]);\n    const day = Number(match[3]);\n    const date = new Date(Date.UTC(year, month - 1, day));\n    const valid = Number.isFinite(date.getTime())\n      && date.getUTCFullYear() === year\n      && date.getUTCMonth() === month - 1\n      && date.getUTCDate() === day;\n    return valid ? { date, precision: 'day' } : null;\n  }\n"""
-          if old not in source:
-              raise SystemExit('Expected time parsing block was not found.')
-          path.write_text(source.replace(old, new))
+
+          def replace_once(path: str, old: str, new: str):
+              file = Path(path)
+              text = file.read_text()
+              if old not in text:
+                  raise SystemExit(f'Expected block not found in {path}: {old[:80]}')
+              file.write_text(text.replace(old, new, 1))
+
+          # Evidence ledger: introduce forecast evidence tied to the time calculation run.
+          replace_once(
+              'src/lib/evidenceLedger.ts',
+              "import type { FinanceTimeSeriesResult } from './timeIntelligence';",
+              "import type { FinanceTimeSeriesResult } from './timeIntelligence';\nimport { backtestBaselineForecasts } from './forecastBacktest';",
+          )
+          replace_once(
+              'src/lib/evidenceLedger.ts',
+              "  | 'time-series'\n  | 'driver'",
+              "  | 'time-series'\n  | 'forecast-model'\n  | 'driver'",
+          )
+          replace_once(
+              'src/lib/evidenceLedger.ts',
+              "    }));\n  }\n\n  for (const dimension of result.dimensionScores.slice(0, 8)) {",
+              """    }));
+    const forecast = backtestBaselineForecasts(time.allPoints.map((point) => ({
+      key: point.key,
+      label: point.label,
+      actual: point.actual,
+    })));
+    items.push(item({
+      id: `forecast:${time.runId}`,
+      kind: 'forecast-model',
+      title: 'Backtested baseline forecast',
+      summary: forecast.champion
+        ? `${forecast.champion.replaceAll('_', ' ')} selected from ${forecast.evaluatedPeriods} out-of-sample periods; status ${forecast.status}.`
+        : `No forecast champion was selected; status ${forecast.status}.`,
+      source: 'deterministic-calculation',
+      runId: time.runId,
+      payload: forecast,
+    }));
+  }
+
+  for (const dimension of result.dimensionScores.slice(0, 8)) {""",
+          )
+
+          # Agent evidence selection includes the forecast-model item for time/explain questions.
+          replace_once(
+              'src/lib/agentOrchestrator.ts',
+              "    explain: ['variance', 'time-series', 'driver', 'quality', 'metric-definition'],\n    time: ['time-series', 'variance', 'metric-definition', 'quality'],",
+              "    explain: ['variance', 'time-series', 'forecast-model', 'driver', 'quality', 'metric-definition'],\n    time: ['time-series', 'forecast-model', 'variance', 'metric-definition', 'quality'],",
+          )
+
+          # LLM evidence contains the same deterministic backtest result.
+          replace_once(
+              'src/lib/llm.ts',
+              "import type { DatasetSession } from './datasetSession';",
+              "import type { DatasetSession } from './datasetSession';\nimport { backtestBaselineForecasts } from './forecastBacktest';",
+          )
+          replace_once(
+              'src/lib/llm.ts',
+              "    modelHealth: time.modelHealth,\n    coverage: time.coverage,",
+              """    modelHealth: time.modelHealth,
+    forecastBacktest: backtestBaselineForecasts(time.allPoints.map((point) => ({
+      key: point.key,
+      label: point.label,
+      actual: point.actual,
+    }))),
+    coverage: time.coverage,""",
+          )
+          replace_once(
+              'src/lib/llm.ts',
+              "        'Treat time-series anomaly scores as robust descriptive monitoring unless seasonalityReady is true; never call them a forecast or causal model without supporting evidence.',",
+              "        'Treat time-series anomaly scores as robust descriptive monitoring. Call a future-period estimate a forecast only when the supplied forecastBacktest contains a champion selected from out-of-sample folds, and disclose its WAPE, bias, interval, and status.',",
+          )
+
+          # CFO Pulse exposes the baseline model evaluation without changing the deterministic time engine contract.
+          replace_once(
+              'src/components/TimeSeriesCockpit.tsx',
+              "import { EChart } from './EChart';",
+              "import { EChart } from './EChart';\nimport { backtestBaselineForecasts } from '../lib/forecastBacktest';",
+          )
+          replace_once(
+              'src/components/TimeSeriesCockpit.tsx',
+              "    modelHealth: result.modelHealth,\n    coverage: result.coverage,",
+              """    modelHealth: result.modelHealth,
+    forecastBacktest: backtestBaselineForecasts(result.allPoints.map((point) => ({ key: point.key, label: point.label, actual: point.actual }))),
+    coverage: result.coverage,""",
+          )
+          replace_once(
+              'src/components/TimeSeriesCockpit.tsx',
+              "  const option = buildOption(result);\n  const alerts = [...result.allPoints]",
+              """  const option = buildOption(result);
+  const forecastBacktest = backtestBaselineForecasts(result.allPoints.map((point) => ({
+    key: point.key,
+    label: point.label,
+    actual: point.actual,
+  })));
+  const forecastChampion = forecastBacktest.scores.find((score) => score.model === forecastBacktest.champion) ?? null;
+  const alerts = [...result.allPoints]""",
+          )
+          replace_once(
+              'src/components/TimeSeriesCockpit.tsx',
+              "      <article className={`time-metric health-${result.modelHealth.status}`}><span>Analysis health</span><strong>{result.modelHealth.score.toFixed(0)}/100</strong><small>{humanize(result.modelHealth.status)} · {result.modelHealth.periodCount} periods</small></article>\n    </div>",
+              """      <article className={`time-metric health-${result.modelHealth.status}`}><span>Analysis health</span><strong>{result.modelHealth.score.toFixed(0)}/100</strong><small>{humanize(result.modelHealth.status)} · {result.modelHealth.periodCount} periods</small></article>
+      <article className={`time-metric health-${forecastBacktest.status === 'ready' ? 'healthy' : forecastBacktest.status}`}><span>Forecast backtest</span><strong>{forecastBacktest.champion ? humanize(forecastBacktest.champion) : 'Not ready'}</strong><small>{forecastChampion?.wape == null ? `${forecastBacktest.historyPeriods} history periods` : `WAPE ${(forecastChampion.wape * 100).toFixed(1)}% · bias ${forecastChampion.bias == null ? '—' : `${(forecastChampion.bias * 100).toFixed(1)}%`}`}</small></article>
+    </div>""",
+          )
+          replace_once(
+              'src/components/TimeSeriesCockpit.tsx',
+              "      <div><span>Time coverage</span><strong>{(result.modelHealth.parseRate * 100).toFixed(1)}%</strong></div>\n    </div>",
+              """      <div><span>Time coverage</span><strong>{(result.modelHealth.parseRate * 100).toFixed(1)}%</strong></div>
+      <div><span>Forecast status</span><strong>{humanize(forecastBacktest.status)}</strong></div>
+    </div>""",
+          )
+          replace_once(
+              'src/components/TimeSeriesCockpit.tsx',
+              "        <section><h4>Warnings</h4>{result.warnings.length ? result.warnings.map((warning) => <p key={warning}>{warning}</p>) : <p>No automatic warnings.</p>}</section>",
+              """        <section><h4>Warnings</h4>{result.warnings.length ? result.warnings.map((warning) => <p key={warning}>{warning}</p>) : <p>No automatic warnings.</p>}</section>
+        <section><h4>Forecast backtest</h4><p>Champion: {forecastBacktest.champion ? humanize(forecastBacktest.champion) : 'none'} · folds: {forecastBacktest.evaluatedPeriods} · status: {humanize(forecastBacktest.status)}.</p>{forecastBacktest.predictionInterval80 && <p>Next baseline estimate: {compact(forecastBacktest.nextForecast ?? 0)} · 80% empirical interval {compact(forecastBacktest.predictionInterval80.lower)} to {compact(forecastBacktest.predictionInterval80.upper)}.</p>}{forecastBacktest.warnings.map((warning) => <p key={warning}>{warning}</p>)}</section>""",
+          )
           PY
-          cat > src/lib/timeParsingRegression.test.ts <<'EOF'
-          import { describe, expect, it } from 'vitest';
-          import { parseTimeValue } from './timeIntelligence';
 
-          describe('strict finance date parsing', () => {
-            it('preserves every two-digit day instead of truncating it', () => {
-              expect(parseTimeValue('2025-01-10')?.date.toISOString().slice(0, 10)).toBe('2025-01-10');
-              expect(parseTimeValue('2025-01-31')?.date.toISOString().slice(0, 10)).toBe('2025-01-31');
-              expect(parseTimeValue('2024-02-29')?.date.toISOString().slice(0, 10)).toBe('2024-02-29');
-            });
-
-            it('rejects impossible calendar dates', () => {
-              expect(parseTimeValue('2025-02-29')).toBeNull();
-              expect(parseTimeValue('2025-04-31')).toBeNull();
-            });
-          });
-          EOF
-          git add src/lib/timeIntelligence.ts src/lib/timeParsingRegression.test.ts
+          git add src/lib/evidenceLedger.ts src/lib/agentOrchestrator.ts src/lib/llm.ts src/components/TimeSeriesCockpit.tsx
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git commit -m "Fix strict date parsing for finance time intelligence"
+          git commit -m "Integrate backtested forecast evidence into CFO and AI reviews"
           git push origin HEAD:architecture-hardening-v1
