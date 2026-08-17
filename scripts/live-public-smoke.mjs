@@ -1,6 +1,7 @@
 const DATASET_ID = 'v5c4-aqci';
 const RESOURCE = `https://controllerdata.lacity.org/resource/${DATASET_ID}.json`;
 const METADATA = `https://controllerdata.lacity.org/api/views/${DATASET_ID}`;
+const APP_TOKEN = process.env.SODA_APP_TOKEN?.trim() || '';
 const REQUIRED_DIMENSIONS = [
   'department_name',
   'vendor_name',
@@ -20,40 +21,61 @@ function queryUrl(params) {
   return url;
 }
 
-async function readJson(url, timeoutMs = 45_000) {
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), timeoutMs);
-  try {
-    const response = await fetch(url, {
-      headers: {
-        Accept: 'application/json',
-        'User-Agent': 'drill-down-anomaly-lab-live-smoke/0.2',
-      },
-      signal: controller.signal,
-    });
-    if (!response.ok) throw new Error(`${response.status} ${await response.text()}`);
-    return response.json();
-  } finally {
-    clearTimeout(timeout);
-  }
+function wait(milliseconds) {
+  return new Promise((resolve) => setTimeout(resolve, milliseconds));
 }
 
-const [countRows, latestRows, metadata, monthlyRows, departmentRows] = await Promise.all([
-  readJson(queryUrl({
-    '$select': 'count(*) as row_count',
-    '$where': 'dollar_amount is not null',
-  })),
+async function readJson(url, { timeoutMs = 20_000, attempts = 3 } = {}) {
+  let lastError;
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+      const response = await fetch(url, {
+        headers: {
+          Accept: 'application/json',
+          'User-Agent': 'fpa-variance-copilot-public-adapter-monitor/1.0',
+          ...(APP_TOKEN ? { 'X-App-Token': APP_TOKEN } : {}),
+        },
+        signal: controller.signal,
+      });
+      if (!response.ok) {
+        const body = (await response.text()).slice(0, 300);
+        throw new Error(`${response.status} ${response.statusText}: ${body}`);
+      }
+      return await response.json();
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error));
+      if (attempt < attempts) {
+        const delay = 750 * 2 ** (attempt - 1);
+        console.warn(`Public adapter request attempt ${attempt}/${attempts} failed; retrying in ${delay}ms: ${lastError.message}`);
+        await wait(delay);
+      }
+    } finally {
+      clearTimeout(timeout);
+    }
+  }
+  throw new Error(`Public adapter request failed after ${attempts} attempts: ${lastError?.message ?? 'unknown error'}`);
+}
+
+const startedAt = new Date().toISOString();
+const metadata = await readJson(METADATA);
+const countRows = await readJson(queryUrl({
+  '$select': 'count(*) as row_count',
+  '$where': 'dollar_amount is not null',
+}));
+const [latestRows, monthlyRows, departmentRows] = await Promise.all([
   readJson(queryUrl({
     '$select': 'transaction_date, fiscal_year',
     '$where': 'transaction_date is not null',
     '$order': 'transaction_date DESC',
     '$limit': '1',
   })),
-  readJson(METADATA),
   readJson(queryUrl({
     '$select': 'fiscal_year, fiscal_month_number, min(transaction_date) as period_start, max(transaction_date) as period_end, sum(dollar_amount) as amount, count(*) as transactions',
     '$where': 'dollar_amount is not null AND fiscal_year is not null AND fiscal_month_number is not null AND transaction_date is not null',
     '$group': 'fiscal_year, fiscal_month_number',
+    '$order': 'fiscal_year DESC, fiscal_month_number DESC',
     '$limit': '5',
   })),
   readJson(queryUrl({
@@ -81,6 +103,10 @@ const monthlyTotal = monthlyRows.reduce((sum, row) => sum + Number(row.amount ||
 if (!Number.isFinite(monthlyTotal)) throw new Error('Monthly payment aggregation returned an invalid total.');
 
 console.log(JSON.stringify({
+  monitorVersion: 'public-adapter-monitor-v1',
+  startedAt,
+  completedAt: new Date().toISOString(),
+  authenticatedTier: Boolean(APP_TOKEN),
   datasetId: DATASET_ID,
   rowCount,
   latestTransactionDate: latestRows[0].transaction_date,
