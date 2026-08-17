@@ -8,7 +8,13 @@ import type { DatasetSession } from '../lib/datasetSession';
 import type { MetricDefinition } from '../lib/metricSemantics';
 import { askLlm, outboundEvidencePreview, testLlmConnection } from '../lib/llm';
 import type { LlmConfig } from '../lib/llm';
-import { LOCAL_OLLAMA_SETUP_STEPS, localOllamaOriginCommand, localOllamaPreset } from '../lib/llmPresets';
+import {
+  LOCAL_FP_AND_A_MODEL,
+  LOCAL_OLLAMA_SETUP_STEPS,
+  localOllamaOriginCommand,
+  localOllamaPreset,
+  selectLocalOllamaModel,
+} from '../lib/llmPresets';
 import type { FinanceTimeSeriesResult } from '../lib/timeIntelligence';
 import type { DataRow, InvestigationResult, MetricPolarity, Predicate } from '../types';
 
@@ -19,13 +25,25 @@ function stored(key: string, fallback = '') {
 }
 
 const initialLlm: LlmConfig = {
-  enabled: false,
+  enabled: stored('anomaly-llm-enabled', 'false') === 'true',
   endpoint: stored('anomaly-llm-endpoint'),
   model: stored('anomaly-llm-model'),
   apiKey: '',
   authHeader: stored('anomaly-llm-auth-header', 'Authorization'),
   authPrefix: stored('anomaly-llm-auth-prefix', 'Bearer '),
 };
+
+function persistNonSecretConfig(config: LlmConfig) {
+  try {
+    localStorage.setItem('anomaly-llm-enabled', String(config.enabled));
+    localStorage.setItem('anomaly-llm-endpoint', config.endpoint);
+    localStorage.setItem('anomaly-llm-model', config.model);
+    localStorage.setItem('anomaly-llm-auth-header', config.authHeader);
+    localStorage.setItem('anomaly-llm-auth-prefix', config.authPrefix);
+  } catch {
+    // The dashboard remains usable when storage is blocked by the browser.
+  }
+}
 
 export function ChatPanel({
   rows,
@@ -70,6 +88,8 @@ export function ChatPanel({
   const [settingsOpen, setSettingsOpen] = useState(defaultSettingsOpen);
   const [busy, setBusy] = useState(false);
   const [testing, setTesting] = useState(false);
+  const [connectionOk, setConnectionOk] = useState(false);
+  const [availableModels, setAvailableModels] = useState<string[]>([]);
   const [connectionStatus, setConnectionStatus] = useState('');
   const evidenceLedger = useMemo(() => buildEvidenceLedger({
     result,
@@ -112,32 +132,59 @@ export function ChatPanel({
     setSuggestions(starterSuggestions);
   }, [starterSuggestions]);
 
-  function saveNonSecretConfig(next: LlmConfig) {
+  function updateConfig(next: LlmConfig, preserveModels = false) {
     setLlm(next);
+    persistNonSecretConfig(next);
+    setConnectionOk(false);
+    if (!preserveModels) setAvailableModels([]);
     setConnectionStatus('');
-    try {
-      localStorage.setItem('anomaly-llm-endpoint', next.endpoint);
-      localStorage.setItem('anomaly-llm-model', next.model);
-      localStorage.setItem('anomaly-llm-auth-header', next.authHeader);
-      localStorage.setItem('anomaly-llm-auth-prefix', next.authPrefix);
-    } catch {
-      // The dashboard remains usable when storage is blocked by the browser.
-    }
   }
 
-  function useLocalModel() {
-    saveNonSecretConfig(localOllamaPreset());
+  async function connectLocalModel() {
+    const preset = localOllamaPreset();
+    const checking = { ...preset, enabled: false };
     setSettingsOpen(true);
-    setConnectionStatus('Local FP&A preset loaded. Start Ollama with this site origin allowed, then test the connection.');
+    setTesting(true);
+    setConnectionOk(false);
+    setAvailableModels([]);
+    setLlm(checking);
+    persistNonSecretConfig(checking);
+    setConnectionStatus('Looking for Ollama on this device…');
+    try {
+      const output = await testLlmConnection(checking);
+      setAvailableModels(output.availableModels);
+      const selectedModel = output.ok ? preset.model : selectLocalOllamaModel(output.availableModels);
+      if (!selectedModel) {
+        throw new Error('Ollama is reachable, but no installed text model was returned. Pull llama3.2, then connect again.');
+      }
+      const next = { ...preset, model: selectedModel, enabled: true };
+      setLlm(next);
+      persistNonSecretConfig(next);
+      setConnectionOk(true);
+      setConnectionStatus(selectedModel === LOCAL_FP_AND_A_MODEL
+        ? `Local LLM connected. ${selectedModel} is ready for evidence-grounded finance questions.`
+        : `Local LLM connected using ${selectedModel}. Create the ${LOCAL_FP_AND_A_MODEL} alias later to apply the repository's finance-specific model profile.`);
+    } catch (error) {
+      const disabled = { ...checking, enabled: false };
+      setLlm(disabled);
+      persistNonSecretConfig(disabled);
+      setConnectionStatus(error instanceof Error ? error.message : String(error));
+    } finally {
+      setTesting(false);
+    }
   }
 
   async function testConnection() {
     setTesting(true);
+    setConnectionOk(false);
     setConnectionStatus('Testing the model endpoint…');
     try {
       const output = await testLlmConnection(llm);
+      setAvailableModels(output.availableModels);
+      setConnectionOk(output.ok);
       setConnectionStatus(output.message);
     } catch (error) {
+      setAvailableModels([]);
       setConnectionStatus(error instanceof Error ? error.message : String(error));
     } finally {
       setTesting(false);
@@ -187,18 +234,29 @@ export function ChatPanel({
     }
   }
 
-  return <aside className={`chat-panel chat-${displayMode}`} aria-label="Ask FP&A">
-    <div className="chat-head"><div><span className="chat-kicker">AI / LLM ANALYST</span><h2>Explain performance and pacing</h2></div><button className="icon-button" type="button" onClick={() => setSettingsOpen((value) => !value)}>{llm.enabled ? 'LLM connected' : settingsOpen ? 'LLM setup visible' : 'Connect LLM'}</button></div>
+  const connectionLabel = llm.enabled && connectionOk
+    ? 'LLM ready'
+    : llm.enabled
+      ? 'LLM configured'
+      : settingsOpen
+        ? 'LLM setup visible'
+        : 'Connect LLM';
+  const detectedModelOptions = availableModels.includes(llm.model) || !llm.model
+    ? availableModels
+    : [llm.model, ...availableModels];
 
-    {displayMode === 'presentation' && <div className="llm-visibility-callout"><div><strong>Use the built-in finance guide now</strong><span>Or connect the local FP&A Ollama preset or another OpenAI-compatible endpoint.</span></div><b>{llm.enabled ? 'LLM ON' : 'DETERMINISTIC MODE'} · {evidenceLedger.items.length} evidence items</b></div>}
+  return <aside className={`chat-panel chat-${displayMode}`} aria-label="Ask FP&A">
+    <div className="chat-head"><div><span className="chat-kicker">AI / LLM ANALYST</span><h2>Explain performance and pacing</h2></div><button className="icon-button" type="button" onClick={() => setSettingsOpen((value) => !value)}>{connectionLabel}</button></div>
+
+    {displayMode === 'presentation' && <div className="llm-visibility-callout"><div><strong>Use the built-in finance guide now</strong><span>Or connect the local FP&A Ollama preset or another OpenAI-compatible endpoint.</span></div><b>{llm.enabled && connectionOk ? 'LLM READY' : llm.enabled ? 'LLM CONFIGURED' : 'DETERMINISTIC MODE'} · {evidenceLedger.items.length} evidence items</b></div>}
 
     {settingsOpen && <div className="llm-settings">
-      <div className="settings-title"><strong>Model connection</strong><div className="llm-settings-actions"><button type="button" onClick={useLocalModel}>Use local FP&A model</button><button type="button" onClick={testConnection} disabled={testing}>{testing ? 'Testing…' : 'Test connection'}</button><label><input type="checkbox" checked={llm.enabled} onChange={(event) => saveNonSecretConfig({ ...llm, enabled: event.target.checked })} /> Enable</label></div></div>
-      <label>Chat-completions endpoint<input value={llm.endpoint} onChange={(event) => saveNonSecretConfig({ ...llm, endpoint: event.target.value })} placeholder="https://your-host/.../chat/completions" /></label>
-      <div className="settings-row"><label>Model<input value={llm.model} onChange={(event) => saveNonSecretConfig({ ...llm, model: event.target.value })} placeholder="model-name" /></label><label>Auth header<input value={llm.authHeader} onChange={(event) => saveNonSecretConfig({ ...llm, authHeader: event.target.value })} /></label></div>
-      <div className="settings-row"><label>Auth prefix<input value={llm.authPrefix} onChange={(event) => saveNonSecretConfig({ ...llm, authPrefix: event.target.value })} placeholder="Bearer " /></label><label>API key<input type="password" value={llm.apiKey} onChange={(event) => setLlm({ ...llm, apiKey: event.target.value })} placeholder="Not saved" autoComplete="off" /></label></div>
-      {connectionStatus && <p className="llm-connection-status">{connectionStatus}</p>}
-      <details className="local-llm-guide"><summary>Local model setup</summary><code>{LOCAL_OLLAMA_SETUP_STEPS[0]}</code><code>{LOCAL_OLLAMA_SETUP_STEPS[1]}</code><code>{localOllamaOriginCommand()}</code><small>The deployed page calls the local OpenAI-compatible Ollama endpoint. Allow only this site origin rather than every website.</small></details>
+      <div className="settings-title"><strong>Model connection</strong><div className="llm-settings-actions"><button type="button" onClick={connectLocalModel} disabled={testing}>{testing ? 'Connecting…' : 'Connect local LLM'}</button><button type="button" onClick={testConnection} disabled={testing || !llm.endpoint.trim()}>{testing ? 'Testing…' : 'Test endpoint'}</button><label className="llm-enable-toggle"><input type="checkbox" checked={llm.enabled} onChange={(event) => updateConfig({ ...llm, enabled: event.target.checked })} /> Enable</label></div></div>
+      <label>Chat-completions endpoint<input value={llm.endpoint} onChange={(event) => updateConfig({ ...llm, endpoint: event.target.value })} placeholder="https://your-host/.../chat/completions" /></label>
+      <div className="settings-row"><label>Model{detectedModelOptions.length ? <select value={llm.model} onChange={(event) => updateConfig({ ...llm, model: event.target.value }, true)}>{detectedModelOptions.map((model) => <option key={model} value={model}>{model}</option>)}</select> : <input value={llm.model} onChange={(event) => updateConfig({ ...llm, model: event.target.value })} placeholder="model-name" />}</label><label>Auth header<input value={llm.authHeader} onChange={(event) => updateConfig({ ...llm, authHeader: event.target.value })} /></label></div>
+      <div className="settings-row"><label>Auth prefix<input value={llm.authPrefix} onChange={(event) => updateConfig({ ...llm, authPrefix: event.target.value })} placeholder="Bearer " /></label><label>API key<input type="password" value={llm.apiKey} onChange={(event) => setLlm({ ...llm, apiKey: event.target.value })} placeholder="Not saved" autoComplete="off" /></label></div>
+      {connectionStatus && <p className={`llm-connection-status ${connectionOk ? 'connected' : ''}`} role="status" aria-live="polite">{connectionStatus}</p>}
+      <details className="local-llm-guide"><summary>Local model setup</summary><code>{LOCAL_OLLAMA_SETUP_STEPS[0]}</code><code>{LOCAL_OLLAMA_SETUP_STEPS[1]}</code><code>{localOllamaOriginCommand()}</code><small>The deployed page calls the local OpenAI-compatible Ollama endpoint. Allow only this site origin rather than every website.</small><small><strong>Phone note:</strong> 127.0.0.1 means the phone itself. To use a model running on another computer, route it through an approved authenticated HTTPS gateway; do not expose Ollama port 11434 directly to the internet.</small></details>
       <p className="llm-outbound-preview"><strong>Outbound evidence preview</strong><span>{outboundPreview.bytes.toLocaleString()} bytes · no raw rows · ledger {outboundPreview.evidenceLedgerId ?? 'not available'} · run {outboundPreview.calculationRunId}</span>{outboundPreview.sensitiveColumns.length ? <small>Potential sensitive columns are named in quality metadata but raw values are not included: {outboundPreview.sensitiveColumns.join(', ')}.</small> : <small>No sensitive-column candidates are included in the outbound summary.</small>}</p>
       <p className="security-note">The API key remains only in this page's memory. Production deployments should proxy approved providers through a secured backend, redact sensitive values, and retain an auditable calculation snapshot.</p>
     </div>}

@@ -18,6 +18,8 @@ import { profileFields } from './lib/profile';
 import { buildFinanceTimeSeries, detectTimeFields } from './lib/timeIntelligence';
 import type { AggregationMethod, TimeGrain, TimeWindow } from './lib/timeIntelligence';
 import { filterRowsByTimeWindow } from './lib/timeWindow';
+import { layoutModeForWidth } from './lib/responsiveLayout';
+import type { LayoutMode } from './lib/responsiveLayout';
 import { workspaceFromHash, writeWorkspaceHash } from './lib/workspaceRouting';
 import { ContributionBars, DimensionLandscape, DrillTree, InteractionList } from './components/Visuals';
 import { ChatPanel } from './components/ChatPanel';
@@ -65,6 +67,7 @@ export default function AppShell() {
   const [contractReport, setContractReport] = useState<FinanceDataContractReport | undefined>();
   const [datasetSource, setDatasetSource] = useState<DatasetSource>({ kind: 'embedded', name: 'Finance sample' });
   const [workspace, setWorkspace] = useState<Workspace>(() => workspaceFromHash());
+  const [layoutMode, setLayoutMode] = useState<LayoutMode>(() => layoutModeForWidth(typeof window === 'undefined' ? 1280 : window.innerWidth));
   const [actualKey, setActualKey] = useState('actual');
   const [expectedKey, setExpectedKey] = useState('target');
   const [metricPolarity, setMetricPolarity] = useState<MetricPolarity>('higher_is_better');
@@ -153,6 +156,17 @@ export default function AppShell() {
   useEffect(() => {
     writeWorkspaceHash(workspace);
   }, [workspace]);
+
+  useEffect(() => {
+    const updateLayoutMode = () => setLayoutMode(layoutModeForWidth(window.innerWidth));
+    updateLayoutMode();
+    window.addEventListener('resize', updateLayoutMode);
+    window.addEventListener('orientationchange', updateLayoutMode);
+    return () => {
+      window.removeEventListener('resize', updateLayoutMode);
+      window.removeEventListener('orientationchange', updateLayoutMode);
+    };
+  }, []);
 
   function changePalette(next: PaletteId) {
     setPalette(next);
@@ -320,14 +334,14 @@ export default function AppShell() {
     displayMode="presentation"
   />;
 
-  return <main data-theme={palette} data-workspace={workspace} data-dataset-session={datasetSession.sessionId}>
+  return <main data-theme={palette} data-workspace={workspace} data-layout={layoutMode} data-dataset-session={datasetSession.sessionId}>
     {presentationWorkspace ? <header className="presentation-appbar">
       <button type="button" className="presentation-brand" onClick={() => setWorkspace('guided')}><span>FP&A</span><strong>Variance Copilot</strong></button>
       {workspaceNavigation}
       <div className="presentation-appbar-actions"><ThemePicker value={palette} onChange={changePalette} /><label className="presentation-upload">Use my data<input type="file" accept=".csv,.json" onChange={(event) => loadFile(event.target.files?.[0])} /></label></div>
     </header> : <>
       <header className="hero compact-hero">
-        <div><span className="eyebrow">FP&A VARIANCE COPILOT</span><h1>Start with the answer. Drill deeper only when you need to.</h1><p>Quick Answer is a page-by-page presentation. Advanced Analysis preserves every time, driver, evidence, news, and AI control for specialist investigation.</p></div>
+        <div><span className="eyebrow">FP&A VARIANCE COPILOT</span><h1>{layoutMode === 'phone' ? 'Answer first. Drill deeper.' : 'Start with the answer. Drill deeper only when you need to.'}</h1><p>{layoutMode === 'phone' ? 'Quick slides are optimized for the phone. Open Advanced Analysis when you need the full evidence and model controls.' : 'Quick Answer is a page-by-page presentation. Advanced Analysis preserves every time, driver, evidence, news, and AI control for specialist investigation.'}</p></div>
         <div className="header-tools"><ThemePicker value={palette} onChange={changePalette} /><button type="button" className="quiet-button" onClick={() => setWorkspace('public-demo')}>Live 3.8M-row demo</button><label className="upload">Use my data<input type="file" accept=".csv,.json" onChange={(event) => loadFile(event.target.files?.[0])} /></label></div>
       </header>
       {workspaceNavigation}
