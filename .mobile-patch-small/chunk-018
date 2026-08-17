@@ -1,0 +1,41 @@
++  main[data-layout="phone"] .live-overview-page .live-executive-strip,
++  main[data-layout="phone"] .live-alert-row,
++  main[data-layout="phone"] .live-ai-panel,
++  main[data-layout="phone"] .live-method-page .live-method-grid { grid-template-columns: 1fr !important; }
++  main[data-layout="phone"] .live-drivers-page .live-analysis-grid,
++  main[data-layout="phone"] .live-ai-panel,
++  main[data-layout="phone"] .live-method-page .live-method-grid { height: auto; overflow: visible; }
++  main[data-layout="phone"] .live-ai-intro,
++  main[data-layout="phone"] .live-ai-settings,
++  main[data-layout="phone"] .live-ai-conversation { height: auto; overflow: visible; }
++  main[data-layout="phone"] .live-ai-settings > div:not(.live-ai-settings-head) { grid-template-columns: 1fr; }
++
++  /* Advanced controls and evidence cards become true single-column phone modules. */
++  main[data-layout="phone"] .dataset-contract-banner,
++  main[data-layout="phone"] .controls.top-controls,
++  main[data-layout="phone"] .executive-metrics,
++  main[data-layout="phone"] .time-controls,
++  main[data-layout="phone"] .time-summary-grid,
++  main[data-layout="phone"] .model-governance-strip,
++  main[data-layout="phone"] .external-validation-controls,
++  main[data-layout="phone"] .external-validation-result,
++  main[data-layout="phone"] .quality-summary-grid { grid-template-columns: 1fr !important; }
++  main[data-layout="phone"] .dataset-contract-banner { margin-right: 3px; }
++  main[data-layout="phone"] .dataset-contract-banner strong,
++  main[data-layout="phone"] .dataset-contract-banner small { white-space: normal; overflow: visible; text-overflow: clip; }
++  main[data-layout="phone"] .controls.top-controls { display: grid !important; gap: 7px; padding: 8px; }
++  main[data-layout="phone"] .controls.top-controls > *,
++  main[data-layout="phone"] .controls.top-controls label,
++  main[data-layout="phone"] .controls.top-controls .filter-scope { width: 100%; min-width: 0; }
++  main[data-layout="phone"] .advanced-mode-banner { grid-template-columns: 1fr; padding: 10px; }
++  main[data-layout="phone"] .advanced-mode-actions { width: 100%; display: grid; grid-template-columns: 1fr; }
++  main[data-layout="phone"] .advanced-mode-actions button { width: 100%; white-space: normal; }
++  main[data-layout="phone"] .analysis-quality-warning { width: 100%; text-align: left; }
++  main[data-layout="phone"] .friendly-metric { min-height: 0; }
++
++  main[data-layout="phone"] .time-cockpit,
++  main[data-layout="phone"] .fpa-command-center,
++  main[data-layout="phone"] .external-validation-panel,
++  main[data-layout="phone"] .panel,
++  main[data-layout="phone"] .chat-panel,
++  main[data-layout="phone"] .news-panel,
