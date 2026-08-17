@@ -3,6 +3,7 @@ import type { DatasetSession } from './datasetSession';
 import type { MetricDefinition } from './metricSemantics';
 import { metricDefinitionLimitations } from './metricSemantics';
 import type { FinanceTimeSeriesResult } from './timeIntelligence';
+import { backtestBaselineForecasts } from './forecastBacktest';
 import type { InvestigationResult, Predicate } from '../types';
 
 export type EvidenceKind =
@@ -12,6 +13,7 @@ export type EvidenceKind =
   | 'scope'
   | 'variance'
   | 'time-series'
+  | 'forecast-model'
   | 'driver'
   | 'interaction'
   | 'external-context'
@@ -170,6 +172,22 @@ export function buildEvidenceLedger(input: EvidenceLedgerInput): EvidenceLedger 
         modelHealth: time.modelHealth,
         warnings: time.warnings,
       },
+    }));
+    const forecast = backtestBaselineForecasts(time.allPoints.map((point) => ({
+      key: point.key,
+      label: point.label,
+      actual: point.actual,
+    })));
+    items.push(item({
+      id: `forecast:${time.runId}`,
+      kind: 'forecast-model',
+      title: 'Backtested baseline forecast',
+      summary: forecast.champion
+        ? `${forecast.champion.replaceAll('_', ' ')} selected from ${forecast.evaluatedPeriods} out-of-sample periods; status ${forecast.status}.`
+        : `No forecast champion was selected; status ${forecast.status}.`,
+      source: 'deterministic-calculation',
+      runId: time.runId,
+      payload: forecast,
     }));
   }
 
