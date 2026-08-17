@@ -198,3 +198,45 @@
   .live-visual-lab:has(.live-chart-method) { grid-template-rows: auto auto 360px 210px; }
   .llm-settings-actions { display: grid; grid-template-columns: 1fr 1fr; }
 }
+
+/* Architecture hardening: dataset contract, evidence ledger, and outbound AI preview. */
+.dataset-contract-banner {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 7px;
+  margin: 10px 0;
+  border: 3px solid var(--ink);
+  border-radius: 15px;
+  padding: 7px;
+  background: var(--surface);
+  box-shadow: 3px 4px 0 var(--ink);
+}
+.dataset-contract-banner > div {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+  border: 2px solid var(--ink);
+  border-radius: 10px;
+  padding: 7px 9px;
+  background: var(--surface2);
+}
+.dataset-contract-banner > div:nth-child(2) { background: var(--aqua); color: #111; }
+.dataset-contract-banner > div:nth-child(3) { background: var(--yellow); color: #111; }
+.dataset-contract-banner > div:nth-child(4) { background: var(--lime); color: #111; }
+.dataset-contract-banner span { font-size: .56rem; font-weight: 950; letter-spacing: .07em; text-transform: uppercase; }
+.dataset-contract-banner strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .76rem; }
+.dataset-contract-banner small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: inherit !important; opacity: .72; font-size: .58rem; }
+.chat-evidence { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; margin-top: 7px; padding-top: 6px; border-top: 1px dashed currentColor; }
+.chat-evidence b { font-size: .55rem; letter-spacing: .07em; text-transform: uppercase; }
+.chat-evidence code { max-width: 190px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; border: 1px solid currentColor; border-radius: 999px; padding: 2px 5px; font-size: .52rem; }
+.chat-evidence small { margin-left: auto; font-size: .52rem; opacity: .7; }
+.llm-outbound-preview { display: grid; gap: 3px; margin: 0 !important; border: 2px solid var(--ink); border-radius: 9px; padding: 7px; background: var(--aqua); color: #111 !important; }
+.llm-outbound-preview strong { font-size: .63rem; text-transform: uppercase; }
+.llm-outbound-preview span, .llm-outbound-preview small { color: #111 !important; font-size: .57rem; line-height: 1.35; }
+
+@media (max-width: 1000px) {
+  .dataset-contract-banner { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 620px) {
+  .dataset-contract-banner { grid-template-columns: 1fr; }
+}

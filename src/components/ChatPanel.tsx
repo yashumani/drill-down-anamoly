@@ -1,15 +1,18 @@
 import { useEffect, useMemo, useState } from 'react';
 import { demoBusinessContext, demoQuestions } from '../data/demoNews';
-import { answerChat } from '../lib/chatEngine';
+import { runDeterministicAgent } from '../lib/agentOrchestrator';
+import { buildEvidenceLedger } from '../lib/evidenceLedger';
 import type { ChatAction } from '../lib/chatEngine';
 import type { DataQualityReport } from '../lib/dataQuality';
-import { askLlm, testLlmConnection } from '../lib/llm';
+import type { DatasetSession } from '../lib/datasetSession';
+import type { MetricDefinition } from '../lib/metricSemantics';
+import { askLlm, outboundEvidencePreview, testLlmConnection } from '../lib/llm';
 import type { LlmConfig } from '../lib/llm';
 import { LOCAL_OLLAMA_SETUP_STEPS, localOllamaOriginCommand, localOllamaPreset } from '../lib/llmPresets';
 import type { FinanceTimeSeriesResult } from '../lib/timeIntelligence';
 import type { DataRow, InvestigationResult, MetricPolarity, Predicate } from '../types';
 
-interface Message { role: 'user' | 'assistant'; text: string; }
+interface Message { role: 'user' | 'assistant'; text: string; evidenceIds?: string[]; runId?: string; }
 
 function stored(key: string, fallback = '') {
   try { return localStorage.getItem(key) ?? fallback; } catch { return fallback; }
@@ -33,6 +36,8 @@ export function ChatPanel({
   predicates,
   result,
   dataQuality,
+  datasetSession,
+  metricDefinition,
   timeSeries,
   externalContext,
   manualContext,
@@ -49,6 +54,8 @@ export function ChatPanel({
   predicates: Predicate[];
   result: InvestigationResult;
   dataQuality: DataQualityReport;
+  datasetSession: DatasetSession;
+  metricDefinition: MetricDefinition;
   timeSeries: FinanceTimeSeriesResult | null;
   externalContext: string;
   manualContext: string;
@@ -64,6 +71,29 @@ export function ChatPanel({
   const [busy, setBusy] = useState(false);
   const [testing, setTesting] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState('');
+  const evidenceLedger = useMemo(() => buildEvidenceLedger({
+    result,
+    predicates,
+    metricDefinition,
+    dataQuality,
+    timeSeries,
+    datasetSession,
+    externalContext,
+  }), [result, predicates, metricDefinition, dataQuality, timeSeries, datasetSession, externalContext]);
+
+  const outboundPreview = useMemo(() => outboundEvidencePreview({
+    actualKey,
+    expectedKey,
+    metricPolarity,
+    predicates,
+    result,
+    dataQuality,
+    timeSeries: timeSeries ?? undefined,
+    externalContext,
+    datasetSession,
+    metricDefinition,
+    evidenceLedger,
+  }), [actualKey, expectedKey, metricPolarity, predicates, result, dataQuality, timeSeries, externalContext, datasetSession, metricDefinition, evidenceLedger]);
 
   const starterSuggestions = useMemo(() => {
     const top = result.dimensionScores[0];
@@ -117,23 +147,41 @@ export function ChatPanel({
   async function ask(text: string) {
     const question = text.trim();
     if (!question || busy) return;
-    const deterministic = answerChat(question, { rows, dimensions, actualKey, expectedKey, metricPolarity, predicates, result, dataQuality, timeSeries: timeSeries ?? undefined, externalContext });
+    const deterministic = runDeterministicAgent(question, {
+      rows,
+      dimensions,
+      actualKey,
+      expectedKey,
+      metricPolarity,
+      predicates,
+      result,
+      dataQuality,
+      timeSeries: timeSeries ?? undefined,
+      externalContext,
+      aggregationMethod: result.aggregationMethod,
+      timeField: timeSeries?.timeField,
+    }, evidenceLedger);
     setMessages((previous) => [...previous, { role: 'user', text: question }]);
-    setSuggestions(deterministic.suggestions);
+    setSuggestions(deterministic.suggestedQuestions);
     setInput('');
-    if (deterministic.action) onAction(deterministic.action);
+    if (deterministic.uiActions[0]) onAction(deterministic.uiActions[0]);
 
     if (!llm.enabled) {
-      setMessages((previous) => [...previous, { role: 'assistant', text: deterministic.text }]);
+      setMessages((previous) => [...previous, {
+        role: 'assistant',
+        text: deterministic.answer,
+        evidenceIds: deterministic.evidenceIds,
+        runId: deterministic.calculationRunId,
+      }]);
       return;
     }
 
     setBusy(true);
     try {
-      const output = await askLlm(question, llm, { actualKey, expectedKey, metricPolarity, predicates, result, dataQuality, timeSeries: timeSeries ?? undefined, externalContext });
-      setMessages((previous) => [...previous, { role: 'assistant', text: output }]);
+      const output = await askLlm(question, llm, { actualKey, expectedKey, metricPolarity, predicates, result, dataQuality, timeSeries: timeSeries ?? undefined, externalContext, datasetSession, metricDefinition, evidenceLedger });
+      setMessages((previous) => [...previous, { role: 'assistant', text: output, evidenceIds: deterministic.evidenceIds, runId: result.runId }]);
     } catch (requestError) {
-      setMessages((previous) => [...previous, { role: 'assistant', text: `${deterministic.text}\n\nLLM connection note: ${requestError instanceof Error ? requestError.message : String(requestError)}` }]);
+      setMessages((previous) => [...previous, { role: 'assistant', text: `${deterministic.answer}\n\nLLM connection note: ${requestError instanceof Error ? requestError.message : String(requestError)}`, evidenceIds: deterministic.evidenceIds, runId: result.runId }]);
     } finally {
       setBusy(false);
     }
@@ -142,7 +190,7 @@ export function ChatPanel({
   return <aside className={`chat-panel chat-${displayMode}`} aria-label="Ask FP&A">
     <div className="chat-head"><div><span className="chat-kicker">AI / LLM ANALYST</span><h2>Explain performance and pacing</h2></div><button className="icon-button" type="button" onClick={() => setSettingsOpen((value) => !value)}>{llm.enabled ? 'LLM connected' : settingsOpen ? 'LLM setup visible' : 'Connect LLM'}</button></div>
 
-    {displayMode === 'presentation' && <div className="llm-visibility-callout"><div><strong>Use the built-in finance guide now</strong><span>Or connect the local FP&A Ollama preset or another OpenAI-compatible endpoint.</span></div><b>{llm.enabled ? 'LLM ON' : 'DETERMINISTIC MODE'}</b></div>}
+    {displayMode === 'presentation' && <div className="llm-visibility-callout"><div><strong>Use the built-in finance guide now</strong><span>Or connect the local FP&A Ollama preset or another OpenAI-compatible endpoint.</span></div><b>{llm.enabled ? 'LLM ON' : 'DETERMINISTIC MODE'} · {evidenceLedger.items.length} evidence items</b></div>}
 
     {settingsOpen && <div className="llm-settings">
       <div className="settings-title"><strong>Model connection</strong><div className="llm-settings-actions"><button type="button" onClick={useLocalModel}>Use local FP&A model</button><button type="button" onClick={testConnection} disabled={testing}>{testing ? 'Testing…' : 'Test connection'}</button><label><input type="checkbox" checked={llm.enabled} onChange={(event) => saveNonSecretConfig({ ...llm, enabled: event.target.checked })} /> Enable</label></div></div>
@@ -151,6 +199,7 @@ export function ChatPanel({
       <div className="settings-row"><label>Auth prefix<input value={llm.authPrefix} onChange={(event) => saveNonSecretConfig({ ...llm, authPrefix: event.target.value })} placeholder="Bearer " /></label><label>API key<input type="password" value={llm.apiKey} onChange={(event) => setLlm({ ...llm, apiKey: event.target.value })} placeholder="Not saved" autoComplete="off" /></label></div>
       {connectionStatus && <p className="llm-connection-status">{connectionStatus}</p>}
       <details className="local-llm-guide"><summary>Local model setup</summary><code>{LOCAL_OLLAMA_SETUP_STEPS[0]}</code><code>{LOCAL_OLLAMA_SETUP_STEPS[1]}</code><code>{localOllamaOriginCommand()}</code><small>The deployed page calls the local OpenAI-compatible Ollama endpoint. Allow only this site origin rather than every website.</small></details>
+      <p className="llm-outbound-preview"><strong>Outbound evidence preview</strong><span>{outboundPreview.bytes.toLocaleString()} bytes · no raw rows · ledger {outboundPreview.evidenceLedgerId ?? 'not available'} · run {outboundPreview.calculationRunId}</span>{outboundPreview.sensitiveColumns.length ? <small>Potential sensitive columns are named in quality metadata but raw values are not included: {outboundPreview.sensitiveColumns.join(', ')}.</small> : <small>No sensitive-column candidates are included in the outbound summary.</small>}</p>
       <p className="security-note">The API key remains only in this page's memory. Production deployments should proxy approved providers through a secured backend, redact sensitive values, and retain an auditable calculation snapshot.</p>
     </div>}
 
@@ -162,7 +211,7 @@ export function ChatPanel({
       {externalContext && <small className="context-status">External context is active for Ask FP&A.</small>}
     </details>
 
-    <div className="chat-messages" aria-live="polite">{messages.slice(-8).map((message, index) => <div key={`${index}-${message.role}`} className={`chat-message ${message.role}`}><span>{message.role === 'assistant' ? (llm.enabled ? 'AI FP&A analyst' : 'Finance guide') : 'You'}</span><p>{message.text}</p></div>)}</div>
+    <div className="chat-messages" aria-live="polite">{messages.slice(-8).map((message, index) => <div key={`${index}-${message.role}`} className={`chat-message ${message.role}`}><span>{message.role === 'assistant' ? (llm.enabled ? 'AI FP&A analyst' : 'Finance guide') : 'You'}</span><p>{message.text}</p>{message.evidenceIds?.length ? <div className="chat-evidence"><b>Evidence</b>{message.evidenceIds.slice(0, 4).map((id) => <code key={id}>{id}</code>)}{message.runId && <small>Run {message.runId}</small>}</div> : null}</div>)}</div>
     <div className="chat-suggestions">{suggestions.map((suggestion) => <button key={suggestion} type="button" onClick={() => ask(suggestion)}>{suggestion}</button>)}</div>
     <div className="chat-input-row"><input value={input} onChange={(event) => setInput(event.target.value)} onKeyDown={(event) => { if (event.key === 'Enter') ask(input); }} placeholder="Ask: Are we pacing to hit the quarter?" aria-label="Ask a finance question" /><button type="button" disabled={busy} onClick={() => ask(input)}>{busy ? 'Thinking…' : 'Ask'}</button></div>
   </aside>;

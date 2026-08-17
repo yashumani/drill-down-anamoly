@@ -31,3 +31,7 @@ Ollama's local API does not require authentication. The dashboard sends summariz
 ## Why this is in the application repository
 
 For the demo, keeping the Modelfile beside the analytics code makes the prompt and calculation contract versioned together. A separate service repository becomes useful when several applications share one hosted gateway, authentication policy, model registry, observability stack, and deployment lifecycle. A GitHub repository by itself is not a running API; a local Ollama process or deployed inference service must still host the endpoint.
+
+## Governance metadata
+
+`local-ai/model-profile.json` records the prompt, evidence, and response schema versions. The model remains `evaluation-required`; it is not approved for autonomous publishing or official accounting conclusions. Production use should pin a model artifact digest and pass the finance AI evaluation suite.
