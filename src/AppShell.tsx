@@ -6,6 +6,8 @@ import { investigate } from './lib/anomaly';
 import { analyzeDataQuality } from './lib/dataQuality';
 import { inferDatasetDefaults } from './lib/datasetDefaults';
 import { createDatasetSession } from './lib/datasetSession';
+import { buildEvidenceLedger } from './lib/evidenceLedger';
+import { createInvestigationSnapshot, downloadInvestigationSnapshot } from './lib/investigationSnapshot';
 import type { DatasetSource } from './lib/datasetSession';
 import type { FinanceDataContractReport } from './lib/financeDataContract';
 import type { PlanningLens } from './lib/fpaInsights';
@@ -120,6 +122,15 @@ export default function AppShell() {
     }) : null,
     [rows, predicates, actualKey, expectedKey, activeTimeField, timeGrain, timeWindow, aggregation, metricPolarity, fiscalYearStartMonth, materialityPercent],
   );
+  const evidenceLedger = useMemo(() => buildEvidenceLedger({
+    result,
+    predicates,
+    metricDefinition,
+    dataQuality: qualityReport,
+    timeSeries,
+    datasetSession,
+    externalContext,
+  }), [result, predicates, metricDefinition, qualityReport, timeSeries, datasetSession, externalContext]);
   const selectedScore = result.dimensionScores.find((dimension) => dimension.dimension === selectedDimension) ?? result.dimensionScores[0] ?? null;
   const topDriver = result.dimensionScores[0] ?? null;
   const selectedTone = result.businessImpact < 0 ? 'bad' : result.businessImpact > 0 ? 'good' : undefined;
@@ -254,6 +265,27 @@ export default function AppShell() {
     }
   }
 
+  function exportInvestigation() {
+    const snapshot = createInvestigationSnapshot({
+      datasetSession,
+      metricDefinition,
+      actualKey,
+      expectedKey: expectedKey || undefined,
+      metricPolarity,
+      aggregation,
+      timeField: activeTimeField || undefined,
+      timeGrain,
+      timeWindow,
+      fiscalYearStartMonth,
+      materialityPercent,
+      predicates,
+      investigation: result,
+      timeSeries,
+      evidenceLedger,
+    });
+    downloadInvestigationSnapshot(snapshot);
+  }
+
   function openAdvanced(dimension?: string) {
     if (dimension) setSelectedDimension(dimension);
     setWorkspace('advanced');
@@ -346,7 +378,7 @@ export default function AppShell() {
       onOpenPublic={() => setWorkspace('public-demo')}
       onOpenQuality={() => setWorkspace('quality')}
     /> : workspace === 'public-demo' ? <LivePublicFinanceDemo /> : workspace === 'quality' ? <DataQualityPanel rows={rows} report={qualityReport} onLoadCleanDemo={loadCleanDemo} onLoadQualityDemo={loadQualityDemo} /> : <>
-      <div className="advanced-mode-banner"><div><span className="eyebrow">ADVANCED ANALYSIS</span><strong>Every control, every evidence layer.</strong><small>Return to Quick Answer whenever the specialist detail is no longer useful.</small></div><button type="button" onClick={() => setWorkspace('guided')}>← Back to slide presentation</button></div>
+      <div className="advanced-mode-banner"><div><span className="eyebrow">ADVANCED ANALYSIS</span><strong>Every control, every evidence layer.</strong><small>Return to Quick Answer whenever the specialist detail is no longer useful.</small></div><div className="advanced-mode-actions"><button type="button" className="quiet-button" onClick={exportInvestigation}>Export investigation</button><button type="button" onClick={() => setWorkspace('guided')}>← Back to slide presentation</button></div></div>
 
       {(qualityReport.blockers > 0 || qualityReport.warnings > 0) && <button type="button" className={`analysis-quality-warning ${qualityReport.blockers ? 'critical' : ''}`} onClick={() => setWorkspace('quality')}>
         <strong>Data quality: {qualityReport.overallScore.toFixed(0)}/100</strong>
