@@ -22,18 +22,21 @@ jobs:
         with:
           node-version: 24
           cache: npm
-          cache-dependency-path: package.json
+          cache-dependency-path: package-lock.json
 
-      - name: Install dependencies
-        run: npm install --no-audit --no-fund
+      - name: Install locked dependencies
+        run: npm ci --no-audit --no-fund
 
-      - name: Run analytical and AI regression tests
+      - name: Run analytical, semantic, agent, and AI regression tests
         run: npm test
 
       - name: Build production application
         run: npm run build -- --base=/drill-down-anamoly/
 
-      - name: Package branch source and resolved dependencies
+      - name: Enforce bundle budget
+        run: npm run check:bundle
+
+      - name: Package validated branch source
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -44,11 +47,13 @@ jobs:
             docs
             local-ai
             scripts
+            services
             src
             index.html
             package.json
             package-lock.json
-            node_modules
+            vite.config.ts
             tsconfig.app.json
             tsconfig.json
+            SECURITY.md
           retention-days: 1
