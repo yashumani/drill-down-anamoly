@@ -21,10 +21,11 @@ jobs:
       - name: Apply validated implementation and remove transfer artifacts
         run: |
           set -euo pipefail
-          cat .mobile-patch/part-* > /tmp/mobile-responsive.patch
+          cat .mobile-patch-small/chunk-* > /tmp/mobile-responsive.patch
+          echo "58da7aebb1faa17b22eb540658156119f5a9450d962362d9b76ded3da383a62e  /tmp/mobile-responsive.patch" | sha256sum --check --strict
           git apply --check /tmp/mobile-responsive.patch
           git apply --whitespace=fix /tmp/mobile-responsive.patch
-          rm -rf .mobile-patch
+          rm -rf .mobile-patch .mobile-patch-small
           rm .github/workflows/apply-mobile-responsive.yml
           git add -A
           git config user.name "github-actions[bot]"
