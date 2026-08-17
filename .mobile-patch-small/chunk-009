@@ -1,0 +1,51 @@
++    setConnectionStatus('Looking for Ollama on this device…');
++    try {
++      const output = await testLlmConnection(checking);
++      setAvailableModels(output.availableModels);
++      const selectedModel = output.ok ? preset.model : selectLocalOllamaModel(output.availableModels);
++      if (!selectedModel) throw new Error('Ollama is reachable, but no installed text model was returned. Pull llama3.2, then connect again.');
++      const next = { ...preset, model: selectedModel, enabled: true };
++      setLlm(next);
++      try {
++        localStorage.setItem('anomaly-llm-enabled', 'true');
++        localStorage.setItem('anomaly-llm-endpoint', next.endpoint);
++        localStorage.setItem('anomaly-llm-model', next.model);
++      } catch {
++        // The live demo remains usable if browser storage is unavailable.
++      }
++      setConnectionOk(true);
++      setConnectionStatus(selectedModel === LOCAL_FP_AND_A_MODEL
++        ? `Local LLM connected. ${selectedModel} is ready.`
++        : `Local LLM connected using ${selectedModel}; the finance alias can be created later.`);
++    } catch (error) {
++      setLlm(checking);
++      setConnectionStatus(error instanceof Error ? error.message : String(error));
++    } finally {
++      setTesting(false);
++    }
+   }
+ 
+   async function testConnection() {
+     setTesting(true);
++    setConnectionOk(false);
+     setConnectionStatus('Testing the model endpoint…');
+     try {
+       const output = await testLlmConnection(llm);
++      setAvailableModels(output.availableModels);
++      setConnectionOk(output.ok);
+       setConnectionStatus(output.message);
+     } catch (error) {
++      setAvailableModels([]);
+       setConnectionStatus(error instanceof Error ? error.message : String(error));
+     } finally {
+       setTesting(false);
+@@ -169,17 +220,21 @@ export function LivePublicAiPanel({ result }: { result: LivePublicFinanceResult
+     }
+   }
+ 
++  const detectedModelOptions = availableModels.includes(llm.model) || !llm.model
++    ? availableModels
++    : [llm.model, ...availableModels];
++
+   return <section className="live-ai-panel" aria-label="AI review for the live public dataset">
+-    <div className="live-ai-intro"><div><span>VISIBLE AI / LLM OPTION</span><h3>Review 3.8M live records through verified aggregates.</h3><p>The built-in finance guide works immediately. Load the local FP&A Ollama preset or provide another OpenAI-compatible endpoint.</p></div><b>{llm.enabled ? 'LLM ON' : 'GUIDE MODE'}</b></div>
