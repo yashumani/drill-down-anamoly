@@ -1,5 +1,7 @@
 import { answerChat } from './chatEngine';
 import type { ChatAction, ChatContext } from './chatEngine';
+import { runAgentToolPlan } from './agentTools';
+import type { AgentToolExecution } from './agentTools';
 import type { EvidenceLedger } from './evidenceLedger';
 import { findEvidence } from './evidenceLedger';
 
@@ -33,6 +35,7 @@ export interface AgentResponse {
   answer: string;
   claims: AgentClaim[];
   evidenceIds: string[];
+  toolTrace: AgentToolExecution[];
   uiActions: AgentUiAction[];
   suggestedQuestions: string[];
   limitations: string[];
@@ -40,7 +43,7 @@ export interface AgentResponse {
   evidenceLedgerId: string;
 }
 
-function intent(question: string): AgentIntent {
+export function resolveAgentIntent(question: string): AgentIntent {
   const value = question.toLowerCase();
   if (/(quality|missing|duplicate|trust|reliable)/.test(value)) return 'quality';
   if (/(news|external|competitor|event|cause|why factor)/.test(value)) return 'external-hypothesis';
@@ -96,9 +99,13 @@ export function runDeterministicAgent(
   ledger: EvidenceLedger,
 ): AgentResponse {
   const reply = answerChat(question, context);
-  const resolvedIntent = intent(question);
-  const evidenceIds = evidenceForIntent(resolvedIntent, ledger)
-    .filter((id) => Boolean(findEvidence(ledger, id)));
+  const resolvedIntent = resolveAgentIntent(question);
+  const toolTrace = runAgentToolPlan(question, context, ledger);
+  const traceEvidence = toolTrace.flatMap((execution) => execution.evidenceIds);
+  const evidenceIds = [...new Set([
+    ...evidenceForIntent(resolvedIntent, ledger),
+    ...traceEvidence,
+  ])].filter((id) => Boolean(findEvidence(ledger, id)));
   const confidence: AgentClaim['confidence'] = context.dataQuality?.blockers
     ? 'low'
     : context.dataQuality && context.dataQuality.overallScore < 80
@@ -118,6 +125,7 @@ export function runDeterministicAgent(
     answer: reply.text,
     claims,
     evidenceIds,
+    toolTrace,
     uiActions: validateAction(reply.action, context),
     suggestedQuestions: reply.suggestions,
     limitations: limitations(ledger),
@@ -137,6 +145,11 @@ export function validateAgentResponse(
     if (!claim.evidenceIds.length) errors.push(`Claim ${claim.id} has no evidence.`);
     for (const id of claim.evidenceIds) {
       if (!allowedEvidence.has(id)) errors.push(`Claim ${claim.id} references unknown evidence ${id}.`);
+    }
+  }
+  for (const execution of response.toolTrace) {
+    for (const id of execution.evidenceIds) {
+      if (!allowedEvidence.has(id)) errors.push(`Tool ${execution.call.name} references unknown evidence ${id}.`);
     }
   }
   for (const action of response.uiActions) {
