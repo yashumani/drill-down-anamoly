@@ -10,6 +10,7 @@ function result(): InvestigationResult {
   return {
     calculationVersion: 'test',
     runId: 'run-1',
+    generatedAt: '2026-01-01T00:00:00.000Z',
     rowCount: 1,
     validRowCount: 1,
     excludedMeasureRows: 0,
@@ -24,9 +25,8 @@ function result(): InvestigationResult {
     baselineMethod: 'target',
     metricPolarity: 'higher_is_better',
     aggregationMethod: 'sum',
-    attributionBasis: 'additive-total',
+    attributionBasis: 'total',
     attributionReconciles: true,
-    attributionPopulationDate: null,
     dimensionsScanned: 0,
     dimensionScores: [],
     interactions: [],
