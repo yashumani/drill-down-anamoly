@@ -59,10 +59,6 @@ jobs:
       - name: Enforce production bundle budget
         run: npm run check:bundle
 
-      - name: Monitor live public adapter
-        continue-on-error: true
-        run: npm run smoke:public-data
-
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
 
