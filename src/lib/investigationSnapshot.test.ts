@@ -53,7 +53,12 @@ describe('investigation snapshot', () => {
   it('rejects evidence from a different calculation run', () => {
     const session = createDatasetSession({ rows, source: { kind: 'embedded', name: 'Test data' } });
     const result = investigate(rows, ['region'], 'actual', 'target');
-    const ledger = buildEvidenceLedger({ result, predicates: [], datasetSession: session });
+    const ledger = buildEvidenceLedger({
+      result,
+      predicates: [],
+      datasetSession: session,
+      metricDefinition: session.metricDefinition,
+    });
     const snapshot = createInvestigationSnapshot({
       datasetSession: session,
       metricDefinition: session.metricDefinition,
