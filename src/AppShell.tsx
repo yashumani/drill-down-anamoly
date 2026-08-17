@@ -23,6 +23,7 @@ import { ContributionBars, DimensionLandscape, DrillTree, InteractionList } from
 import { ChatPanel } from './components/ChatPanel';
 import { DataQualityPanel } from './components/DataQualityPanel';
 import { FpaInsightPanel } from './components/FpaInsightPanel';
+import { ExternalFactorValidationPanel } from './components/ExternalFactorValidationPanel';
 import { GuidedExperience } from './components/GuidedExperience';
 import { LivePublicFinanceDemo } from './components/LivePublicFinanceDemo';
 import { NewsIntelPanel } from './components/NewsIntelPanel';
@@ -410,6 +411,17 @@ export default function AppShell() {
       />
 
       <FpaInsightPanel rows={analysisRows} predicates={predicates} result={result} dataQuality={qualityReport} planningLens={planningLens} newsAnalysis={newsAnalysis} timeSeries={timeSeries} />
+
+      <ExternalFactorValidationPanel
+        rows={rows}
+        result={result}
+        predicates={predicates}
+        actualKey={actualKey}
+        expectedKey={expectedKey || undefined}
+        metricPolarity={metricPolarity}
+        timeField={activeTimeField}
+        defaultEventDate={timeSeries?.currentPeriod?.periodStart}
+      />
 
       <section className="guided-layout">
         <div className="guided-main">
