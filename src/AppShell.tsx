@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import { createSampleData } from './data/sampleData';
 import { createQualityDemoData } from './data/qualityDemo';
 import { investigate } from './lib/anomaly';
+import { analyzeDataQuality } from './lib/dataQuality';
 import { inferDatasetDefaults } from './lib/datasetDefaults';
 import { createDatasetSession } from './lib/datasetSession';
 import type { DatasetSource } from './lib/datasetSession';
