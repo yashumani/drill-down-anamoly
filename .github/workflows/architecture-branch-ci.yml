@@ -27,16 +27,18 @@ jobs:
       - name: Install dependencies
         run: npm install --no-audit --no-fund
 
-      - name: Run tests
+      - name: Run analytical and AI regression tests
         run: npm test
 
-      - name: Build
+      - name: Build production application
         run: npm run build -- --base=/drill-down-anamoly/
 
-      - name: Package branch source
+      - name: Package branch source and resolved dependencies
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: architecture-hardening-source
+          include-hidden-files: true
           path: |
             .github
             docs
@@ -45,6 +47,8 @@ jobs:
             src
             index.html
             package.json
+            package-lock.json
+            node_modules
             tsconfig.app.json
             tsconfig.json
           retention-days: 1
