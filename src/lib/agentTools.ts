@@ -44,7 +44,7 @@ function callsForQuestion(question: string): Array<Omit<AgentToolCall, 'id'>> {
   if (/(mtd|qtd|ytd|trend|time|month|quarter|year|pace|run rate|forecast|volatility|bias)/.test(value)) {
     calls.push({ name: 'get_time_analysis', reason: 'The question asks about time, pacing, or forecast evidence.' });
   }
-  if (/(driver|contribut|dimension|factor|concentrat|why|explain|what happened)/.test(value)) {
+  if (/(driv|contribut|dimension|factor|concentrat|why|explain|what happened)/.test(value)) {
     calls.push({ name: 'scan_dimensions', reason: 'The question requires ranked business-driver evidence.' });
   }
   if (/(combined|interaction|together|combination|multi)/.test(value)) {
