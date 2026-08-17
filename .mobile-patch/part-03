@@ -1,0 +1,146 @@
+ovide another OpenAI-compatible endpoint.</p></div><b>{llm.enabled ? 'LLM ON' : 'GUIDE MODE'}</b></div>
++    <div className="live-ai-intro"><div><span>VISIBLE AI / LLM OPTION</span><h3>Review 3.8M live records through verified aggregates.</h3><p>The built-in finance guide works immediately. Load the local FP&A Ollama preset or provide another OpenAI-compatible endpoint.</p></div><b>{llm.enabled && connectionOk ? 'LLM READY' : llm.enabled ? 'LLM CONFIGURED' : 'GUIDE MODE'}</b></div>
+ 
+     <div className="live-ai-settings">
+       <div className="live-ai-settings-head"><strong>Model connection</strong><label><input type="checkbox" checked={llm.enabled} onChange={(event) => saveConfig({ ...llm, enabled: event.target.checked })} /> Enable LLM</label></div>
+-      <div className="live-ai-preset-actions"><button type="button" onClick={useLocalModel}>Use local FP&A model</button><button type="button" onClick={testConnection} disabled={testing}>{testing ? 'Testing…' : 'Test connection'}</button></div>
++      <div className="live-ai-preset-actions"><button type="button" onClick={connectLocalModel} disabled={testing}>{testing ? 'Connecting…' : 'Connect local LLM'}</button><button type="button" onClick={testConnection} disabled={testing || !llm.endpoint.trim()}>{testing ? 'Testing…' : 'Test endpoint'}</button></div>
+       <label>Chat-completions endpoint<input value={llm.endpoint} onChange={(event) => saveConfig({ ...llm, endpoint: event.target.value })} placeholder="https://your-host/.../chat/completions" /></label>
+-      <div><label>Model<input value={llm.model} onChange={(event) => saveConfig({ ...llm, model: event.target.value })} placeholder="model-name" /></label><label>API key<input type="password" value={llm.apiKey} onChange={(event) => setLlm({ ...llm, apiKey: event.target.value })} placeholder="Not saved" autoComplete="off" /></label></div>
++      <div><label>Model{detectedModelOptions.length ? <select value={llm.model} onChange={(event) => saveConfig({ ...llm, model: event.target.value }, true)}>{detectedModelOptions.map((model) => <option key={model} value={model}>{model}</option>)}</select> : <input value={llm.model} onChange={(event) => saveConfig({ ...llm, model: event.target.value })} placeholder="model-name" />}</label><label>API key<input type="password" value={llm.apiKey} onChange={(event) => setLlm({ ...llm, apiKey: event.target.value })} placeholder="Not saved" autoComplete="off" /></label></div>
+       <div><label>Auth header<input value={llm.authHeader} onChange={(event) => saveConfig({ ...llm, authHeader: event.target.value })} /></label><label>Auth prefix<input value={llm.authPrefix} onChange={(event) => saveConfig({ ...llm, authPrefix: event.target.value })} placeholder="Bearer " /></label></div>
+-      {connectionStatus && <p className="llm-connection-status">{connectionStatus}</p>}
+-      <details className="local-llm-guide"><summary>Local setup commands</summary><code>{LOCAL_OLLAMA_SETUP_STEPS[0]}</code><code>{LOCAL_OLLAMA_SETUP_STEPS[1]}</code><code>{localOllamaOriginCommand()}</code></details>
++      {connectionStatus && <p className={`llm-connection-status ${connectionOk ? 'connected' : ''}`} role="status" aria-live="polite">{connectionStatus}</p>}
++      <details className="local-llm-guide"><summary>Local setup commands</summary><code>{LOCAL_OLLAMA_SETUP_STEPS[0]}</code><code>{LOCAL_OLLAMA_SETUP_STEPS[1]}</code><code>{localOllamaOriginCommand()}</code><small><strong>Phone note:</strong> 127.0.0.1 means the phone itself. Use an approved authenticated HTTPS gateway for a model running on another computer; never expose Ollama port 11434 directly.</small></details>
+       <small>The API key stays in page memory only. Browser requests require CORS. A production deployment should use a secured server-side LLM gateway.</small>
+     </div>
+ 
+diff --git a/src/lib/llmPresets.test.ts b/src/lib/llmPresets.test.ts
+new file mode 100644
+index 0000000..8eca977
+--- /dev/null
++++ b/src/lib/llmPresets.test.ts
+@@ -0,0 +1,17 @@
++import { describe, expect, it } from 'vitest';
++import { LOCAL_FP_AND_A_MODEL, selectLocalOllamaModel } from './llmPresets';
++
++describe('local Ollama model selection', () => {
++  it('prefers the finance alias when it exists', () => {
++    expect(selectLocalOllamaModel(['llama3.2:latest', LOCAL_FP_AND_A_MODEL])).toBe(LOCAL_FP_AND_A_MODEL);
++  });
++
++  it('falls back to a detected base model when the finance alias is not created yet', () => {
++    expect(selectLocalOllamaModel(['embedding-model', 'llama3.2:latest'])).toBe('llama3.2:latest');
++    expect(selectLocalOllamaModel(['qwen2.5:7b'])).toBe('qwen2.5:7b');
++  });
++
++  it('returns an empty value when no model is installed', () => {
++    expect(selectLocalOllamaModel([])).toBe('');
++  });
++});
+diff --git a/src/lib/llmPresets.ts b/src/lib/llmPresets.ts
+index 9f8b571..1e4ebc1 100644
+--- a/src/lib/llmPresets.ts
++++ b/src/lib/llmPresets.ts
+@@ -14,6 +14,15 @@ export function localOllamaPreset(): LlmConfig {
+   };
+ }
+ 
++export function selectLocalOllamaModel(availableModels: string[]) {
++  const cleaned = [...new Set(availableModels.map((model) => model.trim()).filter(Boolean))];
++  if (cleaned.includes(LOCAL_FP_AND_A_MODEL)) return LOCAL_FP_AND_A_MODEL;
++  return cleaned.find((model) => /^llama3\.2(?::|$)/i.test(model))
++    ?? cleaned.find((model) => /^(llama|qwen|mistral|gemma|phi)/i.test(model))
++    ?? cleaned[0]
++    ?? '';
++}
++
+ export function localOllamaOriginCommand(origin = typeof window === 'undefined' ? 'https://yashumani.github.io' : window.location.origin) {
+   return `OLLAMA_ORIGINS=${origin} ollama serve`;
+ }
+diff --git a/src/lib/responsiveChart.test.ts b/src/lib/responsiveChart.test.ts
+new file mode 100644
+index 0000000..4651bda
+--- /dev/null
++++ b/src/lib/responsiveChart.test.ts
+@@ -0,0 +1,28 @@
++import { describe, expect, it } from 'vitest';
++import type { EChartsOption } from 'echarts';
++import { responsiveChartOption } from './responsiveChart';
++
++describe('responsive ECharts option', () => {
++  it('keeps the desktop option unchanged above the compact breakpoint', () => {
++    const option: EChartsOption = { xAxis: { type: 'value', name: 'Impact' }, yAxis: { type: 'category' } };
++    expect(responsiveChartOption(option, 900)).toBe(option);
++  });
++
++  it('confines tooltips, scrolls legends, and trims category-axis margins on phones', () => {
++    const option: EChartsOption = {
++      tooltip: { trigger: 'axis' },
++      legend: { data: ['Actual', 'Plan', 'Impact'] },
++      grid: { left: 170, right: 70 },
++      xAxis: { type: 'value', name: 'Business impact' },
++      yAxis: { type: 'category', data: ['Long category label'] },
++      series: [],
++    };
++    const output = responsiveChartOption(option, 390) as Record<string, any>;
++    expect(output.tooltip.confine).toBe(true);
++    expect(output.legend.type).toBe('scroll');
++    expect(output.grid.left).toBe(112);
++    expect(output.grid.right).toBe(14);
++    expect(output.xAxis.name).toBe('');
++    expect(output.yAxis.axisLabel.overflow).toBe('truncate');
++  });
++});
+diff --git a/src/lib/responsiveChart.ts b/src/lib/responsiveChart.ts
+new file mode 100644
+index 0000000..7f1eeb4
+--- /dev/null
++++ b/src/lib/responsiveChart.ts
+@@ -0,0 +1,87 @@
++import type { EChartsOption } from 'echarts';
++
++export const COMPACT_CHART_MAX_WIDTH = 560;
++
++type LooseOption = Record<string, any>;
++
++function mapCollection(value: unknown, transform: (item: LooseOption) => LooseOption) {
++  if (Array.isArray(value)) return value.map((item) => transform((item ?? {}) as LooseOption));
++  if (value && typeof value === 'object') return transform(value as LooseOption);
++  return value;
++}
++
++function collectionItems(value: unknown): LooseOption[] {
++  if (Array.isArray(value)) return value.filter((item) => item && typeof item === 'object') as LooseOption[];
++  if (value && typeof value === 'object') return [value as LooseOption];
++  return [];
++}
++
++export function responsiveChartOption(option: EChartsOption, width: number): EChartsOption {
++  if (!Number.isFinite(width) || width <= 0 || width > COMPACT_CHART_MAX_WIDTH) return option;
++
++  const source = option as LooseOption;
++  const output: LooseOption = { ...source };
++  const hasLegend = Boolean(source.legend);
++  const hasAxes = Boolean(source.xAxis || source.yAxis);
++  const hasDataZoom = Boolean(source.dataZoom) && (!Array.isArray(source.dataZoom) || source.dataZoom.length > 0);
++  const yAxes = collectionItems(source.yAxis);
++  const categoryY = yAxes.some((axis) => axis.type === 'category');
++
++  if (source.tooltip && typeof source.tooltip === 'object' && !Array.isArray(source.tooltip)) {
++    output.tooltip = { ...source.tooltip, confine: true };
++  }
++
++  if (source.legend) {
++    output.legend = mapCollection(source.legend, (legend) => ({
++      ...legend,
++      type: 'scroll',
++      top: 4,
++      left: 8,
++      right: 8,
++      itemWidth: 12,
++      itemHeight: 7,
++      itemGap: 8,
++      pageIconSize: 9,
++      textStyle: { ...(l
