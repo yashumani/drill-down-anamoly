@@ -54,8 +54,8 @@ function intent(question: string): AgentIntent {
 
 function evidenceForIntent(value: AgentIntent, ledger: EvidenceLedger) {
   const kindsByIntent: Record<AgentIntent, string[]> = {
-    explain: ['variance', 'time-series', 'driver', 'quality', 'metric-definition'],
-    time: ['time-series', 'variance', 'metric-definition', 'quality'],
+    explain: ['variance', 'time-series', 'forecast-model', 'driver', 'quality', 'metric-definition'],
+    time: ['time-series', 'forecast-model', 'variance', 'metric-definition', 'quality'],
     driver: ['driver', 'interaction', 'variance', 'scope', 'metric-definition'],
     quality: ['quality', 'dataset', 'metric-definition'],
     'external-hypothesis': ['external-context', 'driver', 'time-series', 'variance', 'limitation'],
