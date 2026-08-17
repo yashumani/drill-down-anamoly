@@ -1,0 +1,40 @@
+name: Live public adapter monitor
+
+on:
+  schedule:
+    - cron: "17 */6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: public-adapter-monitor
+  cancel-in-progress: true
+
+jobs:
+  monitor:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+
+      - name: Verify live public source schema, scale, and aggregates
+        env:
+          SODA_APP_TOKEN: ${{ secrets.SODA_APP_TOKEN }}
+        run: npm run smoke:public-data
+
+      - name: Record monitor summary
+        if: always()
+        run: |
+          echo "## Live public adapter monitor" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Dataset: City of Los Angeles LA_PROCUREMENT (v5c4-aqci)" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Trigger: ${{ github.event_name }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Commit: ${{ github.sha }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Optional secret: SODA_APP_TOKEN" >> "$GITHUB_STEP_SUMMARY"
