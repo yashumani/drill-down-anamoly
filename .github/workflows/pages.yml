@@ -1,4 +1,4 @@
-name: Test and deploy FP&A intelligence dashboard
+name: Validate and deploy FP&A intelligence dashboard
 
 on:
   push:
@@ -6,10 +6,17 @@ on:
     paths:
       - "src/**"
       - "scripts/**"
+      - "local-ai/**"
+      - "docs/adr/**"
+      - "docs/ai-model-card.md"
+      - "docs/threat-model.md"
       - "index.html"
       - "package.json"
       - "package-lock.json"
       - "tsconfig*.json"
+      - "SECURITY.md"
+      - ".github/CODEOWNERS"
+      - ".github/pull_request_template.md"
       - ".github/workflows/pages.yml"
   workflow_dispatch:
 
@@ -19,18 +26,18 @@ permissions:
   id-token: write
 
 concurrency:
-  group: "pages"
+  group: "pages-production"
   cancel-in-progress: true
 
 jobs:
-  build-and-deploy:
+  validate-build-deploy:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
+      - name: Checkout immutable source
         uses: actions/checkout@v6
 
       - name: Setup Node
@@ -38,25 +45,25 @@ jobs:
         with:
           node-version: 24
           cache: npm
-          cache-dependency-path: package.json
+          cache-dependency-path: package-lock.json
 
-      - name: Install dependencies
-        run: npm install --no-audit --no-fund
+      - name: Install locked dependencies
+        run: npm ci --no-audit --no-fund
 
-      - name: Run analytical regression tests
+      - name: Run analytical, semantic, agent, and AI regression tests
         run: npm test
 
-      - name: Verify live public dataset
+      - name: Build production application
+        run: npm run build -- --base=/drill-down-anamoly/
+
+      - name: Monitor live public adapter
         continue-on-error: true
         run: npm run smoke:public-data
-
-      - name: Build React dashboard
-        run: npm run build -- --base=/drill-down-anamoly/
 
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
 
-      - name: Upload React build
+      - name: Upload immutable Pages artifact
         uses: actions/upload-pages-artifact@v4
         with:
           path: ./dist
