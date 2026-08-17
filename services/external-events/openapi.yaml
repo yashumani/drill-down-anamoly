@@ -1,0 +1,122 @@
+openapi: 3.1.0
+info:
+  title: FP&A External Event Service
+  version: 1.0.0
+  description: Normalize external events and test their relationship to finance outcomes without claiming unsupported causality.
+servers:
+  - url: https://events.example.com
+security:
+  - bearerAuth: []
+paths:
+  /v1/events/normalize:
+    post:
+      operationId: normalizeExternalEvent
+      summary: Convert news, operations, campaign, outage, pricing, or market input into a governed event
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExternalEventInput'
+      responses:
+        '200':
+          description: Normalized event
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExternalEvent'
+  /v1/event-studies:
+    post:
+      operationId: runEventStudy
+      summary: Compare affected and control cohorts before and after an event
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EventStudyRequest'
+      responses:
+        '200':
+          description: Descriptive event-study evidence
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventStudyResult'
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    ExternalEventInput:
+      type: object
+      required: [source, title, effectiveStart]
+      properties:
+        source: { type: string }
+        sourceUrl: { type: string, format: uri }
+        title: { type: string }
+        description: { type: string }
+        effectiveStart: { type: string, format: date-time }
+        effectiveEnd: { type: string, format: date-time }
+        entities: { type: array, items: { type: string } }
+        topics: { type: array, items: { type: string } }
+        geographies: { type: array, items: { type: string } }
+        products: { type: array, items: { type: string } }
+        channels: { type: array, items: { type: string } }
+    ExternalEvent:
+      allOf:
+        - $ref: '#/components/schemas/ExternalEventInput'
+        - type: object
+          required: [eventId, sourceCredibility, financeLevers, expectedDirection]
+          properties:
+            eventId: { type: string }
+            sourceCredibility: { type: number, minimum: 0, maximum: 1 }
+            financeLevers:
+              type: array
+              items: { type: string, enum: [price, volume, mix, churn, acquisition, cost, capacity, supply, timing, workforce] }
+            expectedDirection: { type: string, enum: [favorable, unfavorable, mixed, unknown] }
+            normalizationConfidence: { type: number, minimum: 0, maximum: 1 }
+    Predicate:
+      type: object
+      required: [dimension, value]
+      properties:
+        dimension: { type: string }
+        value: { type: string }
+    EventStudyRequest:
+      type: object
+      required: [eventId, datasetSessionId, metricId, timeField, affectedPredicates]
+      properties:
+        eventId: { type: string }
+        datasetSessionId: { type: string }
+        metricId: { type: string }
+        timeField: { type: string }
+        affectedPredicates: { type: array, items: { $ref: '#/components/schemas/Predicate' } }
+        controlPredicates: { type: array, items: { $ref: '#/components/schemas/Predicate' } }
+        preDays: { type: integer, minimum: 7, maximum: 365, default: 30 }
+        postDays: { type: integer, minimum: 7, maximum: 365, default: 30 }
+    EventStudyResult:
+      type: object
+      required:
+        - calculationVersion
+        - eventId
+        - method
+        - rawEffect
+        - businessImpactEffect
+        - status
+        - confidence
+        - diagnostics
+        - limitations
+      properties:
+        calculationVersion: { type: string }
+        eventId: { type: string }
+        method: { type: string, enum: [difference_in_differences, pre_post] }
+        rawEffect: { type: number }
+        businessImpactEffect: { type: number }
+        impactDirection: { type: string, enum: [favorable, unfavorable, neutral] }
+        standardizedEffect: { type: number }
+        parallelTrendScore: { type: [number, 'null'] }
+        status: { type: string, enum: [supported, weak, contradicted, insufficient] }
+        confidence: { type: string, enum: [high, medium, low] }
+        diagnostics: { type: array, items: { type: string } }
+        limitations: { type: array, items: { type: string } }
