@@ -1,15 +1,15 @@
-name: Apply architecture hardening patch
+name: Commit reproducible dependency lock
 
 on:
   push:
     branches: ["architecture-hardening-v1"]
-    paths: [".architecture/FIX_BUILD_1"]
+    paths: [".architecture/COMMIT_LOCK"]
 
 permissions:
   contents: write
 
 jobs:
-  apply:
+  lock:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout branch
@@ -18,14 +18,19 @@ jobs:
           ref: architecture-hardening-v1
           fetch-depth: 0
 
-      - name: Apply build correction
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: package.json
+
+      - name: Generate and commit package lock
         run: |
           set -euo pipefail
-          if ! grep -q "import { analyzeDataQuality } from './lib/dataQuality';" src/AppShell.tsx; then
-            sed -i "/import { investigate } from '.\/lib\/anomaly';/a import { analyzeDataQuality } from '.\/lib\/dataQuality';" src/AppShell.tsx
-          fi
-          git add src/AppShell.tsx
+          npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+          git add package-lock.json
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git commit -m "Fix data-quality import in hardened application shell"
+          git commit -m "Add reproducible dependency lock"
           git push origin HEAD:architecture-hardening-v1
