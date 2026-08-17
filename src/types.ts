@@ -3,6 +3,8 @@ export type DataRow = Record<string, DataValue>;
 
 export type MetricPolarity = 'higher_is_better' | 'lower_is_better';
 export type ImpactDirection = 'favorable' | 'unfavorable' | 'neutral';
+export type AttributionAggregation = 'sum' | 'average' | 'period_end';
+export type AttributionBasis = 'total' | 'support_weighted_average' | 'latest_period_total';
 
 export interface FieldProfile {
   name: string;
@@ -31,6 +33,7 @@ export interface CategoryContribution {
   shareOfAbsVariance: number;
   surprise: number;
   standardizedResidual: number;
+  attributionBasis: AttributionBasis;
 }
 
 export interface DimensionScore {
@@ -59,9 +62,13 @@ export interface InteractionSegment {
   businessImpactPerRow: number;
   lift: number;
   score: number;
+  attributionBasis: AttributionBasis;
 }
 
 export interface InvestigationResult {
+  calculationVersion: string;
+  runId: string;
+  generatedAt: string;
   rowCount: number;
   validRowCount: number;
   excludedMeasureRows: number;
@@ -75,6 +82,10 @@ export interface InvestigationResult {
   residualScale: number;
   baselineMethod: 'target' | 'robust-median';
   metricPolarity: MetricPolarity;
+  aggregationMethod: AttributionAggregation;
+  attributionBasis: AttributionBasis;
+  attributionReconciles: boolean;
+  attributionPopulationDate?: string;
   dimensionsScanned: number;
   dimensionScores: DimensionScore[];
   interactions: InteractionSegment[];

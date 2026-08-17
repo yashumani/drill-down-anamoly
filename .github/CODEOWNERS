@@ -1,0 +1,10 @@
+# FP&A analytics, AI, security, and deployment changes require owner review.
+* @yashumani
+/.github/ @yashumani
+/src/lib/anomaly.ts @yashumani
+/src/lib/timeIntelligence.ts @yashumani
+/src/lib/llm.ts @yashumani
+/src/lib/agentOrchestrator.ts @yashumani
+/src/lib/evidenceLedger.ts @yashumani
+/src/lib/financeDataContract.ts @yashumani
+/local-ai/ @yashumani

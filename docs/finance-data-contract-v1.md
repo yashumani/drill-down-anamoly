@@ -84,10 +84,15 @@ Long-format rows are pivoted into the internal `actual`, `target`, `forecast`, a
 
 - Contract v1 accepts **one metric per file**. Multi-metric files are rejected rather than silently summed across unlike units.
 - A stable `metric_id` may coexist with one friendly `metric_name`; multiple names for the same ID are flagged for standardization.
-- The detailed driver engine is strongest for additive metrics. Ratios should be supplied as governed numerator and denominator measures in a future semantic-contract version.
+- Driver attribution supports `sum`, support-weighted `average`, and latest-date `period_end`. Unsupported ratio or distinct-count aggregation methods are rejected rather than silently treated as additive.
+- Ratios should be supplied with governed numerator and denominator measures in a future semantic-contract version.
 - `plan_value` is strongly recommended. When no comparison exists, the dashboard uses a clearly labeled rolling historical baseline rather than claiming an official plan variance.
 - Date values should use ISO format to avoid locale ambiguity.
 - Each row should represent a consistent business grain.
 - Long-format files should use one primary Plan/Budget/Target scenario. When several comparison scenarios exist, the highest-priority one is used and the others remain supporting measures.
 
 A downloadable CSV example is available from the live Executive Overview and Method & Source pages.
+
+## Dataset-session evidence
+
+The importer retains the contract report, mappings, warnings, content hash, inferred defaults, data-quality profile, metric definition, and time candidates in a dataset session. Every calculation and AI response can therefore be traced back to the normalized input contract.

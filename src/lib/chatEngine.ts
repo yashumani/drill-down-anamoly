@@ -2,7 +2,7 @@ import { investigate } from './anomaly';
 import type { DataQualityReport } from './dataQuality';
 import { labelFor, resolveDimension, semanticFor } from '../data/semanticModel';
 import type { FinancePeriodSummary, FinanceTimeSeriesResult } from './timeIntelligence';
-import type { DataRow, InvestigationResult, MetricPolarity, Predicate } from '../types';
+import type { AttributionAggregation, DataRow, InvestigationResult, MetricPolarity, Predicate } from '../types';
 
 export interface ChatContext {
   rows: DataRow[];
@@ -15,6 +15,8 @@ export interface ChatContext {
   dataQuality?: DataQualityReport;
   timeSeries?: FinanceTimeSeriesResult;
   externalContext?: string;
+  aggregationMethod?: AttributionAggregation;
+  timeField?: string;
 }
 
 export interface ChatAction {
@@ -202,7 +204,15 @@ function compare(ctx: ChatContext, query: string): ChatReply | null {
     const matches = score.categories.filter((category) => lower.includes(String(category.value).toLowerCase())).slice(0, 2);
     if (matches.length === 2) {
       const parts = matches.map((match) => {
-        const result = investigate(ctx.rows, ctx.dimensions, ctx.actualKey, ctx.expectedKey, [...ctx.predicates.filter((predicate) => predicate.dimension !== score.dimension), { dimension: score.dimension, value: String(match.value) }], ctx.metricPolarity);
+        const result = investigate(
+          ctx.rows,
+          ctx.dimensions,
+          ctx.actualKey,
+          ctx.expectedKey,
+          [...ctx.predicates.filter((predicate) => predicate.dimension !== score.dimension), { dimension: score.dimension, value: String(match.value) }],
+          ctx.metricPolarity,
+          { aggregationMethod: ctx.aggregationMethod ?? ctx.result.aggregationMethod, timeField: ctx.timeField ?? ctx.timeSeries?.timeField },
+        );
         return { value: match.value, result };
       });
       const better = parts[0].result.businessImpact >= parts[1].result.businessImpact ? parts[0] : parts[1];

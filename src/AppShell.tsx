@@ -1,18 +1,21 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import { createSampleData } from './data/sampleData';
 import { createQualityDemoData } from './data/qualityDemo';
 import { investigate } from './lib/anomaly';
-import { analyzeDataQuality } from './lib/dataQuality';
 import { inferDatasetDefaults } from './lib/datasetDefaults';
+import { createDatasetSession } from './lib/datasetSession';
+import type { DatasetSource } from './lib/datasetSession';
+import type { FinanceDataContractReport } from './lib/financeDataContract';
 import type { PlanningLens } from './lib/fpaInsights';
 import { planningLenses } from './lib/fpaInsights';
-import { parseDataFile } from './lib/io';
+import { parseDataFileWithMetadata } from './lib/io';
 import type { NewsAnalysisResult } from './lib/newsIntel';
 import { profileFields } from './lib/profile';
 import { buildFinanceTimeSeries, detectTimeFields } from './lib/timeIntelligence';
 import type { AggregationMethod, TimeGrain, TimeWindow } from './lib/timeIntelligence';
 import { filterRowsByTimeWindow } from './lib/timeWindow';
+import { workspaceFromHash, writeWorkspaceHash } from './lib/workspaceRouting';
 import { ContributionBars, DimensionLandscape, DrillTree, InteractionList } from './components/Visuals';
 import { ChatPanel } from './components/ChatPanel';
 import { DataQualityPanel } from './components/DataQualityPanel';
@@ -55,7 +58,9 @@ function windowLabel(window: TimeWindow) {
 
 export default function AppShell() {
   const [rows, setRows] = useState<DataRow[]>(() => createSampleData());
-  const [workspace, setWorkspace] = useState<Workspace>('guided');
+  const [contractReport, setContractReport] = useState<FinanceDataContractReport | undefined>();
+  const [datasetSource, setDatasetSource] = useState<DatasetSource>({ kind: 'embedded', name: 'Finance sample' });
+  const [workspace, setWorkspace] = useState<Workspace>(() => workspaceFromHash());
   const [actualKey, setActualKey] = useState('actual');
   const [expectedKey, setExpectedKey] = useState('target');
   const [metricPolarity, setMetricPolarity] = useState<MetricPolarity>('higher_is_better');
@@ -78,10 +83,12 @@ export default function AppShell() {
   const [error, setError] = useState('');
 
   const profiles = useMemo(() => profileFields(rows), [rows]);
-  const qualityReport = useMemo(() => analyzeDataQuality(rows), [rows]);
+  const datasetSession = useMemo(() => createDatasetSession({ rows, source: datasetSource, contractReport }), [rows, datasetSource, contractReport]);
+  const qualityReport = datasetSession.qualityReport;
+  const metricDefinition = datasetSession.metricDefinition;
   const qualityByName = useMemo(() => new Map(qualityReport.columns.map((column) => [column.name, column])), [qualityReport.columns]);
   const numeric = profiles.filter((profile) => profile.kind === 'numeric' && qualityByName.get(profile.name)?.analysisRole === 'measure');
-  const timeCandidates = useMemo(() => detectTimeFields(rows), [rows]);
+  const timeCandidates = datasetSession.timeCandidates;
   const activeTimeField = timeCandidates.some((candidate) => candidate.field === timeField) ? timeField : timeCandidates[0]?.field ?? '';
   const timeFields = useMemo(() => new Set(timeCandidates.map((candidate) => candidate.field)), [timeCandidates]);
   const availableDimensions = profiles.filter((profile) => qualityByName.get(profile.name)?.analysisRole === 'dimension' && !timeFields.has(profile.name));
@@ -93,8 +100,8 @@ export default function AppShell() {
   );
   const externalContext = [manualContext, newsContext].filter(Boolean).join('\n\n');
   const result = useMemo(
-    () => investigate(analysisRows, dimensions, actualKey, expectedKey || undefined, predicates, metricPolarity),
-    [analysisRows, dimensionKey, actualKey, expectedKey, predicates, metricPolarity],
+    () => investigate(analysisRows, dimensions, actualKey, expectedKey || undefined, predicates, metricPolarity, { aggregationMethod: aggregation, timeField: activeTimeField || undefined }),
+    [analysisRows, dimensionKey, actualKey, expectedKey, predicates, metricPolarity, aggregation, activeTimeField],
   );
   const timeSeries = useMemo(
     () => activeTimeField ? buildFinanceTimeSeries({
@@ -120,12 +127,31 @@ export default function AppShell() {
   const executiveTone = executiveImpact < 0 ? 'bad' : executiveImpact > 0 ? 'good' : undefined;
   const presentationWorkspace = workspace === 'guided' || workspace === 'public-demo';
 
+  useEffect(() => {
+    const onRouteChange = () => setWorkspace(workspaceFromHash());
+    window.addEventListener('hashchange', onRouteChange);
+    window.addEventListener('popstate', onRouteChange);
+    return () => {
+      window.removeEventListener('hashchange', onRouteChange);
+      window.removeEventListener('popstate', onRouteChange);
+    };
+  }, []);
+
+  useEffect(() => {
+    writeWorkspaceHash(workspace);
+  }, [workspace]);
+
   function changePalette(next: PaletteId) {
     setPalette(next);
     localStorage.setItem('anomaly-palette', next);
   }
 
-  function applyDataset(nextRows: DataRow[], preferredActual?: string, preferredExpected?: string) {
+  function applyDataset(
+    nextRows: DataRow[],
+    preferredActual?: string,
+    preferredExpected?: string,
+    metadata?: { contractReport?: FinanceDataContractReport; source?: DatasetSource },
+  ) {
     const nextQuality = analyzeDataQuality(nextRows);
     const nextProfiles = profileFields(nextRows);
     const defaults = inferDatasetDefaults(nextRows, nextQuality.measureCandidates);
@@ -139,6 +165,8 @@ export default function AppShell() {
         : nextQuality.measureCandidates.find((name) => name !== candidateActual) ?? '';
     const candidateTime = detectTimeFields(nextRows)[0];
     setRows(nextRows);
+    setContractReport(metadata?.contractReport);
+    setDatasetSource(metadata?.source ?? { kind: 'unknown', name: defaults.datasetLabel });
     setActualKey(candidateActual);
     setExpectedKey(candidateExpected);
     setMetricPolarity(defaults.metricPolarity);
@@ -157,12 +185,12 @@ export default function AppShell() {
   }
 
   function loadCleanDemo() {
-    applyDataset(createSampleData(), 'actual', 'target');
+    applyDataset(createSampleData(), 'actual', 'target', { source: { kind: 'embedded', name: 'Finance sample' } });
     setWorkspace('guided');
   }
 
   function loadQualityDemo() {
-    applyDataset(createQualityDemoData(), 'actual', 'target');
+    applyDataset(createQualityDemoData(), 'actual', 'target', { source: { kind: 'embedded', name: 'Data quality demonstration' } });
     setWorkspace('quality');
   }
 
@@ -207,12 +235,19 @@ export default function AppShell() {
     if (!file) return;
     try {
       setError('');
-      const parsed = await parseDataFile(file);
-      if (!parsed.length) throw new Error('No rows found in this file.');
-      const nextQuality = analyzeDataQuality(parsed);
-      if (!nextQuality.measureCandidates.length) throw new Error('No reliable numeric measure was detected. Open Data quality to review mixed types or missing values.');
-      applyDataset(parsed);
-      setWorkspace(nextQuality.analysisReady ? 'guided' : 'quality');
+      const parsed = await parseDataFileWithMetadata(file);
+      if (!parsed.rows.length) throw new Error('No rows found in this file.');
+      const nextSession = createDatasetSession({
+        rows: parsed.rows,
+        source: { kind: 'upload', name: file.name, fileName: file.name },
+        contractReport: parsed.contractReport,
+      });
+      if (!nextSession.qualityReport.measureCandidates.length) throw new Error('No reliable numeric measure was detected. Open Data quality to review mixed types or missing values.');
+      applyDataset(parsed.rows, undefined, undefined, {
+        contractReport: parsed.contractReport,
+        source: { kind: 'upload', name: file.name, fileName: file.name },
+      });
+      setWorkspace(nextSession.qualityReport.analysisReady ? 'guided' : 'quality');
     } catch (loadError) {
       setError(loadError instanceof Error ? loadError.message : String(loadError));
     }
@@ -240,6 +275,8 @@ export default function AppShell() {
     predicates={predicates}
     result={result}
     dataQuality={qualityReport}
+    datasetSession={datasetSession}
+    metricDefinition={metricDefinition}
     timeSeries={timeSeries}
     externalContext={externalContext}
     manualContext={manualContext}
@@ -249,7 +286,7 @@ export default function AppShell() {
     displayMode="presentation"
   />;
 
-  return <main data-theme={palette} data-workspace={workspace}>
+  return <main data-theme={palette} data-workspace={workspace} data-dataset-session={datasetSession.sessionId}>
     {presentationWorkspace ? <header className="presentation-appbar">
       <button type="button" className="presentation-brand" onClick={() => setWorkspace('guided')}><span>FP&A</span><strong>Variance Copilot</strong></button>
       {workspaceNavigation}
@@ -263,6 +300,13 @@ export default function AppShell() {
     </>}
 
     {error && <div className="error">{error}</div>}
+
+    {(workspace === 'advanced' || workspace === 'quality') && <section className="dataset-contract-banner" aria-label="Dataset and metric contract">
+      <div><span>Dataset session</span><strong>{datasetSession.source.name}</strong><small>{datasetSession.rows.length.toLocaleString()} rows · hash {datasetSession.contentHash}</small></div>
+      <div><span>Finance contract</span><strong>{datasetSession.contractReport.detected ? `v${datasetSession.contractReport.version} · ${datasetSession.contractReport.mode}` : 'Automatic profiling'}</strong><small>{datasetSession.contractReport.detected ? `${datasetSession.contractReport.normalizedDimensionFields.length} declared dimensions` : 'Use the standard contract for deterministic field mapping'}</small></div>
+      <div><span>Metric semantics</span><strong>{metricDefinition.name}</strong><small>{metricDefinition.aggregation.replace('_', ' ')} · {metricDefinition.semanticCompleteness}/100 complete · {metricDefinition.certificationStatus}</small></div>
+      <div><span>Driver attribution</span><strong>{result.attributionReconciles ? 'Reconciled' : 'Review required'}</strong><small>{result.aggregationMethod.replace('_', ' ')} · run {result.runId}</small></div>
+    </section>}
 
     {(workspace === 'advanced' || workspace === 'quality') && <section className="controls top-controls" aria-label="Analysis filters">
       {workspace === 'advanced' && <>
@@ -288,6 +332,7 @@ export default function AppShell() {
       result={result}
       timeSeries={timeSeries}
       dataQuality={qualityReport}
+      metricDefinition={metricDefinition}
       aiPanel={guidedAiPanel}
       onPlanningLens={setPlanningLens}
       onActualKey={(next) => { setActualKey(next); setPredicates([]); }}
@@ -340,13 +385,13 @@ export default function AppShell() {
         </div>
         <div className="insight-sidebar">
           <NewsIntelPanel onContextReady={setNewsContext} onAnalysisReady={setNewsAnalysis} />
-          <ChatPanel rows={analysisRows} dimensions={dimensions} actualKey={actualKey} expectedKey={expectedKey || undefined} metricPolarity={metricPolarity} predicates={predicates} result={result} dataQuality={qualityReport} timeSeries={timeSeries} externalContext={externalContext} manualContext={manualContext} onExternalContext={setManualContext} onAction={handleChatAction} />
+          <ChatPanel rows={analysisRows} dimensions={dimensions} actualKey={actualKey} expectedKey={expectedKey || undefined} metricPolarity={metricPolarity} predicates={predicates} result={result} dataQuality={qualityReport} datasetSession={datasetSession} metricDefinition={metricDefinition} timeSeries={timeSeries} externalContext={externalContext} manualContext={manualContext} onExternalContext={setManualContext} onAction={handleChatAction} />
         </div>
       </section>
 
       <details className="more-analysis"><summary>More analysis</summary><div className="grid two"><Panel title="Combined patterns" subtitle="Groups where several characteristics appear together inside the selected finance window."><InteractionList interactions={result.interactions} onDrill={drill} /></Panel><Panel title="Investigation trail" subtitle="The path you have taken so far."><DrillTree predicates={predicates} /></Panel></div><div className="breadcrumbs"><button onClick={() => setPredicates([])}>All business dimensions</button>{predicates.map((predicate, index) => <button key={`${predicate.dimension}-${predicate.value}`} onClick={() => setPredicates(predicates.slice(0, index + 1))}>→ {humanize(predicate.dimension)}: {predicate.value}</button>)}</div></details>
 
-      <details className="analyst-details"><summary>Analyst evidence</summary><section className="technical-strip"><span><strong>{result.validRowCount.toLocaleString()}</strong> valid measure rows</span><span><strong>{result.excludedMeasureRows.toLocaleString()}</strong> excluded measure rows</span><span><strong>{result.dimensionsScanned}</strong> business factors</span><span><strong>{result.anomalyScore.toFixed(2)}</strong> standardized deviation</span><span><strong>{metricPolarity === 'higher_is_better' ? 'Higher' : 'Lower'}</strong> is better</span><span><strong>{windowLabel(timeWindow)}</strong> selected window</span></section><section className="table-panel"><h2>Factor audit</h2><p>Detailed evidence for every business factor reviewed after excluding time fields and quality-ineligible columns.</p><div className="table-wrap"><table><thead><tr><th>#</th><th>Factor</th><th>Score</th><th>Leading group</th><th>Business impact</th><th>Support</th><th>Impact</th></tr></thead><tbody>{result.dimensionScores.map((dimension, index) => <tr key={dimension.dimension} onClick={() => setSelectedDimension(dimension.dimension)}><td>{index + 1}</td><td>{humanize(dimension.dimension)}</td><td>{dimension.score.toFixed(1)}</td><td>{dimension.topCategory?.value}</td><td className={Number(dimension.topCategory?.businessImpact) < 0 ? 'bad' : 'good'}>{format(dimension.topCategory?.businessImpact ?? 0)}</td><td>{dimension.topCategory ? `${(dimension.topCategory.support * 100).toFixed(1)}%` : '—'}</td><td>{(dimension.impact * 100).toFixed(1)}%</td></tr>)}</tbody></table></div></section></details>
+      <details className="analyst-details"><summary>Analyst evidence</summary><section className="technical-strip"><span><strong>{result.validRowCount.toLocaleString()}</strong> valid measure rows</span><span><strong>{result.excludedMeasureRows.toLocaleString()}</strong> excluded measure rows</span><span><strong>{result.dimensionsScanned}</strong> business factors</span><span><strong>{result.anomalyScore.toFixed(2)}</strong> standardized deviation</span><span><strong>{metricPolarity === 'higher_is_better' ? 'Higher' : 'Lower'}</strong> is better</span><span><strong>{windowLabel(timeWindow)}</strong> selected window</span><span><strong>{result.aggregationMethod.replace('_', ' ')}</strong> attribution</span><span><strong>{result.runId}</strong> calculation run</span></section><section className="table-panel"><h2>Factor audit</h2><p>Detailed evidence for every business factor reviewed after excluding time fields and quality-ineligible columns.</p><div className="table-wrap"><table><thead><tr><th>#</th><th>Factor</th><th>Score</th><th>Leading group</th><th>Business impact</th><th>Support</th><th>Impact</th></tr></thead><tbody>{result.dimensionScores.map((dimension, index) => <tr key={dimension.dimension} onClick={() => setSelectedDimension(dimension.dimension)}><td>{index + 1}</td><td>{humanize(dimension.dimension)}</td><td>{dimension.score.toFixed(1)}</td><td>{dimension.topCategory?.value}</td><td className={Number(dimension.topCategory?.businessImpact) < 0 ? 'bad' : 'good'}>{format(dimension.topCategory?.businessImpact ?? 0)}</td><td>{dimension.topCategory ? `${(dimension.topCategory.support * 100).toFixed(1)}%` : '—'}</td><td>{(dimension.impact * 100).toFixed(1)}%</td></tr>)}</tbody></table></div></section></details>
     </>}
   </main>;
 }

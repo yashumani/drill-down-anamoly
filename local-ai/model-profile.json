@@ -1,0 +1,18 @@
+{
+  "profileId": "local-ollama-fpa-v1",
+  "displayName": "Local FP&A Variance Copilot",
+  "provider": "Ollama",
+  "baseModel": "llama3.2",
+  "modelArtifactDigest": null,
+  "applicationModelId": "fpa-variance-copilot",
+  "promptVersion": "fpa-system-prompt-v2",
+  "evidenceSchemaVersion": "finance-evidence-v1",
+  "responseSchemaVersion": "finance-agent-response-v1",
+  "approvalStatus": "evaluation-required",
+  "temperature": 0.2,
+  "contextWindow": 16384,
+  "notes": [
+    "The repository stores configuration and prompt instructions, not model weights.",
+    "Pin a model digest and complete the finance evaluation suite before production approval."
+  ]
+}
