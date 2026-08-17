@@ -14,6 +14,15 @@ export function localOllamaPreset(): LlmConfig {
   };
 }
 
+export function selectLocalOllamaModel(availableModels: string[]) {
+  const cleaned = [...new Set(availableModels.map((model) => model.trim()).filter(Boolean))];
+  if (cleaned.includes(LOCAL_FP_AND_A_MODEL)) return LOCAL_FP_AND_A_MODEL;
+  return cleaned.find((model) => /^llama3\.2(?::|$)/i.test(model))
+    ?? cleaned.find((model) => /^(llama|qwen|mistral|gemma|phi)/i.test(model))
+    ?? cleaned[0]
+    ?? '';
+}
+
 export function localOllamaOriginCommand(origin = typeof window === 'undefined' ? 'https://yashumani.github.io' : window.location.origin) {
   return `OLLAMA_ORIGINS=${origin} ollama serve`;
 }
