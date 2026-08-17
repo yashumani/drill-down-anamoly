@@ -1,2 +1,0 @@
-Apply architecture-hardening patch generated from the validated branch source artifact.
-Retry: exclude workflow-file changes from the automated push.
