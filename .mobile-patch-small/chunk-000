@@ -1,0 +1,43 @@
+diff --git a/local-ai/README.md b/local-ai/README.md
+index ff1aa97..593f684 100644
+--- a/local-ai/README.md
++++ b/local-ai/README.md
+@@ -10,6 +10,8 @@ ollama pull llama3.2
+ ollama create fpa-variance-copilot -f local-ai/ollama/Modelfile
+ ```
+ 
++The chatbot's **Connect local LLM** button first looks for `fpa-variance-copilot`. When that alias has not been created yet, it can connect to an installed `llama3.2`, Qwen, Mistral, Gemma, Phi, or the first text model returned by Ollama. The finance alias remains recommended because it applies the repository's versioned finance system profile.
++
+ ## Allow the deployed dashboard to call local Ollama
+ 
+ Stop the running Ollama service, then start it with the dashboard origin allowlisted:
+@@ -28,6 +30,16 @@ API key:  leave blank
+ 
+ Ollama's local API does not require authentication. The dashboard sends summarized, verified finance evidence rather than raw uploaded rows by default.
+ 
++## Phone and tablet behavior
++
++`127.0.0.1` always refers to the device running the browser. Therefore:
++
++- A desktop browser can connect to Ollama running on that same desktop.
++- A phone browser can connect only to a model service running on the phone itself at that address.
++- A phone cannot reach Ollama running on a laptop by using `127.0.0.1`.
++
++For cross-device use, place the model behind an approved authenticated HTTPS gateway with CORS, access control, rate limiting, and audit logging. Do not expose Ollama port `11434` directly to the public internet.
++
+ ## Why this is in the application repository
+ 
+ For the demo, keeping the Modelfile beside the analytics code makes the prompt and calculation contract versioned together. A separate service repository becomes useful when several applications share one hosted gateway, authentication policy, model registry, observability stack, and deployment lifecycle. A GitHub repository by itself is not a running API; a local Ollama process or deployed inference service must still host the endpoint.
+diff --git a/src/AppShell.tsx b/src/AppShell.tsx
+index 6e5aee4..06a3bdb 100644
+--- a/src/AppShell.tsx
++++ b/src/AppShell.tsx
+@@ -18,6 +18,8 @@ import { profileFields } from './lib/profile';
+ import { buildFinanceTimeSeries, detectTimeFields } from './lib/timeIntelligence';
+ import type { AggregationMethod, TimeGrain, TimeWindow } from './lib/timeIntelligence';
+ import { filterRowsByTimeWindow } from './lib/timeWindow';
++import { layoutModeForWidth } from './lib/responsiveLayout';
++import type { LayoutMode } from './lib/responsiveLayout';
+ import { workspaceFromHash, writeWorkspaceHash } from './lib/workspaceRouting';
+ import { ContributionBars, DimensionLandscape, DrillTree, InteractionList } from './components/Visuals';
+ import { ChatPanel } from './components/ChatPanel';
