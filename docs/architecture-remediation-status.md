@@ -15,7 +15,7 @@
 - deep-linkable workspace hashes;
 - outbound LLM evidence preview and hardened fetch behavior;
 - CSP, permissions policy, security policy, threat model, model card, ADRs, CODEOWNERS, and PR checklist;
-- dedicated branch CI with tests, production build, and source/dependency artifact.
+- dedicated branch CI with analytical/AI tests, a production build, and a reproducibility artifact.
 
 ## External or administrative work still required
 
