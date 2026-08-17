@@ -1,0 +1,143 @@
+openapi: 3.1.0
+info:
+  title: FP&A AI Gateway
+  version: 1.0.0
+  description: Governed model routing, evidence-grounded orchestration, claim validation, and telemetry.
+servers:
+  - url: https://ai.example.com
+security:
+  - bearerAuth: []
+paths:
+  /v1/agent/respond:
+    post:
+      operationId: createAgentResponse
+      summary: Generate an evidence-grounded finance response
+      parameters:
+        - in: header
+          name: Idempotency-Key
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgentRequest'
+      responses:
+        '200':
+          description: Validated agent response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentResponse'
+        '422':
+          description: Claim, tool, policy, or evidence validation failed
+  /v1/models:
+    get:
+      operationId: listApprovedModels
+      summary: List models approved for the tenant and data classification
+      responses:
+        '200':
+          description: Approved model profiles
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  required: [profileId, provider, model, approvalStatus]
+                  properties:
+                    profileId: { type: string }
+                    provider: { type: string }
+                    model: { type: string }
+                    approvalStatus: { type: string }
+                    maxDataClassification: { type: string }
+  /v1/evaluations:
+    post:
+      operationId: evaluateModelCandidate
+      summary: Run the approved finance evaluation suite before promotion
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [modelProfileId, promptVersion, evaluationSuite]
+              properties:
+                modelProfileId: { type: string }
+                promptVersion: { type: string }
+                evaluationSuite: { type: string }
+      responses:
+        '202':
+          description: Evaluation accepted
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    AgentRequest:
+      type: object
+      required:
+        - question
+        - datasetSessionId
+        - calculationRunId
+        - evidenceLedgerId
+        - promptVersion
+        - toolSchemaVersion
+      properties:
+        question: { type: string, minLength: 1, maxLength: 4000 }
+        datasetSessionId: { type: string }
+        calculationRunId: { type: string }
+        evidenceLedgerId: { type: string }
+        promptVersion: { type: string }
+        toolSchemaVersion: { type: string }
+        preferredModelProfileId: { type: string }
+        allowedEvidenceIds: { type: array, items: { type: string } }
+        conversationContext: { type: array, items: { type: object, additionalProperties: true } }
+    AgentResponse:
+      type: object
+      required:
+        - schemaVersion
+        - answer
+        - claims
+        - evidenceIds
+        - toolTrace
+        - limitations
+        - calculationRunId
+        - evidenceLedgerId
+        - modelTrace
+      properties:
+        schemaVersion: { type: string, const: finance-agent-response-v1 }
+        answer: { type: string }
+        claims:
+          type: array
+          items:
+            type: object
+            required: [id, text, evidenceIds, confidence]
+            properties:
+              id: { type: string }
+              text: { type: string }
+              evidenceIds: { type: array, items: { type: string } }
+              confidence: { type: string, enum: [high, medium, low] }
+        evidenceIds: { type: array, items: { type: string } }
+        toolTrace: { type: array, items: { type: object, additionalProperties: true } }
+        uiActions: { type: array, items: { type: object, additionalProperties: true } }
+        suggestedQuestions: { type: array, items: { type: string } }
+        limitations: { type: array, items: { type: string } }
+        calculationRunId: { type: string }
+        evidenceLedgerId: { type: string }
+        modelTrace:
+          type: object
+          required: [provider, model, profileId, promptVersion, latencyMs]
+          properties:
+            provider: { type: string }
+            model: { type: string }
+            profileId: { type: string }
+            promptVersion: { type: string }
+            toolSchemaVersion: { type: string }
+            latencyMs: { type: integer }
+            inputTokens: { type: integer }
+            outputTokens: { type: integer }
+            validationStatus: { type: string }

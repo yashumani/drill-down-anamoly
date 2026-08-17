@@ -1,0 +1,214 @@
+openapi: 3.1.0
+info:
+  title: FP&A Investigation API
+  version: 1.0.0
+  description: Authenticated, provider-neutral finance investigation service.
+servers:
+  - url: https://analytics.example.com
+security:
+  - bearerAuth: []
+paths:
+  /v1/datasets/sessions:
+    post:
+      summary: Register or connect a governed dataset session
+      operationId: createDatasetSession
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DatasetSessionRequest'
+      responses:
+        '201':
+          description: Dataset session created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DatasetSession'
+  /v1/investigations:
+    post:
+      summary: Start a versioned finance investigation
+      operationId: createInvestigation
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InvestigationRequest'
+      responses:
+        '201':
+          description: Calculation and evidence created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvestigationResponse'
+  /v1/investigations/{investigationId}/drill:
+    post:
+      summary: Apply validated predicates and rerun the remaining dimensions
+      operationId: drillInvestigation
+      parameters:
+        - $ref: '#/components/parameters/InvestigationId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [predicates]
+              properties:
+                predicates:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Predicate'
+      responses:
+        '200':
+          description: Recalculated investigation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvestigationResponse'
+  /v1/investigations/{investigationId}/dimension-matrix/{dimension}:
+    get:
+      summary: Retrieve category-by-period evidence for heatmaps and waterfalls
+      operationId: getDimensionMatrix
+      parameters:
+        - $ref: '#/components/parameters/InvestigationId'
+        - in: path
+          name: dimension
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Matrix evidence
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [dimension, periods, categories, cells, calculationRunId]
+                properties:
+                  dimension: { type: string }
+                  periods: { type: array, items: { type: string } }
+                  categories: { type: array, items: { type: string } }
+                  cells: { type: array, items: { type: object, additionalProperties: true } }
+                  calculationRunId: { type: string }
+  /v1/investigations/{investigationId}/snapshot:
+    get:
+      summary: Retrieve the immutable investigation and evidence snapshot
+      operationId: getInvestigationSnapshot
+      parameters:
+        - $ref: '#/components/parameters/InvestigationId'
+      responses:
+        '200':
+          description: Versioned snapshot
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /v1/investigations/{investigationId}/evidence-rows:
+    post:
+      summary: Retrieve authorized supporting records for a selected claim
+      operationId: getEvidenceRows
+      parameters:
+        - $ref: '#/components/parameters/InvestigationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [evidenceId]
+              properties:
+                evidenceId: { type: string }
+                limit: { type: integer, minimum: 1, maximum: 500, default: 100 }
+      responses:
+        '200':
+          description: Authorized records with redaction metadata
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [rows, redactions]
+                properties:
+                  rows: { type: array, items: { type: object, additionalProperties: true } }
+                  redactions: { type: array, items: { type: string } }
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    InvestigationId:
+      in: path
+      name: investigationId
+      required: true
+      schema: { type: string }
+    IdempotencyKey:
+      in: header
+      name: Idempotency-Key
+      required: true
+      schema: { type: string, minLength: 8, maxLength: 128 }
+  schemas:
+    Predicate:
+      type: object
+      required: [dimension, value]
+      properties:
+        dimension: { type: string }
+        value: { type: string }
+    DatasetSessionRequest:
+      type: object
+      required: [source, metricId]
+      properties:
+        source:
+          type: object
+          required: [provider, location]
+          properties:
+            provider: { type: string, enum: [warehouse, object_store, file_upload, public_api] }
+            location: { type: string }
+        metricId: { type: string }
+    DatasetSession:
+      type: object
+      required: [sessionId, contentHash, source, contractReport, qualitySummary]
+      properties:
+        sessionId: { type: string }
+        contentHash: { type: string }
+        source: { type: object, additionalProperties: true }
+        contractReport: { type: object, additionalProperties: true }
+        qualitySummary: { type: object, additionalProperties: true }
+    InvestigationRequest:
+      type: object
+      required: [datasetSessionId, metricId, timeWindow, aggregation]
+      properties:
+        datasetSessionId: { type: string }
+        metricId: { type: string }
+        comparisonScenario: { type: string }
+        timeWindow: { type: string }
+        aggregation: { type: string, enum: [sum, average, period_end, ratio, distinct_count] }
+        predicates:
+          type: array
+          items:
+            $ref: '#/components/schemas/Predicate'
+        materialityPercent: { type: number, minimum: 0 }
+    InvestigationResponse:
+      type: object
+      required: [investigationId, calculationRunId, evidenceLedgerId, result, evidence]
+      properties:
+        investigationId: { type: string }
+        calculationRunId: { type: string }
+        evidenceLedgerId: { type: string }
+        result: { type: object, additionalProperties: true }
+        timeSeries: { type: object, additionalProperties: true }
+        evidence:
+          type: array
+          items:
+            type: object
+            required: [id, kind, summary]
+            properties:
+              id: { type: string }
+              kind: { type: string }
+              summary: { type: string }

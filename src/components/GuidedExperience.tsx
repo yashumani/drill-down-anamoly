@@ -4,6 +4,7 @@ import type { EChartsOption } from 'echarts';
 import { planningLenses } from '../lib/fpaInsights';
 import type { PlanningLens } from '../lib/fpaInsights';
 import type { DataQualityReport } from '../lib/dataQuality';
+import type { MetricDefinition } from '../lib/metricSemantics';
 import {
   guidedSlideIndex,
   guidedSlides,
@@ -27,6 +28,7 @@ interface Props {
   result: InvestigationResult;
   timeSeries: FinanceTimeSeriesResult | null;
   dataQuality: DataQualityReport;
+  metricDefinition: MetricDefinition;
   aiPanel: ReactNode;
   onPlanningLens: (value: PlanningLens) => void;
   onActualKey: (value: string) => void;
@@ -101,6 +103,7 @@ export function GuidedExperience({
   result,
   timeSeries,
   dataQuality,
+  metricDefinition,
   aiPanel,
   onPlanningLens,
   onActualKey,
@@ -207,7 +210,7 @@ export function GuidedExperience({
     </div>
     <div className="deck-assumption-row">
       <label>Business direction<select value={metricPolarity} onChange={(event) => onMetricPolarity(event.target.value as MetricPolarity)}><option value="higher_is_better">Higher is better</option><option value="lower_is_better">Lower is better</option></select></label>
-      <div><span>Automatic assumptions</span><strong>{timeSeries?.timeField ? humanize(timeSeries.timeField) : 'No time field'} · {timeSeries?.aggregation ? humanize(timeSeries.aggregation) : 'Cross-sectional'} · FY month {timeSeries?.fiscalYearStartMonth ?? 1}</strong><small>Open Advanced Analysis to change grain, aggregation, fiscal calendar, and materiality.</small></div>
+      <div><span>Automatic assumptions</span><strong>{metricDefinition.name} · {timeSeries?.timeField ? humanize(timeSeries.timeField) : 'No time field'} · {timeSeries?.aggregation ? humanize(timeSeries.aggregation) : humanize(metricDefinition.aggregation)} · FY month {timeSeries?.fiscalYearStartMonth ?? metricDefinition.fiscalYearStartMonth}</strong><small>{metricDefinition.missingSemantics.length ? `Still requires ${metricDefinition.missingSemantics.join(', ')}. ` : 'Metric semantics are sufficiently declared for this prototype. '}Open Advanced Analysis for the full contract and calculation evidence.</small></div>
       <button type="button" onClick={() => goTo('answer')}>Run the analysis →</button>
     </div>
   </section>;

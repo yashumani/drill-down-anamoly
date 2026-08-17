@@ -1,0 +1,132 @@
+openapi: 3.1.0
+info:
+  title: FP&A Semantic Service
+  version: 1.0.0
+  description: Governed finance metrics, scenarios, fiscal calendars, dimensions, and hierarchies.
+servers:
+  - url: https://semantic.example.com
+security:
+  - bearerAuth: []
+paths:
+  /v1/metrics/{metricId}:
+    get:
+      operationId: getMetricDefinition
+      summary: Resolve the certified business definition and calculation policy
+      parameters:
+        - in: path
+          name: metricId
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Metric definition
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MetricDefinition'
+  /v1/metrics/{metricId}/validate-scope:
+    post:
+      operationId: validateMetricScope
+      summary: Validate aggregation, comparison scenario, and drill dimensions
+      parameters:
+        - in: path
+          name: metricId
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [aggregation, dimensions]
+              properties:
+                aggregation: { type: string }
+                comparisonScenario: { type: string }
+                dimensions: { type: array, items: { type: string } }
+      responses:
+        '200':
+          description: Validation result
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [valid, errors, warnings]
+                properties:
+                  valid: { type: boolean }
+                  errors: { type: array, items: { type: string } }
+                  warnings: { type: array, items: { type: string } }
+  /v1/calendars/{calendarId}:
+    get:
+      operationId: getFiscalCalendar
+      summary: Resolve fiscal period, working-day, and holiday rules
+      parameters:
+        - in: path
+          name: calendarId
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Calendar definition
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /v1/dimensions/{dimensionId}:
+    get:
+      operationId: getDimensionDefinition
+      summary: Resolve labels, synonyms, hierarchy, lineage, and access policy
+      parameters:
+        - in: path
+          name: dimensionId
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Dimension definition
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    MetricDefinition:
+      type: object
+      required:
+        - metricId
+        - name
+        - definition
+        - owner
+        - certificationStatus
+        - aggregation
+        - polarity
+        - unit
+        - fiscalCalendarId
+        - validDimensions
+      properties:
+        metricId: { type: string }
+        name: { type: string }
+        definition: { type: string }
+        owner: { type: string }
+        approver: { type: string }
+        certificationStatus: { type: string, enum: [draft, certified, deprecated] }
+        aggregation: { type: string, enum: [sum, average, period_end, ratio, distinct_count] }
+        numeratorMetricId: { type: string }
+        denominatorMetricId: { type: string }
+        polarity: { type: string, enum: [higher_is_better, lower_is_better] }
+        unit: { type: string }
+        currency: { type: string }
+        scale: { type: number }
+        fiscalCalendarId: { type: string }
+        validDimensions: { type: array, items: { type: string } }
+        targetGrain: { type: array, items: { type: string } }
+        actualSource: { type: string }
+        comparisonSources: { type: object, additionalProperties: { type: string } }
+        caveats: { type: array, items: { type: string } }

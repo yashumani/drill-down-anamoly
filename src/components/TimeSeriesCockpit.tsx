@@ -1,5 +1,6 @@
 import type { EChartsOption } from 'echarts';
 import { EChart } from './EChart';
+import { backtestBaselineForecasts } from '../lib/forecastBacktest';
 import type {
   AggregationMethod,
   FinancePeriodSummary,
@@ -59,6 +60,7 @@ function downloadSnapshot(result: FinanceTimeSeriesResult) {
       volatility: result.volatility,
     },
     modelHealth: result.modelHealth,
+    forecastBacktest: backtestBaselineForecasts(result.allPoints.map((point) => ({ key: point.key, label: point.label, actual: point.actual }))),
     coverage: result.coverage,
     warnings: result.warnings,
     points: result.allPoints,
@@ -151,6 +153,12 @@ export function TimeSeriesCockpit({
   }
 
   const option = buildOption(result);
+  const forecastBacktest = backtestBaselineForecasts(result.allPoints.map((point) => ({
+    key: point.key,
+    label: point.label,
+    actual: point.actual,
+  })));
+  const forecastChampion = forecastBacktest.scores.find((score) => score.model === forecastBacktest.champion) ?? null;
   const alerts = [...result.allPoints]
     .filter((point) => point.alertSeverity !== 'normal')
     .sort((left, right) => {
@@ -197,6 +205,7 @@ export function TimeSeriesCockpit({
       <TimeMetric title={result.trailing?.label ?? 'Trailing view'} summary={result.trailing} />
       <article className={`time-metric trend-${result.trend.direction}`}><span>Momentum</span><strong>{humanize(result.trend.direction)}</strong><small>{result.trend.description}</small></article>
       <article className={`time-metric health-${result.modelHealth.status}`}><span>Analysis health</span><strong>{result.modelHealth.score.toFixed(0)}/100</strong><small>{humanize(result.modelHealth.status)} · {result.modelHealth.periodCount} periods</small></article>
+      <article className={`time-metric health-${forecastBacktest.status === 'ready' ? 'healthy' : forecastBacktest.status}`}><span>Forecast backtest</span><strong>{forecastBacktest.champion ? humanize(forecastBacktest.champion) : 'Not ready'}</strong><small>{forecastChampion?.wape == null ? `${forecastBacktest.historyPeriods} history periods` : `WAPE ${(forecastChampion.wape * 100).toFixed(1)}% · bias ${forecastChampion.bias == null ? '—' : `${(forecastChampion.bias * 100).toFixed(1)}%`}`}</small></article>
     </div>
 
     {result.runRate && <div className={`run-rate-banner ${result.runRate.impactDirection}`}>
@@ -227,6 +236,7 @@ export function TimeSeriesCockpit({
       <div><span>Forecast bias</span><strong>{percent(result.forecastBias)}</strong></div>
       <div><span>Volatility</span><strong>{percent(result.volatility)}</strong></div>
       <div><span>Time coverage</span><strong>{(result.modelHealth.parseRate * 100).toFixed(1)}%</strong></div>
+      <div><span>Forecast status</span><strong>{humanize(forecastBacktest.status)}</strong></div>
     </div>
 
     <details className="time-governance-details">
@@ -235,6 +245,7 @@ export function TimeSeriesCockpit({
         <section><h4>Model / calculation health</h4>{result.modelHealth.reasons.map((reason) => <p key={reason}>{reason}</p>)}</section>
         <section><h4>Coverage</h4><p>{result.coverage.parsedRows.toLocaleString()} of {result.coverage.scopedRows.toLocaleString()} scoped rows were assigned to time.</p><p>{result.coverage.validMeasureRows.toLocaleString()} rows entered the calculation; {result.coverage.excludedMeasureRows.toLocaleString()} were excluded.</p><p>Range: {result.coverage.minDate ? result.coverage.minDate.slice(0, 10) : '—'} to {result.coverage.maxDate ? result.coverage.maxDate.slice(0, 10) : '—'}.</p></section>
         <section><h4>Warnings</h4>{result.warnings.length ? result.warnings.map((warning) => <p key={warning}>{warning}</p>) : <p>No automatic warnings.</p>}</section>
+        <section><h4>Forecast backtest</h4><p>Champion: {forecastBacktest.champion ? humanize(forecastBacktest.champion) : 'none'} · folds: {forecastBacktest.evaluatedPeriods} · status: {humanize(forecastBacktest.status)}.</p>{forecastBacktest.predictionInterval80 && <p>Next baseline estimate: {compact(forecastBacktest.nextForecast ?? 0)} · 80% empirical interval {compact(forecastBacktest.predictionInterval80.lower)} to {compact(forecastBacktest.predictionInterval80.upper)}.</p>}{forecastBacktest.warnings.map((warning) => <p key={warning}>{warning}</p>)}</section>
       </div>
     </details>
 

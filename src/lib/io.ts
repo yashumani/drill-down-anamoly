@@ -1,9 +1,18 @@
 import Papa from 'papaparse';
 import type { DataRow } from '../types';
+import type { FinanceDataContractReport } from './financeDataContract';
 import { normalizeFinanceDataRows } from './financeDataContract';
 
 const MAX_FILE_BYTES = 25 * 1024 * 1024;
 const MAX_BROWSER_ROWS = 100_000;
+
+export interface ParsedDataFile {
+  rows: DataRow[];
+  contractReport: FinanceDataContractReport;
+  fileName: string;
+  fileSize: number;
+  parsedAt: string;
+}
 
 function coerce(value: unknown): string | number | boolean | null {
   if (value === null || value === undefined) return null;
@@ -15,8 +24,6 @@ function coerce(value: unknown): string | number | boolean | null {
   if (!text) return null;
   if (/^(true|false)$/i.test(text)) return text.toLowerCase() === 'true';
 
-  // Preserve common identifier forms such as ZIP codes, account numbers, and values
-  // that would lose precision if converted to JavaScript numbers.
   const unsignedDigits = text.replace(/^[+-]/, '');
   if (/^0\d+$/.test(unsignedDigits) || /^\d{16,}$/.test(unsignedDigits)) return text;
 
@@ -69,15 +76,17 @@ function applyFinanceContract(rows: DataRow[]) {
   if (normalized.report.errors.length) {
     throw new Error(`Finance Data Contract v${normalized.report.version}: ${normalized.report.errors.join(' ')}`);
   }
-  return normalized.rows;
+  return normalized;
 }
 
-export async function parseDataFile(file: File): Promise<DataRow[]> {
+export async function parseDataFileWithMetadata(file: File): Promise<ParsedDataFile> {
   if (file.size > MAX_FILE_BYTES) {
     throw new Error(`File is ${(file.size / 1024 / 1024).toFixed(1)} MB. The public browser demo accepts files up to 25 MB.`);
   }
 
   const text = (await file.text()).replace(/^\uFEFF/, '');
+  let normalizedRows: DataRow[];
+
   if (file.name.toLowerCase().endsWith('.json')) {
     let parsed: unknown;
     try {
@@ -87,20 +96,33 @@ export async function parseDataFile(file: File): Promise<DataRow[]> {
     }
     const rows = Array.isArray(parsed) ? parsed : (parsed as { data?: unknown })?.data;
     if (!Array.isArray(rows)) throw new Error('JSON must be an array of objects or an object shaped like { data: [...] }.');
-    return applyFinanceContract(normalizeRows(rows));
+    normalizedRows = normalizeRows(rows);
+  } else {
+    const parsed = Papa.parse<Record<string, unknown>>(text, {
+      header: true,
+      skipEmptyLines: 'greedy',
+      transformHeader: (header) => header.replace(/^\uFEFF/, '').trim(),
+    });
+    if (parsed.errors.length) {
+      const details = parsed.errors.slice(0, 3).map((error) => `row ${error.row ?? '?'}: ${error.message}`).join('; ');
+      throw new Error(`CSV parsing found ${parsed.errors.length} issue(s): ${details}`);
+    }
+    if (!parsed.meta.fields?.length) throw new Error('CSV needs a header row with at least one named column.');
+    const duplicateHeaders = parsed.meta.fields.filter((field, index, fields) => fields.indexOf(field) !== index);
+    if (duplicateHeaders.length) throw new Error(`CSV contains duplicate header names: ${[...new Set(duplicateHeaders)].join(', ')}.`);
+    normalizedRows = normalizeRows(parsed.data);
   }
 
-  const parsed = Papa.parse<Record<string, unknown>>(text, {
-    header: true,
-    skipEmptyLines: 'greedy',
-    transformHeader: (header) => header.replace(/^\uFEFF/, '').trim(),
-  });
-  if (parsed.errors.length) {
-    const details = parsed.errors.slice(0, 3).map((error) => `row ${error.row ?? '?'}: ${error.message}`).join('; ');
-    throw new Error(`CSV parsing found ${parsed.errors.length} issue(s): ${details}`);
-  }
-  if (!parsed.meta.fields?.length) throw new Error('CSV needs a header row with at least one named column.');
-  const duplicateHeaders = parsed.meta.fields.filter((field, index, fields) => fields.indexOf(field) !== index);
-  if (duplicateHeaders.length) throw new Error(`CSV contains duplicate header names: ${[...new Set(duplicateHeaders)].join(', ')}.`);
-  return applyFinanceContract(normalizeRows(parsed.data));
+  const contracted = applyFinanceContract(normalizedRows);
+  return {
+    rows: contracted.rows,
+    contractReport: contracted.report,
+    fileName: file.name,
+    fileSize: file.size,
+    parsedAt: new Date().toISOString(),
+  };
+}
+
+export async function parseDataFile(file: File): Promise<DataRow[]> {
+  return (await parseDataFileWithMetadata(file)).rows;
 }
