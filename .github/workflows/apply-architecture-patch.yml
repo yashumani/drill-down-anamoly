@@ -1,15 +1,15 @@
-name: Integrate forecast evidence and UI
+name: Integrate investigation snapshot export
 
 on:
   push:
     branches: ["architecture-hardening-v1"]
-    paths: [".architecture/INTEGRATE_FORECAST_RETRY"]
+    paths: [".architecture/INTEGRATE_SNAPSHOT"]
 
 permissions:
   contents: write
 
 jobs:
-  integrate-forecast:
+  integrate-snapshot:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout branch
@@ -18,12 +18,12 @@ jobs:
           ref: architecture-hardening-v1
           fetch-depth: 0
 
-      - name: Apply forecast integration and commit
+      - name: Apply snapshot integration and commit
         run: |
           set -euo pipefail
-          python .architecture/integrate_forecast.py
-          git add src/lib/evidenceLedger.ts src/lib/agentOrchestrator.ts src/lib/llm.ts src/components/TimeSeriesCockpit.tsx
+          python .architecture/integrate_snapshot.py
+          git add src/AppShell.tsx src/final-enhancements.css
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git commit -m "Integrate backtested forecast evidence into CFO and AI reviews"
+          git commit -m "Expose versioned investigation snapshot export"
           git push origin HEAD:architecture-hardening-v1
