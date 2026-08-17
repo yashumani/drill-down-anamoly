@@ -1,0 +1,58 @@
+@@ -70,6 +88,8 @@ export function ChatPanel({
+   const [settingsOpen, setSettingsOpen] = useState(defaultSettingsOpen);
+   const [busy, setBusy] = useState(false);
+   const [testing, setTesting] = useState(false);
++  const [connectionOk, setConnectionOk] = useState(false);
++  const [availableModels, setAvailableModels] = useState<string[]>([]);
+   const [connectionStatus, setConnectionStatus] = useState('');
+   const evidenceLedger = useMemo(() => buildEvidenceLedger({
+     result,
+@@ -112,32 +132,59 @@ export function ChatPanel({
+     setSuggestions(starterSuggestions);
+   }, [starterSuggestions]);
+ 
+-  function saveNonSecretConfig(next: LlmConfig) {
++  function updateConfig(next: LlmConfig, preserveModels = false) {
+     setLlm(next);
++    persistNonSecretConfig(next);
++    setConnectionOk(false);
++    if (!preserveModels) setAvailableModels([]);
+     setConnectionStatus('');
+-    try {
+-      localStorage.setItem('anomaly-llm-endpoint', next.endpoint);
+-      localStorage.setItem('anomaly-llm-model', next.model);
+-      localStorage.setItem('anomaly-llm-auth-header', next.authHeader);
+-      localStorage.setItem('anomaly-llm-auth-prefix', next.authPrefix);
+-    } catch {
+-      // The dashboard remains usable when storage is blocked by the browser.
+-    }
+   }
+ 
+-  function useLocalModel() {
+-    saveNonSecretConfig(localOllamaPreset());
++  async function connectLocalModel() {
++    const preset = localOllamaPreset();
++    const checking = { ...preset, enabled: false };
+     setSettingsOpen(true);
+-    setConnectionStatus('Local FP&A preset loaded. Start Ollama with this site origin allowed, then test the connection.');
++    setTesting(true);
++    setConnectionOk(false);
++    setAvailableModels([]);
++    setLlm(checking);
++    persistNonSecretConfig(checking);
++    setConnectionStatus('Looking for Ollama on this device…');
++    try {
++      const output = await testLlmConnection(checking);
++      setAvailableModels(output.availableModels);
++      const selectedModel = output.ok ? preset.model : selectLocalOllamaModel(output.availableModels);
++      if (!selectedModel) {
++        throw new Error('Ollama is reachable, but no installed text model was returned. Pull llama3.2, then connect again.');
++      }
++      const next = { ...preset, model: selectedModel, enabled: true };
++      setLlm(next);
++      persistNonSecretConfig(next);
++      setConnectionOk(true);
++      setConnectionStatus(selectedModel === LOCAL_FP_AND_A_MODEL
++        ? `Local LLM connected. ${selectedModel} is ready for evidence-grounded finance questions.`
++        : `Local LLM connected using ${selectedModel}. Create the ${LOCAL_FP_AND_A_MODEL} alias later to apply the repository's finance-specific model profile.`);
++    } catch (error) {
