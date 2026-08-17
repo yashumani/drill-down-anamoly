@@ -1,0 +1,83 @@
+name: Security validation
+
+on:
+  push:
+    branches: ["main", "architecture-hardening-v1"]
+  pull_request:
+    branches: ["main"]
+  schedule:
+    - cron: "23 5 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  codeql:
+    name: CodeQL JavaScript and TypeScript
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+      packages: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v4
+        with:
+          languages: javascript-typescript
+          queries: security-extended
+
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v4
+
+      - name: Analyze
+        uses: github/codeql-action/analyze@v4
+        with:
+          category: "/language:javascript-typescript"
+
+  dependency-audit:
+    name: Locked dependency audit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install locked dependencies
+        run: npm ci --ignore-scripts --no-audit --no-fund
+
+      - name: Reject high or critical known vulnerabilities
+        run: npm audit --audit-level=high
+
+      - name: Validate dependency tree
+        run: npm ls --all
+
+  dependency-review:
+    if: github.event_name == 'pull_request'
+    name: GitHub dependency review (when dependency graph is enabled)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Review dependency changes
+        continue-on-error: true
+        uses: actions/dependency-review-action@v4
+        with:
+          fail-on-severity: high
+          deny-licenses: AGPL-1.0-only, AGPL-3.0-only
+
+      - name: Explain optional GitHub dependency graph gate
+        run: echo "The locked npm audit is authoritative for this repository. GitHub dependency review becomes an additional blocking gate after Dependency Graph is enabled in repository settings."

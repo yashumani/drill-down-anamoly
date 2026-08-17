@@ -39,7 +39,17 @@ const METADATA_FIELDS = new Set([
   'dataset_name',
   'metric_id',
   'metric_name',
+  'metric_definition',
+  'metric_description',
+  'metric_owner',
+  'metric_certification',
   'metric_unit',
+  'metric_scale',
+  'numerator_metric_id',
+  'denominator_metric_id',
+  'metric_caveat',
+  'close_process_note',
+  'allocation_note',
   'currency',
   'metric_polarity',
   'aggregation_method',
@@ -111,6 +121,16 @@ function validateMetricIdentity(report: FinanceDataContractReport, rows: DataRow
   }
 }
 
+function validateAggregation(report: FinanceDataContractReport, rows: DataRow[], fields: string[]) {
+  if (!fields.includes('aggregation_method')) return;
+  const supported = new Set(['sum', 'average', 'avg', 'mean', 'period_end', 'ending_balance', 'snapshot']);
+  const values = uniqueStrings(rows, ['aggregation_method']).map((value) => value.toLowerCase().replace(/[\s-]+/g, '_'));
+  const unsupported = values.filter((value) => !supported.has(value));
+  if (unsupported.length) {
+    report.errors.push(`Finance Data Contract v1 does not yet support aggregation_method values: ${unsupported.join(', ')}. Use sum, average, or period_end, or provide a governed semantic extension.`);
+  }
+}
+
 function baseReport(rows: DataRow[]): FinanceDataContractReport {
   return {
     version: FINANCE_DATA_CONTRACT_VERSION,
@@ -150,6 +170,7 @@ function normalizeWide(rows: DataRow[], fields: string[]): FinanceDataNormalizat
   }
 
   validateMetricIdentity(report, rows, fields, 'wide-format');
+  validateAggregation(report, rows, fields);
 
   const normalized = rows.map((row) => {
     const output: DataRow = {
@@ -205,6 +226,7 @@ function normalizeLong(rows: DataRow[], fields: string[]): FinanceDataNormalizat
   if (!dimensionFields.length) report.warnings.push('No dim_* columns were found. Driver analysis will be limited.');
 
   validateMetricIdentity(report, rows, fields, 'long-format');
+  validateAggregation(report, rows, fields);
   const metricKeyFields = fields.includes('metric_id') ? ['metric_id'] : fields.includes('metric_name') ? ['metric_name'] : [];
   const grouped = new Map<string, PivotRow>();
   const observedScenarios = new Set<string>();
@@ -271,7 +293,7 @@ export function normalizeFinanceDataRows(rows: DataRow[]): FinanceDataNormalizat
   return { rows, report: baseReport(rows) };
 }
 
-export const FINANCE_DATA_TEMPLATE_CSV = `period_date,actual_value,plan_value,forecast_value,dataset_name,metric_id,metric_name,metric_polarity,aggregation_method,planning_lens,currency,metric_unit,fiscal_year_start_month,dim_region,dim_business_unit,dim_product,dim_channel,dim_customer_segment,dim_cost_center,dim_department,dim_vendor,dim_project,dim_campaign\n2025-01-31,1285000,1320000,1300000,Enterprise FP&A Demo,REV_NET,Net Revenue,higher_is_better,sum,revenue,USD,USD,1,West,Consumer,Wireless,Retail,Enterprise,CC100,Sales,Vendor A,Project Atlas,Winter Promo\n2025-02-28,1340000,1365000,1355000,Enterprise FP&A Demo,REV_NET,Net Revenue,higher_is_better,sum,revenue,USD,USD,1,West,Consumer,Wireless,Digital,Enterprise,CC100,Sales,Vendor A,Project Atlas,Spring Launch\n2025-03-31,1420000,1390000,1410000,Enterprise FP&A Demo,REV_NET,Net Revenue,higher_is_better,sum,revenue,USD,USD,1,East,Business,Fiber,Partner,Mid Market,CC220,Commercial,Vendor B,Project Beacon,Always On`;
+export const FINANCE_DATA_TEMPLATE_CSV = `period_date,actual_value,plan_value,forecast_value,dataset_name,metric_id,metric_name,metric_definition,metric_owner,metric_certification,metric_polarity,aggregation_method,planning_lens,currency,metric_unit,fiscal_year_start_month,dim_region,dim_business_unit,dim_product,dim_channel,dim_customer_segment,dim_cost_center,dim_department,dim_vendor,dim_project,dim_campaign\n2025-01-31,1285000,1320000,1300000,Enterprise FP&A Demo,REV_NET,Net Revenue,Recognized net revenue after credits,Revenue Finance,certified,higher_is_better,sum,revenue,USD,USD,1,West,Consumer,Wireless,Retail,Enterprise,CC100,Sales,Vendor A,Project Atlas,Winter Promo\n2025-02-28,1340000,1365000,1355000,Enterprise FP&A Demo,REV_NET,Net Revenue,Recognized net revenue after credits,Revenue Finance,certified,higher_is_better,sum,revenue,USD,USD,1,West,Consumer,Wireless,Digital,Enterprise,CC100,Sales,Vendor A,Project Atlas,Spring Launch\n2025-03-31,1420000,1390000,1410000,Enterprise FP&A Demo,REV_NET,Net Revenue,Recognized net revenue after credits,Revenue Finance,certified,higher_is_better,sum,revenue,USD,USD,1,East,Business,Fiber,Partner,Mid Market,CC220,Commercial,Vendor B,Project Beacon,Always On`;
 
 export function downloadFinanceDataTemplate() {
   const blob = new Blob([FINANCE_DATA_TEMPLATE_CSV], { type: 'text/csv;charset=utf-8' });
