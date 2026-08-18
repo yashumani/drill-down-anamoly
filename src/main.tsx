@@ -14,6 +14,7 @@ import './presentation.css';
 import './presentation-fit.css';
 import './final-enhancements.css';
 import './mobile.css';
+import './hierarchy.css';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
