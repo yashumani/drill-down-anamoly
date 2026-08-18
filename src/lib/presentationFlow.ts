@@ -27,6 +27,7 @@ export const liveDemoSlides = [
   { id: 'overview', label: 'Executive overview' },
   { id: 'trend', label: 'Monthly pulse' },
   { id: 'drivers', label: '10-dimension drill' },
+  { id: 'hierarchy', label: 'Hierarchy org chart' },
   { id: 'ai', label: 'AI review' },
   { id: 'method', label: 'Method & source' },
 ] as const;
