@@ -1,0 +1,396 @@
+.hierarchy-workspace {
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+}
+
+.hierarchy-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 18px;
+  align-items: end;
+  padding: 18px 20px;
+  border: 3px solid var(--ink, #111);
+  background: var(--surface, #fff);
+  box-shadow: 6px 6px 0 var(--ink, #111);
+}
+
+.hierarchy-head h3 {
+  margin: 4px 0 7px;
+  font-size: clamp(1.4rem, 2.3vw, 2.3rem);
+  line-height: 1;
+  text-transform: uppercase;
+  letter-spacing: -.035em;
+}
+
+.hierarchy-head p {
+  max-width: 930px;
+  margin: 0;
+}
+
+.hierarchy-head code {
+  padding: 2px 5px;
+  border: 1px solid currentColor;
+  background: color-mix(in srgb, var(--accent, #a3e635) 30%, transparent);
+  font-weight: 800;
+}
+
+.hierarchy-head-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.hierarchy-contract-strip {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.hierarchy-contract-strip article {
+  min-width: 0;
+  padding: 12px 14px;
+  border: 2px solid var(--ink, #111);
+  background: var(--surface, #fff);
+  box-shadow: 3px 3px 0 var(--ink, #111);
+}
+
+.hierarchy-contract-strip article:nth-child(1) { background: color-mix(in srgb, #3b82f6 18%, var(--surface, #fff)); }
+.hierarchy-contract-strip article:nth-child(2) { background: color-mix(in srgb, #10b981 18%, var(--surface, #fff)); }
+.hierarchy-contract-strip article:nth-child(3) { background: color-mix(in srgb, #facc15 22%, var(--surface, #fff)); }
+.hierarchy-contract-strip article:nth-child(4) { background: color-mix(in srgb, #c026d3 14%, var(--surface, #fff)); }
+
+.hierarchy-contract-strip span,
+.hierarchy-contract-strip small,
+.hierarchy-chart-meta span,
+.hierarchy-chart-meta small {
+  display: block;
+}
+
+.hierarchy-contract-strip span,
+.hierarchy-chart-meta span {
+  font-size: .68rem;
+  font-weight: 900;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  opacity: .66;
+}
+
+.hierarchy-contract-strip strong {
+  display: block;
+  margin: 3px 0;
+  overflow-wrap: anywhere;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: .98rem;
+}
+
+.hierarchy-level-rail {
+  display: grid;
+  grid-template-columns: repeat(10, minmax(92px, 1fr));
+  gap: 7px;
+  overflow-x: auto;
+  padding: 3px 3px 8px;
+  scrollbar-width: thin;
+}
+
+.hierarchy-level-rail button {
+  min-width: 92px;
+  min-height: 76px;
+  padding: 8px;
+  border: 2px solid var(--ink, #111);
+  background: color-mix(in srgb, var(--surface, #fff) 90%, #d1d5db);
+  color: inherit;
+  text-align: left;
+  box-shadow: 2px 2px 0 var(--ink, #111);
+}
+
+.hierarchy-level-rail button.complete {
+  background: color-mix(in srgb, var(--accent, #a3e635) 50%, var(--surface, #fff));
+}
+
+.hierarchy-level-rail button.active {
+  background: color-mix(in srgb, var(--warning, #facc15) 58%, var(--surface, #fff));
+}
+
+.hierarchy-level-rail button:disabled {
+  opacity: .5;
+  cursor: default;
+}
+
+.hierarchy-level-rail span,
+.hierarchy-level-rail strong,
+.hierarchy-level-rail small {
+  display: block;
+}
+
+.hierarchy-level-rail span {
+  font-size: .64rem;
+  font-weight: 950;
+  opacity: .65;
+}
+
+.hierarchy-level-rail strong {
+  margin: 3px 0;
+  font-size: .75rem;
+  line-height: 1.05;
+  text-transform: uppercase;
+}
+
+.hierarchy-level-rail small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: .65rem;
+}
+
+.hierarchy-breadcrumbs {
+  display: flex;
+  align-items: stretch;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.hierarchy-breadcrumbs button,
+.hierarchy-breadcrumbs > div {
+  flex: 0 0 auto;
+  min-width: 140px;
+  max-width: 220px;
+  padding: 8px 10px;
+  border: 2px solid var(--ink, #111);
+  background: var(--surface, #fff);
+  color: inherit;
+  text-align: left;
+}
+
+.hierarchy-breadcrumbs > div {
+  border-style: dashed;
+  background: transparent;
+}
+
+.hierarchy-breadcrumbs span,
+.hierarchy-breadcrumbs strong {
+  display: block;
+}
+
+.hierarchy-breadcrumbs span {
+  font-size: .62rem;
+  font-weight: 900;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+  opacity: .64;
+}
+
+.hierarchy-breadcrumbs strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: .78rem;
+}
+
+.hierarchy-chart-shell {
+  position: relative;
+  min-width: 0;
+  overflow: hidden;
+  border: 3px solid var(--ink, #111);
+  background:
+    radial-gradient(circle at 10% 10%, color-mix(in srgb, var(--accent, #a3e635) 13%, transparent), transparent 27%),
+    linear-gradient(145deg, color-mix(in srgb, var(--surface, #fff) 96%, #e5e7eb), var(--surface, #fff));
+  box-shadow: 6px 6px 0 var(--ink, #111);
+}
+
+.hierarchy-chart-meta {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1px;
+  border-bottom: 2px solid var(--ink, #111);
+  background: var(--ink, #111);
+}
+
+.hierarchy-chart-meta > div {
+  min-width: 0;
+  padding: 10px 12px;
+  background: var(--surface, #fff);
+}
+
+.hierarchy-chart-meta strong {
+  display: block;
+  margin: 2px 0;
+  overflow-wrap: anywhere;
+  font-size: .86rem;
+}
+
+.hierarchy-loading {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  gap: 9px;
+  background: color-mix(in srgb, var(--surface, #fff) 82%, transparent);
+  backdrop-filter: blur(2px);
+  text-align: center;
+  z-index: 3;
+}
+
+.hierarchy-loading span {
+  width: 34px;
+  height: 34px;
+  margin: 0 auto;
+  border: 4px solid var(--ink, #111);
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: hierarchy-spin .8s linear infinite;
+}
+
+@keyframes hierarchy-spin { to { transform: rotate(360deg); } }
+
+.hierarchy-error {
+  margin: 12px;
+}
+
+.hierarchy-child-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 9px;
+}
+
+.hierarchy-child-grid button {
+  min-width: 0;
+  min-height: 128px;
+  padding: 12px;
+  border: 2px solid var(--ink, #111);
+  background: var(--surface, #fff);
+  color: inherit;
+  text-align: left;
+  box-shadow: 3px 3px 0 var(--ink, #111);
+  transition: transform .14s ease, box-shadow .14s ease;
+}
+
+.hierarchy-child-grid button:not(:disabled):hover,
+.hierarchy-child-grid button:not(:disabled):focus-visible {
+  transform: translate(-2px, -2px);
+  box-shadow: 5px 5px 0 var(--ink, #111);
+}
+
+.hierarchy-child-grid button.other {
+  border-style: dashed;
+  opacity: .76;
+}
+
+.hierarchy-child-grid button > span,
+.hierarchy-child-grid button > strong,
+.hierarchy-child-grid button > small,
+.hierarchy-child-grid button > em {
+  display: block;
+}
+
+.hierarchy-child-grid button > span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: .65rem;
+  font-weight: 900;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+
+.hierarchy-child-grid button i {
+  width: 10px;
+  height: 10px;
+  border: 1px solid var(--ink, #111);
+  border-radius: 50%;
+}
+
+.hierarchy-child-grid button > strong {
+  margin: 8px 0 4px;
+  overflow-wrap: anywhere;
+  font-size: 1rem;
+  line-height: 1.02;
+}
+
+.hierarchy-child-grid button > small {
+  font-size: .72rem;
+  line-height: 1.3;
+}
+
+.hierarchy-child-grid button > em {
+  margin-top: 10px;
+  font-size: .68rem;
+  font-style: normal;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.hierarchy-empty {
+  grid-column: 1 / -1;
+  padding: 22px;
+  border: 2px dashed var(--ink, #111);
+  text-align: center;
+}
+
+.hierarchy-footnote {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  align-items: baseline;
+  padding: 11px 13px;
+  border: 2px solid var(--ink, #111);
+  background: color-mix(in srgb, var(--accent, #a3e635) 17%, var(--surface, #fff));
+  font-size: .75rem;
+}
+
+.hierarchy-footnote small {
+  flex-basis: 100%;
+}
+
+@media (max-width: 1024px) {
+  .hierarchy-contract-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .hierarchy-child-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 640px) {
+  .hierarchy-workspace { gap: 10px; }
+
+  .hierarchy-head {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+    padding: 14px;
+    box-shadow: 4px 4px 0 var(--ink, #111);
+  }
+
+  .hierarchy-head h3 { font-size: 1.45rem; }
+  .hierarchy-head p { font-size: .82rem; }
+  .hierarchy-head-actions { justify-content: stretch; }
+  .hierarchy-head-actions button { flex: 1 1 100%; width: 100%; }
+
+  .hierarchy-contract-strip { grid-template-columns: minmax(0, 1fr); }
+  .hierarchy-contract-strip article { padding: 10px 12px; }
+
+  .hierarchy-level-rail {
+    grid-template-columns: repeat(10, 104px);
+    scroll-snap-type: x proximity;
+  }
+
+  .hierarchy-level-rail button { scroll-snap-align: start; }
+
+  .hierarchy-breadcrumbs button,
+  .hierarchy-breadcrumbs > div {
+    min-width: 122px;
+    max-width: 170px;
+  }
+
+  .hierarchy-chart-shell {
+    box-shadow: 4px 4px 0 var(--ink, #111);
+  }
+
+  .hierarchy-chart-meta {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .hierarchy-child-grid { grid-template-columns: minmax(0, 1fr); }
+  .hierarchy-child-grid button { min-height: 108px; }
+  .hierarchy-footnote { display: block; }
+  .hierarchy-footnote span,
+  .hierarchy-footnote small { display: block; margin-top: 5px; }
+}
