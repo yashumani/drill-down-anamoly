@@ -21,7 +21,7 @@ jobs:
       - name: Apply validated implementation and remove transfer artifacts
         run: |
           set -euo pipefail
-          cat .arc-patch/chunk-* | base64 -d > /tmp/arc-explorer.patch
+          base64 -d .arc-patch/patch.bz2.b64 | bzip2 -d > /tmp/arc-explorer.patch
           git apply --check /tmp/arc-explorer.patch
           git apply --whitespace=fix /tmp/arc-explorer.patch
           rm -rf .arc-patch
