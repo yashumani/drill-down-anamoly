@@ -1,0 +1,33 @@
+name: Apply validated arc explorer patch
+
+on:
+  push:
+    branches: ["arc-explorer-ux-v1"]
+    paths: [".arc-patch/APPLY"]
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout implementation branch
+        uses: actions/checkout@v6
+        with:
+          ref: arc-explorer-ux-v1
+          fetch-depth: 0
+
+      - name: Apply validated implementation and remove transfer artifacts
+        run: |
+          set -euo pipefail
+          cat .arc-patch/chunk-* | base64 -d | bzip2 -d > /tmp/arc-explorer.patch
+          git apply --check /tmp/arc-explorer.patch
+          git apply --whitespace=fix /tmp/arc-explorer.patch
+          rm -rf .arc-patch
+          rm .github/workflows/apply-arc-explorer.yml
+          git add -A
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Add dynamic arc explorer and simplify data exploration"
+          git push origin HEAD:arc-explorer-ux-v1
