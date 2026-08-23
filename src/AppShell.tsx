@@ -21,7 +21,11 @@ import { filterRowsByTimeWindow } from './lib/timeWindow';
 import { layoutModeForWidth } from './lib/responsiveLayout';
 import type { LayoutMode } from './lib/responsiveLayout';
 import { workspaceFromHash, writeWorkspaceHash } from './lib/workspaceRouting';
-import { ContributionBars, DimensionLandscape, DrillTree, InteractionList } from './components/Visuals';
+import { ContributionBars, DimensionLandscape, DrillTree } from './components/Visuals';
+import { CombinationExplorer } from './components/CombinationExplorer';
+import { ExplorationControlBar } from './components/ExplorationControlBar';
+import type { ExplorerMode } from './components/ExplorationControlBar';
+import { HierarchyDataExplorer } from './components/HierarchyDataExplorer';
 import { ChatPanel } from './components/ChatPanel';
 import { DataQualityPanel } from './components/DataQualityPanel';
 import { FpaInsightPanel } from './components/FpaInsightPanel';
@@ -74,6 +78,10 @@ export default function AppShell() {
   const [planningLens, setPlanningLens] = useState<PlanningLens>('revenue');
   const [predicates, setPredicates] = useState<Predicate[]>([]);
   const [selectedDimension, setSelectedDimension] = useState<string>('region');
+  const [selectedCategoryValue, setSelectedCategoryValue] = useState('');
+  const [explorerMode, setExplorerMode] = useState<ExplorerMode>('basic');
+  const [showCombinations, setShowCombinations] = useState(false);
+  const [showHierarchy, setShowHierarchy] = useState(false);
   const [timeField, setTimeField] = useState('month');
   const [timeGrain, setTimeGrain] = useState<TimeGrain>('month');
   const [timeWindow, setTimeWindow] = useState<TimeWindow>('15m');
@@ -168,6 +176,11 @@ export default function AppShell() {
     };
   }, []);
 
+  useEffect(() => {
+    const categories = selectedScore?.categories ?? [];
+    if (!categories.some((category) => category.value === selectedCategoryValue)) setSelectedCategoryValue(categories[0]?.value ?? '');
+  }, [selectedScore?.dimension, selectedScore?.categories, selectedCategoryValue]);
+
   function changePalette(next: PaletteId) {
     setPalette(next);
     localStorage.setItem('anomaly-palette', next);
@@ -200,6 +213,7 @@ export default function AppShell() {
     setPlanningLens(defaults.planningLens);
     setPredicates([]);
     setSelectedDimension(nextQuality.dimensionCandidates[0] ?? '');
+    setSelectedCategoryValue('');
     setTimeField(candidateTime?.field ?? '');
     setTimeGrain(candidateTime?.suggestedGrain ?? 'month');
     setTimeWindow(defaultWindow(candidateTime?.suggestedGrain ?? 'month'));
@@ -334,7 +348,7 @@ export default function AppShell() {
     displayMode="presentation"
   />;
 
-  return <main data-theme={palette} data-workspace={workspace} data-layout={layoutMode} data-dataset-session={datasetSession.sessionId}>
+  return <main data-theme={palette} data-workspace={workspace} data-layout={layoutMode} data-explorer-mode={explorerMode} data-dataset-session={datasetSession.sessionId}>
     {presentationWorkspace ? <header className="presentation-appbar">
       <button type="button" className="presentation-brand" onClick={() => setWorkspace('guided')}><span>FP&A</span><strong>Variance Copilot</strong></button>
       {workspaceNavigation}
@@ -356,16 +370,8 @@ export default function AppShell() {
       <div><span>Driver attribution</span><strong>{result.attributionReconciles ? 'Reconciled' : 'Review required'}</strong><small>{result.aggregationMethod.replace('_', ' ')} · run {result.runId}</small></div>
     </section>}
 
-    {(workspace === 'advanced' || workspace === 'quality') && <section className="controls top-controls" aria-label="Analysis filters">
-      {workspace === 'advanced' && <>
-        <label>FP&A lens<select value={planningLens} onChange={(event) => setPlanningLens(event.target.value as PlanningLens)}>{planningLenses.map((lens) => <option key={lens.id} value={lens.id}>{lens.label}</option>)}</select></label>
-        <label>Measure<select value={actualKey} onChange={(event) => { setActualKey(event.target.value); setPredicates([]); }}>{numeric.map((profile) => <option key={profile.name} value={profile.name}>{humanize(profile.name)}</option>)}</select></label>
-        <label>Compare with<select value={expectedKey} onChange={(event) => { setExpectedKey(event.target.value); setPredicates([]); }}><option value="">Rolling typical value</option>{numeric.filter((profile) => profile.name !== actualKey).map((profile) => <option key={profile.name} value={profile.name}>{humanize(profile.name)}</option>)}</select></label>
-        <label>Business direction<select value={metricPolarity} onChange={(event) => { setMetricPolarity(event.target.value as MetricPolarity); setPredicates([]); }}><option value="higher_is_better">Higher is better</option><option value="lower_is_better">Lower is better</option></select></label>
-        <div className="filter-scope"><span>Analysis scope</span><strong>{windowLabel(timeWindow)}{predicates.length ? ` • ${predicates.map((predicate) => `${humanize(predicate.dimension)}: ${predicate.value}`).join(' • ')}` : ' • All business dimensions'}</strong></div>
-        {predicates.length > 0 && <button className="quiet-button" onClick={() => setPredicates([])}>Clear drill</button>}
-      </>}
-      {workspace === 'quality' && <div className="filter-scope"><span>Dataset</span><strong>{qualityReport.rowCount.toLocaleString()} rows · {qualityReport.columnCount.toLocaleString()} columns · {qualityReport.status}</strong></div>}
+    {workspace === 'quality' && <section className="controls top-controls" aria-label="Data quality controls">
+      <div className="filter-scope"><span>Dataset</span><strong>{qualityReport.rowCount.toLocaleString()} rows · {qualityReport.columnCount.toLocaleString()} columns · {qualityReport.status}</strong></div>
       <button className="quiet-button" onClick={loadCleanDemo}>Reset clean demo</button>
       <button className="quiet-button" onClick={loadQualityDemo}>Load quality demo</button>
     </section>}
@@ -395,10 +401,44 @@ export default function AppShell() {
     /> : workspace === 'public-demo' ? <LivePublicFinanceDemo /> : workspace === 'quality' ? <DataQualityPanel rows={rows} report={qualityReport} onLoadCleanDemo={loadCleanDemo} onLoadQualityDemo={loadQualityDemo} /> : <>
       <div className="advanced-mode-banner"><div><span className="eyebrow">ADVANCED ANALYSIS</span><strong>Every control, every evidence layer.</strong><small>Return to Quick Answer whenever the specialist detail is no longer useful.</small></div><div className="advanced-mode-actions"><button type="button" className="quiet-button" onClick={exportInvestigation}>Export investigation</button><button type="button" onClick={() => setWorkspace('guided')}>← Back to slide presentation</button></div></div>
 
+      <ExplorationControlBar
+        mode={explorerMode}
+        planningLens={planningLens}
+        planningOptions={planningLenses.map((lens) => ({ id: lens.id, label: lens.label }))}
+        numericFields={numeric.map((profile) => profile.name)}
+        actualKey={actualKey}
+        expectedKey={expectedKey}
+        metricPolarity={metricPolarity}
+        timeWindow={timeWindow}
+        dimensions={result.dimensionScores.map((dimension) => dimension.dimension)}
+        selectedDimension={selectedScore?.dimension ?? selectedDimension}
+        categoryValues={selectedScore?.categories.map((category) => category.value) ?? []}
+        selectedCategory={selectedCategoryValue}
+        predicates={predicates}
+        onMode={setExplorerMode}
+        onPlanningLens={(next) => setPlanningLens(next as PlanningLens)}
+        onActual={(next) => { setActualKey(next); setPredicates([]); }}
+        onExpected={(next) => { setExpectedKey(next); setPredicates([]); }}
+        onPolarity={(next) => { setMetricPolarity(next); setPredicates([]); }}
+        onWindow={(next) => { setTimeWindow(next); setPredicates([]); }}
+        onDimension={(next) => { setSelectedDimension(next); setSelectedCategoryValue(''); }}
+        onCategory={setSelectedCategoryValue}
+        onFocus={() => document.querySelector('.driver-split')?.scrollIntoView({ behavior: 'smooth', block: 'center' })}
+        onDrill={() => selectedScore && selectedCategoryValue && drill([{ dimension: selectedScore.dimension, value: selectedCategoryValue }])}
+        onCombinations={() => { setShowCombinations(true); window.setTimeout(() => document.getElementById('combined-drivers')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80); }}
+        onHierarchy={() => { setShowHierarchy(true); window.setTimeout(() => document.getElementById('hierarchy-data-explorer')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80); }}
+        onReset={() => { setPredicates([]); setSelectedCategoryValue(''); }}
+      />
+
       {(qualityReport.blockers > 0 || qualityReport.warnings > 0) && <button type="button" className={`analysis-quality-warning ${qualityReport.blockers ? 'critical' : ''}`} onClick={() => setWorkspace('quality')}>
         <strong>Data quality: {qualityReport.overallScore.toFixed(0)}/100</strong>
         <span>{qualityReport.blockers ? `${qualityReport.blockers} blocker(s) can change or invalidate the analysis.` : `${qualityReport.warnings} warning(s) should be reviewed.`} Open the supporting Data Quality Explorer.</span>
       </button>}
+
+      <details id="hierarchy-data-explorer" className="hierarchy-data-details" open={showHierarchy} onToggle={(event) => setShowHierarchy(event.currentTarget.open)}>
+        <summary><span>Hierarchy explorer</span><strong>Map parent-child columns and open the animated arc tree</strong></summary>
+        <HierarchyDataExplorer rows={analysisRows} />
+      </details>
 
       <section className="executive-metrics">
         <Metric label={currentPoint ? `${currentPoint.label} actual` : 'Selected-scope actual'} value={format(currentPoint?.actual ?? result.actual)} helper={`${humanize(actualKey)} · ${timeSeries?.coverage.validMeasureRows.toLocaleString() ?? result.validRowCount.toLocaleString()} valid rows`} />
@@ -440,7 +480,7 @@ export default function AppShell() {
       <section className="guided-layout">
         <div className="guided-main">
           <section className={`story-banner ${selectedTone ?? ''}`}><div className="story-kicker">SELECTED-WINDOW BOTTOM LINE</div><h2>The business impact is <span>{format(Math.abs(result.businessImpact))}</span> {result.impactDirection} across {windowLabel(timeWindow).toLowerCase()}.</h2><p>{plainSummary(result.businessImpact, result.variance, result.variancePct, result.anomalyScore, metricPolarity)}</p>{topDriver?.topCategory && <div className="next-clue"><span>Strongest clue</span><strong>{humanize(topDriver.dimension)} → {topDriver.topCategory.value}</strong><button onClick={() => setSelectedDimension(topDriver.dimension)}>Explore</button></div>}{result.warnings.length > 0 && <div className="analysis-warnings">{result.warnings.map((warning) => <span key={warning}>{warning}</span>)}</div>}</section>
-          <Panel title="What is contributing most?" subtitle={`Driver rankings are aligned to ${windowLabel(timeWindow).toLowerCase()} and automatically re-check every remaining quality-approved business factor after each drill.`}><div className="driver-split"><DimensionLandscape scores={result.dimensionScores} onSelect={(dimension: DimensionScore) => setSelectedDimension(dimension.dimension)} /><ContributionBars score={selectedScore} onDrill={(predicate) => drill([predicate])} /></div></Panel>
+          <Panel title="What is contributing most?" subtitle={`Driver rankings are aligned to ${windowLabel(timeWindow).toLowerCase()} and automatically re-check every remaining quality-approved business factor after each drill.`}><div className="driver-split"><DimensionLandscape scores={result.dimensionScores} onSelect={(dimension: DimensionScore) => setSelectedDimension(dimension.dimension)} /><ContributionBars score={selectedScore} onDrill={(predicate) => { setSelectedDimension(predicate.dimension); setSelectedCategoryValue(predicate.value); }} /></div></Panel>
         </div>
         <div className="insight-sidebar">
           <NewsIntelPanel onContextReady={setNewsContext} onAnalysisReady={setNewsAnalysis} />
@@ -448,7 +488,7 @@ export default function AppShell() {
         </div>
       </section>
 
-      <details className="more-analysis"><summary>More analysis</summary><div className="grid two"><Panel title="Combined patterns" subtitle="Groups where several characteristics appear together inside the selected finance window."><InteractionList interactions={result.interactions} onDrill={drill} /></Panel><Panel title="Investigation trail" subtitle="The path you have taken so far."><DrillTree predicates={predicates} /></Panel></div><div className="breadcrumbs"><button onClick={() => setPredicates([])}>All business dimensions</button>{predicates.map((predicate, index) => <button key={`${predicate.dimension}-${predicate.value}`} onClick={() => setPredicates(predicates.slice(0, index + 1))}>→ {humanize(predicate.dimension)}: {predicate.value}</button>)}</div></details>
+      <details className="more-analysis" open={showCombinations} onToggle={(event) => setShowCombinations(event.currentTarget.open)}><summary>More analysis</summary><div className="grid two"><Panel title="Combined drivers" subtitle="Values that become important when they occur together inside the selected finance window."><CombinationExplorer interactions={result.interactions} onDrill={drill} /></Panel><Panel title="Investigation trail" subtitle="The path you have taken so far."><DrillTree predicates={predicates} /></Panel></div><div className="breadcrumbs"><button onClick={() => setPredicates([])}>All business dimensions</button>{predicates.map((predicate, index) => <button key={`${predicate.dimension}-${predicate.value}`} onClick={() => setPredicates(predicates.slice(0, index + 1))}>→ {humanize(predicate.dimension)}: {predicate.value}</button>)}</div></details>
 
       <details className="analyst-details"><summary>Analyst evidence</summary><section className="technical-strip"><span><strong>{result.validRowCount.toLocaleString()}</strong> valid measure rows</span><span><strong>{result.excludedMeasureRows.toLocaleString()}</strong> excluded measure rows</span><span><strong>{result.dimensionsScanned}</strong> business factors</span><span><strong>{result.anomalyScore.toFixed(2)}</strong> standardized deviation</span><span><strong>{metricPolarity === 'higher_is_better' ? 'Higher' : 'Lower'}</strong> is better</span><span><strong>{windowLabel(timeWindow)}</strong> selected window</span><span><strong>{result.aggregationMethod.replace('_', ' ')}</strong> attribution</span><span><strong>{result.runId}</strong> calculation run</span></section><section className="table-panel"><h2>Factor audit</h2><p>Detailed evidence for every business factor reviewed after excluding time fields and quality-ineligible columns.</p><div className="table-wrap"><table><thead><tr><th>#</th><th>Factor</th><th>Score</th><th>Leading group</th><th>Business impact</th><th>Support</th><th>Impact</th></tr></thead><tbody>{result.dimensionScores.map((dimension, index) => <tr key={dimension.dimension} onClick={() => setSelectedDimension(dimension.dimension)}><td>{index + 1}</td><td>{humanize(dimension.dimension)}</td><td>{dimension.score.toFixed(1)}</td><td>{dimension.topCategory?.value}</td><td className={Number(dimension.topCategory?.businessImpact) < 0 ? 'bad' : 'good'}>{format(dimension.topCategory?.businessImpact ?? 0)}</td><td>{dimension.topCategory ? `${(dimension.topCategory.support * 100).toFixed(1)}%` : '—'}</td><td>{(dimension.impact * 100).toFixed(1)}%</td></tr>)}</tbody></table></div></section></details>
     </>}

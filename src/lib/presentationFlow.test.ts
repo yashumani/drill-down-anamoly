@@ -22,9 +22,10 @@ describe('guided presentation flow', () => {
 });
 
 describe('live public presentation flow', () => {
-  it('moves through overview, trend, drivers, AI, and method pages', () => {
+  it('moves through overview, trend, drivers, hierarchy, AI, and method pages', () => {
     expect(nextLiveDemoSlide('overview')).toBe('trend');
-    expect(nextLiveDemoSlide('drivers')).toBe('ai');
+    expect(nextLiveDemoSlide('drivers')).toBe('hierarchy');
+    expect(nextLiveDemoSlide('hierarchy')).toBe('ai');
     expect(previousLiveDemoSlide('method')).toBe('ai');
   });
 
