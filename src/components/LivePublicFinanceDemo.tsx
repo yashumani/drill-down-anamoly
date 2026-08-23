@@ -4,6 +4,7 @@ import { EChart } from './EChart';
 import { LiveDimensionVisualLab } from './LiveDimensionVisualLab';
 import { LiveHierarchyOrgChart } from './LiveHierarchyOrgChart';
 import { LivePublicAiPanel } from './LivePublicAiPanel';
+import { LiveHierarchyArcExplorer } from './LiveHierarchyArcExplorer';
 import { downloadFinanceDataTemplate } from '../lib/financeDataContract';
 import {
   LIVE_PUBLIC_DIMENSIONS,
@@ -74,6 +75,8 @@ export function LivePublicFinanceDemo() {
   const [scope, setScope] = useState<LiveDemoScope>('all');
   const [filter, setFilter] = useState<LiveDemoFilter | null>(null);
   const [selectedDimension, setSelectedDimension] = useState(LIVE_PUBLIC_DIMENSIONS[0].field);
+  const [selectedLiveCategory, setSelectedLiveCategory] = useState('');
+  const [hierarchyView, setHierarchyView] = useState<'arc' | 'org'>('arc');
   const [appToken, setAppToken] = useState('');
   const [result, setResult] = useState<LivePublicFinanceResult | null>(null);
   const [loading, setLoading] = useState(true);
@@ -132,6 +135,11 @@ export function LivePublicFinanceDemo() {
     [result, selectedDimension],
   );
 
+  useEffect(() => {
+    const values = selectedSummary?.values ?? [];
+    if (!values.some((item) => item.value === selectedLiveCategory)) setSelectedLiveCategory(values[0]?.value ?? '');
+  }, [selectedSummary?.field, selectedSummary?.values, selectedLiveCategory]);
+
   const current = result?.currentMonth ?? null;
   const progressPct = progress.total ? Math.min(100, progress.completed / progress.total * 100) : 0;
 
@@ -143,13 +151,21 @@ export function LivePublicFinanceDemo() {
 
     <nav className="live-slide-nav" aria-label="Live demo pages">{liveDemoSlides.map((item, index) => <button type="button" key={item.id} className={slide === item.id ? 'active' : index < slideIndex ? 'complete' : ''} onClick={() => setSlide(item.id)} aria-current={slide === item.id ? 'step' : undefined}><span>{String(index + 1).padStart(2, '0')}</span><strong>{item.label}</strong></button>)}</nav>
 
-    <div className="live-demo-controls live-presentation-controls">
-      <label className="live-control-scope">Source scope<select value={scope} onChange={(event) => { setScope(event.target.value as LiveDemoScope); setFilter(null); }}><option value="all">All records</option><option value="24m">Latest 24 months</option><option value="current_fy">Latest fiscal year</option></select></label>
-      <label className="live-control-dimension">Dimension<select value={selectedDimension} onChange={(event) => setSelectedDimension(event.target.value)}>{LIVE_PUBLIC_DIMENSIONS.map((dimension) => <option key={dimension.field} value={dimension.field}>{dimension.label}</option>)}</select></label>
-      <div className="live-filter-scope"><span>Current cohort</span><strong>{filter ? `${humanize(filter.field)} = ${filter.value}` : 'All categories'}</strong></div>
-      {filter && <button type="button" className="quiet-button" onClick={() => setFilter(null)}>Clear drill</button>}
+    <section className="live-explore-bar" aria-label="Live data exploration controls">
+      <div className="live-explore-intro"><span className="deck-kicker">EXPLORE</span><strong>One place for scope, focus, drill, and hierarchy navigation.</strong><small>{filter ? `Current drill: ${humanize(filter.field)} = ${filter.value}` : 'Current drill: all categories'}</small></div>
+      <div className="live-explore-fields">
+        <label>Scope<select value={scope} onChange={(event) => { setScope(event.target.value as LiveDemoScope); setFilter(null); }}><option value="all">All records</option><option value="24m">Latest 24 months</option><option value="current_fy">Latest fiscal year</option></select></label>
+        <label>Explore by<select value={selectedDimension} onChange={(event) => { setSelectedDimension(event.target.value); setSelectedLiveCategory(''); }}>{LIVE_PUBLIC_DIMENSIONS.map((dimension) => <option key={dimension.field} value={dimension.field}>{dimension.label}</option>)}</select></label>
+        <label>Category<select value={selectedLiveCategory} onChange={(event) => setSelectedLiveCategory(event.target.value)}><option value="">Choose a category</option>{selectedSummary?.values.map((item) => <option key={item.value} value={item.value}>{item.value}</option>)}</select></label>
+      </div>
+      <div className="live-explore-actions">
+        <button type="button" className="quiet-button" onClick={() => setSlide('drivers')} disabled={!selectedSummary}>Focus</button>
+        <button type="button" onClick={() => selectedSummary && selectedLiveCategory && setFilter({ field: selectedSummary.field, value: selectedLiveCategory })} disabled={!selectedSummary || !selectedLiveCategory}>Drill down</button>
+        <button type="button" className="quiet-button" onClick={() => setSlide('hierarchy')}>Arc hierarchy</button>
+        <button type="button" className="quiet-button" onClick={() => setFilter(null)} disabled={!filter}>Reset</button>
+      </div>
       <details className="live-token-settings"><summary>API token</summary><label>Socrata token<input type="password" value={appToken} onChange={(event) => setAppToken(event.target.value)} placeholder="Not saved" autoComplete="off" /></label><small>Click Refresh after entering a token. It remains only in page memory.</small></details>
-    </div>
+    </section>
 
     <div className="live-stage">
       {loading && <div className="live-loading live-stage-loading"><div><span style={{ width: `${progressPct}%` }} /></div><strong>{progress.message}</strong><small>{progress.completed} of {progress.total} query steps completed</small></div>}
@@ -177,7 +193,7 @@ export function LivePublicFinanceDemo() {
 
       {result && !loading && slide === 'drivers' && <section className="live-slide-page live-drivers-page"><div className="live-analysis-grid"><section className="live-dimension-panel"><div className="live-section-head"><div><span className="deck-kicker">DIMENSION DETAIL</span><h3>{selectedSummary?.label ?? 'Dimension'} analysis</h3><p>{selectedSummary?.description ?? 'Select a dimension to inspect the largest payment categories.'}</p></div><strong>Concentration · waterfall · zoom heatmap</strong></div>{selectedSummary && !selectedSummary.error && selectedSummary.values.length ? <LiveDimensionVisualLab result={result} summary={selectedSummary} appToken={appToken} onFocus={setFilter} /> : <div className="live-empty"><strong>Dimension result unavailable</strong><p>{selectedSummary?.error ?? 'No categories were returned.'}</p></div>}</section><aside className="live-dimension-directory"><div className="live-section-head"><div><span className="deck-kicker">10-DIMENSION SCAN</span><h3>Choose the next branch</h3><p>Each selection updates the chart lab and the latest-period category evidence.</p></div></div><div className="live-dimension-cards">{result.dimensions.map((dimension) => <button type="button" key={dimension.field} className={dimension.field === selectedSummary?.field ? 'active' : ''} onClick={() => setSelectedDimension(dimension.field)}><span>{dimension.label}</span><strong>{dimension.values[0]?.value ?? 'Unavailable'}</strong><small>{dimension.values[0] ? `${money(dimension.values[0].amount)} · ${percent(dimension.values[0].shareOfSpend)}` : dimension.error?.slice(0, 90)}</small></button>)}</div></aside></div></section>}
 
-      {result && !loading && slide === 'hierarchy' && <section className="live-slide-page live-hierarchy-page"><LiveHierarchyOrgChart result={result} appToken={appToken} /></section>}
+      {result && !loading && slide === 'hierarchy' && <section className="live-slide-page live-hierarchy-page"><><div className="hierarchy-view-switch" role="group" aria-label="Hierarchy visualization"><button type="button" className={hierarchyView === 'arc' ? 'active' : ''} onClick={() => setHierarchyView('arc')}>Animated arc</button><button type="button" className={hierarchyView === 'org' ? 'active' : ''} onClick={() => setHierarchyView('org')}>Org chart</button></div>{hierarchyView === 'arc' ? <LiveHierarchyArcExplorer result={result} scope={scope} appToken={appToken} /> : <LiveHierarchyOrgChart result={result} appToken={appToken} />}</></section>}
 
       {result && !loading && slide === 'ai' && <section className="live-slide-page live-ai-page"><LivePublicAiPanel result={result} /></section>}
 
