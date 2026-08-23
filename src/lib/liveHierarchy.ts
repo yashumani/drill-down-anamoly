@@ -226,7 +226,7 @@ export async function loadLiveHierarchyChildren(options: {
     options.appToken,
     options.signal,
   );
-  const children = rows.map((row) => {
+  const children: LiveHierarchyPathItem[] = rows.map((row) => {
     const value = String(row.value ?? '(missing)');
     const amount = Number(row.amount ?? 0);
     const transactions = Number(row.transactions ?? 0);
