@@ -1,0 +1,102 @@
+name: Verify hierarchy deployment
+
+on:
+  push:
+    branches: ["deployment-verification-v1"]
+    paths: [".deployment-verification/TRIGGER"]
+
+permissions:
+  actions: read
+  contents: write
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    env:
+      TARGET_SHA: b1c1b9eef44c6790a1ba19175a8c8529b1c2129f
+      LIVE_URL: https://yashumani.github.io/drill-down-anamoly/
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Checkout verification branch
+        uses: actions/checkout@v6
+        with:
+          ref: deployment-verification-v1
+          fetch-depth: 0
+
+      - name: Wait for Pages deployment and verify the live hierarchy bundle
+        run: |
+          set -euo pipefail
+          run_id=""
+          run_status="not_found"
+          run_conclusion=""
+          run_url=""
+
+          for attempt in $(seq 1 90); do
+            runs="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs?per_page=100")"
+            run_id="$(jq -r --arg sha "$TARGET_SHA" '[.workflow_runs[] | select(.head_sha == $sha and .path == ".github/workflows/pages.yml")][0].id // empty' <<<"$runs")"
+            if [ -n "$run_id" ]; then
+              run_status="$(jq -r --argjson id "$run_id" '.workflow_runs[] | select(.id == $id) | .status' <<<"$runs")"
+              run_conclusion="$(jq -r --argjson id "$run_id" '.workflow_runs[] | select(.id == $id) | (.conclusion // "")' <<<"$runs")"
+              run_url="$(jq -r --argjson id "$run_id" '.workflow_runs[] | select(.id == $id) | .html_url' <<<"$runs")"
+              if [ "$run_status" = "completed" ]; then
+                break
+              fi
+            fi
+            sleep 10
+          done
+
+          jobs_json='{"jobs":[]}'
+          if [ -n "$run_id" ]; then
+            jobs_json="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${run_id}/jobs?per_page=100")"
+          fi
+
+          http_status="$(curl -L -sS -o /tmp/index.html -w '%{http_code}' "${LIVE_URL}?verify=${TARGET_SHA}")"
+          asset_path="$(grep -oE 'src="[^"]+\.js"' /tmp/index.html | head -1 | sed -E 's/^src="//;s/"$//' || true)"
+          asset_url=""
+          bundle_http_status=""
+          contains_hierarchy="false"
+          if [ -n "$asset_path" ]; then
+            if [[ "$asset_path" =~ ^https?:// ]]; then
+              asset_url="$asset_path"
+            elif [[ "$asset_path" == /* ]]; then
+              asset_url="https://yashumani.github.io${asset_path}"
+            else
+              asset_url="${LIVE_URL}${asset_path}"
+            fi
+            bundle_http_status="$(curl -L -sS -o /tmp/app.js -w '%{http_code}' "${asset_url}?verify=${TARGET_SHA}")"
+            if grep -Fq 'Live procurement hierarchy arc' /tmp/app.js && grep -Fq 'Hierarchy arc' /tmp/app.js; then
+              contains_hierarchy="true"
+            fi
+          fi
+
+          verified="false"
+          if [ "$run_status" = "completed" ] && [ "$run_conclusion" = "success" ] && [ "$http_status" = "200" ] && [ "$bundle_http_status" = "200" ] && [ "$contains_hierarchy" = "true" ]; then
+            verified="true"
+          fi
+
+          jq -n \
+            --arg targetSha "$TARGET_SHA" \
+            --arg runId "$run_id" \
+            --arg runStatus "$run_status" \
+            --arg runConclusion "$run_conclusion" \
+            --arg runUrl "$run_url" \
+            --arg liveUrl "$LIVE_URL" \
+            --arg httpStatus "$http_status" \
+            --arg assetUrl "$asset_url" \
+            --arg bundleHttpStatus "$bundle_http_status" \
+            --argjson containsHierarchy "$contains_hierarchy" \
+            --argjson verified "$verified" \
+            --arg checkedAt "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            --argjson jobs "$(jq '[.jobs[] | {name, status, conclusion}]' <<<"$jobs_json")" \
+            '{targetSha:$targetSha, pagesRun:{id:$runId,status:$runStatus,conclusion:$runConclusion,url:$runUrl,jobs:$jobs}, liveSite:{url:$liveUrl,httpStatus:$httpStatus,assetUrl:$assetUrl,bundleHttpStatus:$bundleHttpStatus,containsHierarchy:$containsHierarchy}, verified:$verified,checkedAt:$checkedAt}' \
+            > deployment-verification.json
+
+          rm -rf .deployment-verification
+          rm .github/workflows/verify-hierarchy-deployment.yml
+          git add -A
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Record hierarchy deployment verification"
+          git push origin HEAD:deployment-verification-v1
+
+          test "$verified" = "true"
