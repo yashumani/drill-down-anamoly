@@ -1,0 +1,25 @@
+{
+  "targetSha": "b1c1b9eef44c6790a1ba19175a8c8529b1c2129f",
+  "pagesRun": {
+    "id": "32673914101",
+    "status": "completed",
+    "conclusion": "success",
+    "url": "https://github.com/yashumani/drill-down-anamoly/actions/runs/32673914101",
+    "jobs": [
+      {
+        "name": "validate-build-deploy",
+        "status": "completed",
+        "conclusion": "success"
+      }
+    ]
+  },
+  "liveSite": {
+    "url": "https://yashumani.github.io/drill-down-anamoly/",
+    "httpStatus": "200",
+    "assetUrl": "https://yashumani.github.io/drill-down-anamoly/assets/index-DhulHQa9.js",
+    "bundleHttpStatus": "200",
+    "containsHierarchy": true
+  },
+  "verified": true,
+  "checkedAt": "2026-08-23T23:43:35Z"
+}
