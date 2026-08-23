@@ -214,7 +214,7 @@ export function LiveHierarchyOrgChart({ result, appToken }: { result: LivePublic
         <p>Choose a branch to load its children on demand. The chart uses two standardized relationship fields—<code>node_id</code> and <code>parent_node_id</code>—so the same pattern can work with an LOB, geography, cost-center, product, or organizational hierarchy.</p>
       </div>
       <div className="hierarchy-head-actions">
-        <button type="button" className="quiet-button" onClick={downloadHierarchyTemplate}>Download hierarchy template</button>
+        <button type="button" className="quiet-button" onClick={() => downloadHierarchyTemplate()}>Download hierarchy template</button>
         <button type="button" onClick={() => setPath(initialPath)} disabled={path.length <= initialPath.length}>Reset hierarchy</button>
       </div>
     </header>
