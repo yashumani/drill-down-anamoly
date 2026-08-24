@@ -3,6 +3,7 @@ import type { EChartsOption, ECElementEvent } from 'echarts';
 import { buildArcHierarchyLayout, buildArcLeafInsight, arcNodePathLabel } from '../lib/arcHierarchy';
 import type { ArcHierarchyNodeInput } from '../lib/arcHierarchy';
 import { EChart } from './EChart';
+import { InfoTip } from './InfoTip';
 
 const compact = (value: number | null | undefined) => value === null || value === undefined
   ? '—'
@@ -182,8 +183,8 @@ export function HierarchyArcChart({ path, children, loading = false, onOpenNode,
 
   return <section className="hierarchy-arc-shell" aria-label={title}>
     <div className="hierarchy-arc-head">
-      <div><span className="deck-kicker">DYNAMIC ARC TREE</span><h3>{title}</h3><p>This is an interactive hierarchy visualization—not a machine-learning decision tree. Select a branch to open its children; select a leaf to review evidence and optional local-LLM commentary.</p></div>
-      <div className="hierarchy-arc-actions"><button type="button" className="quiet-button" onClick={onReset} disabled={!path.length}>Reset</button></div>
+      <div><span className="deck-kicker">DYNAMIC ARC TREE <InfoTip text="This chart visualizes a declared parent-child hierarchy. It is not a predictive machine-learning decision tree." label="About the arc tree" /></span><h3>{title}</h3><p>This is an interactive hierarchy visualization—not a machine-learning decision tree. Select a branch to open its children; select a leaf to review evidence and optional local-LLM commentary.</p></div>
+      <div className="hierarchy-arc-actions"><button type="button" title="Return the hierarchy to its configured root." className="quiet-button" onClick={onReset} disabled={!path.length}>Reset</button></div>
     </div>
     <div className="hierarchy-arc-breadcrumbs" aria-label="Hierarchy path">{path.map((node, index) => <button type="button" key={node.id} onClick={() => onJumpToPath?.(index)}><span>{node.levelName || `Level ${node.level}`}</span><strong>{node.label}</strong></button>)}</div>
     <div className="hierarchy-arc-layout">
@@ -193,7 +194,7 @@ export function HierarchyArcChart({ path, children, loading = false, onOpenNode,
         <div className="hierarchy-arc-help"><span>Tap a node</span><span>Pinch / wheel to zoom</span><span>Drag to move</span><span>Node size = financial share</span></div>
       </div>
       <aside className={`hierarchy-leaf-insight ${builtInInsight?.direction ?? 'unknown'}`}>
-        <span className="deck-kicker">LEAF INSIGHT</span>
+        <span className="deck-kicker">LEAF INSIGHT <InfoTip text="This panel summarizes verified node values, support, parent share, and business impact. It does not claim the node caused the result." label="About leaf insight" side="left" /></span>
         {selected && builtInInsight ? <>
           <h4>{selected.label}</h4>
           <p className="leaf-insight-headline">{builtInInsight.headline}</p>
@@ -204,8 +205,8 @@ export function HierarchyArcChart({ path, children, loading = false, onOpenNode,
           {localInsight?.status === 'loading' && <div className="leaf-llm-status">Local LLM is reviewing this leaf…</div>}
           {localInsight?.status === 'ready' && <div className="leaf-llm-answer"><span>Local LLM commentary</span><p>{localInsight.text}</p></div>}
           {localInsight?.status === 'error' && <div className="leaf-llm-status error"><span>{localInsight.text}</span><button type="button" onClick={retryLlm}>Retry local insight</button></div>}
-          {!localInsight && <button type="button" className="leaf-ai-button" onClick={retryLlm}>Generate local AI insight</button>}
-          {selected.hasChildren !== false && <button type="button" onClick={() => onOpenNode?.(selected)}>Open this branch →</button>}
+          {!localInsight && <button type="button" title="Ask the connected local model to summarize only the verified evidence shown for this node." className="leaf-ai-button" onClick={retryLlm}>Generate local AI insight</button>}
+          {selected.hasChildren !== false && <button type="button" title="Load and display the immediate children of this hierarchy node." onClick={() => onOpenNode?.(selected)}>Open this branch →</button>}
         </> : <p>Select a node to review its verified evidence.</p>}
       </aside>
     </div>
