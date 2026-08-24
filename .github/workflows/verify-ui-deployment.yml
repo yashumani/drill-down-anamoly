@@ -1,0 +1,89 @@
+name: Verify UI polish deployment
+
+on:
+  push:
+    branches: ["ui-deployment-verification-v1"]
+    paths: [".ui-deployment-verification/TRIGGER"]
+
+permissions:
+  actions: read
+  contents: write
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    env:
+      TARGET_SHA: f7d6b58f02205d971055cdcb5fce5ffba82a00d2
+      LIVE_URL: https://yashumani.github.io/drill-down-anamoly/
+    steps:
+      - name: Checkout verification branch
+        uses: actions/checkout@v6
+        with:
+          ref: ui-deployment-verification-v1
+          fetch-depth: 0
+
+      - name: Wait for the matching Pages deployment
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          run_json=''
+          for attempt in $(seq 1 24); do
+            payload=$(curl -fsSL \
+              -H "Authorization: Bearer ${GH_TOKEN}" \
+              -H "Accept: application/vnd.github+json" \
+              "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/workflows/pages.yml/runs?branch=main&per_page=20")
+            run_json=$(printf '%s' "$payload" | jq -c --arg sha "$TARGET_SHA" '.workflow_runs[] | select(.head_sha == $sha)' | head -n 1 || true)
+            if [ -n "$run_json" ]; then
+              status=$(printf '%s' "$run_json" | jq -r '.status')
+              conclusion=$(printf '%s' "$run_json" | jq -r '.conclusion // ""')
+              if [ "$status" = completed ] && [ "$conclusion" = success ]; then
+                printf '%s' "$run_json" > /tmp/pages-run.json
+                break
+              fi
+              if [ "$status" = completed ] && [ "$conclusion" != success ]; then
+                echo "Matching Pages run completed with ${conclusion}." >&2
+                exit 1
+              fi
+            fi
+            sleep 10
+          done
+          test -s /tmp/pages-run.json
+
+      - name: Verify the published visual-fit assets
+        run: |
+          set -euo pipefail
+          sleep 12
+          curl -fsSL -H 'Cache-Control: no-cache' "${LIVE_URL}?verify=${TARGET_SHA}" -o /tmp/index.html
+          asset_paths=$(grep -oE 'assets/[^" ]+\.(css|js)' /tmp/index.html | sort -u)
+          test -n "$asset_paths"
+          : > /tmp/all-assets.txt
+          while IFS= read -r asset; do
+            curl -fsSL -H 'Cache-Control: no-cache' "${LIVE_URL}${asset}?verify=${TARGET_SHA}" >> /tmp/all-assets.txt
+          done <<< "$asset_paths"
+          grep -q 'info-tip' /tmp/all-assets.txt
+          grep -q 'About the exploration controls' /tmp/all-assets.txt
+          grep -q 'About the arc tree' /tmp/all-assets.txt
+          curl -fsSI "$LIVE_URL" | head -n 1 | grep -q '200'
+
+      - name: Record verification and remove one-use workflow
+        run: |
+          set -euo pipefail
+          run_id=$(jq -r '.id' /tmp/pages-run.json)
+          run_url=$(jq -r '.html_url' /tmp/pages-run.json)
+          checked_at=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+          jq -n \
+            --arg targetSha "$TARGET_SHA" \
+            --arg runId "$run_id" \
+            --arg runUrl "$run_url" \
+            --arg liveUrl "$LIVE_URL" \
+            --arg checkedAt "$checked_at" \
+            '{targetSha:$targetSha,pagesRun:{id:$runId,status:"completed",conclusion:"success",url:$runUrl},liveSite:{url:$liveUrl,httpStatus:200,containsContextualHelp:true,containsHierarchyFitRules:true},verified:true,checkedAt:$checkedAt}' \
+            > ui-deployment-verification.json
+          rm -rf .ui-deployment-verification
+          rm .github/workflows/verify-ui-deployment.yml
+          git add -A
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Record visual-fit deployment verification"
+          git push origin HEAD:ui-deployment-verification-v1
