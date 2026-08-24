@@ -16,6 +16,7 @@ import './final-enhancements.css';
 import './mobile.css';
 import './arc-explorer.css';
 import './hierarchy.css';
+import './visual-ux-polish.css';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

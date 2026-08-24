@@ -36,6 +36,7 @@ import { NewsIntelPanel } from './components/NewsIntelPanel';
 import { isPaletteId, ThemePicker } from './components/ThemePicker';
 import type { PaletteId } from './components/ThemePicker';
 import { TimeSeriesCockpit } from './components/TimeSeriesCockpit';
+import { InfoTip } from './components/InfoTip';
 import type { ChatAction } from './lib/chatEngine';
 import type { DataRow, DimensionScore, MetricPolarity, Predicate } from './types';
 
@@ -441,10 +442,10 @@ export default function AppShell() {
       </details>
 
       <section className="executive-metrics">
-        <Metric label={currentPoint ? `${currentPoint.label} actual` : 'Selected-scope actual'} value={format(currentPoint?.actual ?? result.actual)} helper={`${humanize(actualKey)} · ${timeSeries?.coverage.validMeasureRows.toLocaleString() ?? result.validRowCount.toLocaleString()} valid rows`} />
-        <Metric label={expectedKey ? 'Plan / expected' : 'Rolling typical'} value={format(currentPoint?.expected ?? result.expected)} helper={expectedKey ? humanize(expectedKey) : 'Rolling median baseline'} />
-        <Metric label="Current-period impact" value={`${executiveImpact >= 0 ? '+' : ''}${format(executiveImpact)}`} helper={`${currentPoint?.impactDirection ?? result.impactDirection} · ${windowLabel(timeWindow)} driver scope`} tone={executiveTone} />
-        <Metric label="Analysis health" value={timeSeries ? `${timeSeries.modelHealth.score.toFixed(0)}/100` : plainAnomaly(result.anomalyScore)} helper={timeSeries ? `${humanize(timeSeries.modelHealth.status)} · run ${timeSeries.runId}` : 'Standardized movement strength'} tone={timeSeries?.modelHealth.status === 'healthy' ? undefined : 'warn'} />
+        <Metric label={currentPoint ? `${currentPoint.label} actual` : 'Selected-scope actual'} help="Observed value for the current reporting period and drill scope. Invalid or missing measure rows are excluded from the calculation." value={format(currentPoint?.actual ?? result.actual)} helper={`${humanize(actualKey)} · ${timeSeries?.coverage.validMeasureRows.toLocaleString() ?? result.validRowCount.toLocaleString()} valid rows`} />
+        <Metric label={expectedKey ? 'Plan / expected' : 'Rolling typical'} help={expectedKey ? 'The selected budget, plan, target, or forecast used as the comparison value.' : 'No official comparison field is selected, so this is an explicitly labeled rolling historical reference rather than a budget.'} value={format(currentPoint?.expected ?? result.expected)} helper={expectedKey ? humanize(expectedKey) : 'Rolling median baseline'} />
+        <Metric label="Current-period impact" help="Actual minus comparison after applying whether higher or lower values are better. This is the business-facing favorable or unfavorable movement." value={`${executiveImpact >= 0 ? '+' : ''}${format(executiveImpact)}`} helper={`${currentPoint?.impactDirection ?? result.impactDirection} · ${windowLabel(timeWindow)} driver scope`} tone={executiveTone} />
+        <Metric label="Analysis health" help="A readiness indicator based on time coverage, valid measures, comparison coverage, available history, and model diagnostics. It is not a probability that the insight is correct." value={timeSeries ? `${timeSeries.modelHealth.score.toFixed(0)}/100` : plainAnomaly(result.anomalyScore)} helper={timeSeries ? `${humanize(timeSeries.modelHealth.status)} · run ${timeSeries.runId}` : 'Standardized movement strength'} tone={timeSeries?.modelHealth.status === 'healthy' ? undefined : 'warn'} />
       </section>
 
       <TimeSeriesCockpit
@@ -495,8 +496,8 @@ export default function AppShell() {
   </main>;
 }
 
-function Metric({ label, value, helper, tone }: { label: string; value: string; helper?: string; tone?: string }) {
-  return <div className="metric friendly-metric"><span>{label}</span><strong className={tone}>{value}</strong>{helper && <small>{helper}</small>}</div>;
+function Metric({ label, value, helper, tone, help }: { label: string; value: string; helper?: string; tone?: string; help?: string }) {
+  return <div className="metric friendly-metric"><span className="metric-label">{label}{help && <InfoTip text={help} label={label} side="bottom" />}</span><strong className={tone}>{value}</strong>{helper && <small>{helper}</small>}</div>;
 }
 
 function Panel({ title, subtitle, children }: { title: string; subtitle: string; children: ReactNode }) {

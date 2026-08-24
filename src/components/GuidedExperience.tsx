@@ -263,7 +263,7 @@ export function GuidedExperience({
 
   return <section className="presentation-deck" aria-label="FP&A slideshow workflow">
     <nav className="deck-progress" aria-label="Presentation pages">
-      {guidedSlides.map((item, index) => <button key={item.id} type="button" className={slide === item.id ? 'active' : index < slideIndex ? 'complete' : ''} onClick={() => goTo(item.id)} aria-current={slide === item.id ? 'step' : undefined}><span>{String(index + 1).padStart(2, '0')}</span><strong>{item.label}</strong></button>)}
+      {guidedSlides.map((item, index) => <button key={item.id} type="button" title={`Open ${item.label}`} className={slide === item.id ? 'active' : index < slideIndex ? 'complete' : ''} onClick={() => goTo(item.id)} aria-current={slide === item.id ? 'step' : undefined}><span>{String(index + 1).padStart(2, '0')}</span><strong>{item.label}</strong></button>)}
     </nav>
     <div className="deck-stage" aria-live="polite">{pages[slide]}</div>
     <footer className="deck-footer">
