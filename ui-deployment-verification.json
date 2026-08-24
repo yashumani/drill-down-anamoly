@@ -1,0 +1,17 @@
+{
+  "targetSha": "f7d6b58f02205d971055cdcb5fce5ffba82a00d2",
+  "pagesRun": {
+    "id": "32692036353",
+    "status": "completed",
+    "conclusion": "success",
+    "url": "https://github.com/yashumani/drill-down-anamoly/actions/runs/32692036353"
+  },
+  "liveSite": {
+    "url": "https://yashumani.github.io/drill-down-anamoly/",
+    "httpStatus": 200,
+    "containsContextualHelp": true,
+    "containsHierarchyFitRules": true
+  },
+  "verified": true,
+  "checkedAt": "2026-08-24T05:04:55Z"
+}
