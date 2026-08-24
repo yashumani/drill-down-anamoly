@@ -5,6 +5,7 @@ import { LiveDimensionVisualLab } from './LiveDimensionVisualLab';
 import { LiveHierarchyOrgChart } from './LiveHierarchyOrgChart';
 import { LivePublicAiPanel } from './LivePublicAiPanel';
 import { LiveHierarchyArcExplorer } from './LiveHierarchyArcExplorer';
+import { InfoTip } from './InfoTip';
 import { downloadFinanceDataTemplate } from '../lib/financeDataContract';
 import {
   LIVE_PUBLIC_DIMENSIONS,
@@ -149,22 +150,22 @@ export function LivePublicFinanceDemo() {
       <div className="live-demo-actions"><button type="button" onClick={() => setRefreshKey((value) => value + 1)} disabled={loading}>{loading ? 'Querying live API…' : 'Refresh live data'}</button>{result && <a href={result.source.datasetUrl} target="_blank" rel="noreferrer">Official dataset</a>}</div>
     </header>
 
-    <nav className="live-slide-nav" aria-label="Live demo pages">{liveDemoSlides.map((item, index) => <button type="button" key={item.id} className={slide === item.id ? 'active' : index < slideIndex ? 'complete' : ''} onClick={() => setSlide(item.id)} aria-current={slide === item.id ? 'step' : undefined}><span>{String(index + 1).padStart(2, '0')}</span><strong>{item.label}</strong></button>)}</nav>
+    <nav className="live-slide-nav" aria-label="Live demo pages">{liveDemoSlides.map((item, index) => <button type="button" key={item.id} title={`Open ${item.label}`} className={slide === item.id ? 'active' : index < slideIndex ? 'complete' : ''} onClick={() => setSlide(item.id)} aria-current={slide === item.id ? 'step' : undefined}><span>{String(index + 1).padStart(2, '0')}</span><strong>{item.label}</strong></button>)}</nav>
 
     <section className="live-explore-bar" aria-label="Live data exploration controls">
-      <div className="live-explore-intro"><span className="deck-kicker">EXPLORE</span><strong>One place for scope, focus, drill, and hierarchy navigation.</strong><small>{filter ? `Current drill: ${humanize(filter.field)} = ${filter.value}` : 'Current drill: all categories'}</small></div>
+      <div className="live-explore-intro"><span className="deck-kicker">EXPLORE <InfoTip text="These controls change the live source scope, select a dimension, preview a category, drill into it, or open the hierarchy view." label="About live exploration" /></span><strong>One place for scope, focus, drill, and hierarchy navigation.</strong><small>{filter ? `Current drill: ${humanize(filter.field)} = ${filter.value}` : 'Current drill: all categories'}</small></div>
       <div className="live-explore-fields">
-        <label>Scope<select value={scope} onChange={(event) => { setScope(event.target.value as LiveDemoScope); setFilter(null); }}><option value="all">All records</option><option value="24m">Latest 24 months</option><option value="current_fy">Latest fiscal year</option></select></label>
-        <label>Explore by<select value={selectedDimension} onChange={(event) => { setSelectedDimension(event.target.value); setSelectedLiveCategory(''); }}>{LIVE_PUBLIC_DIMENSIONS.map((dimension) => <option key={dimension.field} value={dimension.field}>{dimension.label}</option>)}</select></label>
-        <label>Category<select value={selectedLiveCategory} onChange={(event) => setSelectedLiveCategory(event.target.value)}><option value="">Choose a category</option>{selectedSummary?.values.map((item) => <option key={item.value} value={item.value}>{item.value}</option>)}</select></label>
+        <label><span className="control-label">Scope <InfoTip text="Controls the date range queried from the public source. Changing it recalculates every live KPI and visualization." label="Live source scope" /></span><select value={scope} onChange={(event) => { setScope(event.target.value as LiveDemoScope); setFilter(null); }}><option value="all">All records</option><option value="24m">Latest 24 months</option><option value="current_fy">Latest fiscal year</option></select></label>
+        <label><span className="control-label">Explore by <InfoTip text="Select the finance dimension used for the category chart, waterfall, heatmap, and focus action." label="Live dimension" /></span><select value={selectedDimension} onChange={(event) => { setSelectedDimension(event.target.value); setSelectedLiveCategory(''); }}>{LIVE_PUBLIC_DIMENSIONS.map((dimension) => <option key={dimension.field} value={dimension.field}>{dimension.label}</option>)}</select></label>
+        <label><span className="control-label">Category <InfoTip text="Choose one of the leading values returned for the selected dimension. Drill down applies it as a source-side filter." label="Live category" /></span><select value={selectedLiveCategory} onChange={(event) => setSelectedLiveCategory(event.target.value)}><option value="">Choose a category</option>{selectedSummary?.values.map((item) => <option key={item.value} value={item.value}>{item.value}</option>)}</select></label>
       </div>
       <div className="live-explore-actions">
-        <button type="button" className="quiet-button" onClick={() => setSlide('drivers')} disabled={!selectedSummary}>Focus</button>
-        <button type="button" onClick={() => selectedSummary && selectedLiveCategory && setFilter({ field: selectedSummary.field, value: selectedLiveCategory })} disabled={!selectedSummary || !selectedLiveCategory}>Drill down</button>
-        <button type="button" className="quiet-button" onClick={() => setSlide('hierarchy')}>Arc hierarchy</button>
-        <button type="button" className="quiet-button" onClick={() => setFilter(null)} disabled={!filter}>Reset</button>
+        <button type="button" title="Open the selected dimension in the concentration, waterfall, and heatmap visualization lab without changing the population." className="quiet-button" onClick={() => setSlide('drivers')} disabled={!selectedSummary}>Focus</button>
+        <button type="button" title="Apply the selected category as a source-side filter and recalculate all live evidence." onClick={() => selectedSummary && selectedLiveCategory && setFilter({ field: selectedSummary.field, value: selectedLiveCategory })} disabled={!selectedSummary || !selectedLiveCategory}>Drill down</button>
+        <button type="button" title="Open the ten-level animated parent-child hierarchy and org-chart views." className="quiet-button" onClick={() => setSlide('hierarchy')}>Arc hierarchy</button>
+        <button type="button" title="Remove the current source-side category drill and return to the selected date scope." className="quiet-button" onClick={() => setFilter(null)} disabled={!filter}>Reset</button>
       </div>
-      <details className="live-token-settings"><summary>API token</summary><label>Socrata token<input type="password" value={appToken} onChange={(event) => setAppToken(event.target.value)} placeholder="Not saved" autoComplete="off" /></label><small>Click Refresh after entering a token. It remains only in page memory.</small></details>
+      <details className="live-token-settings"><summary title="Optional Socrata app token used only to improve public API rate-limit reliability.">API token</summary><label>Socrata token<input type="password" value={appToken} onChange={(event) => setAppToken(event.target.value)} placeholder="Not saved" autoComplete="off" /></label><small>Click Refresh after entering a token. It remains only in page memory.</small></details>
     </section>
 
     <div className="live-stage">
@@ -173,12 +174,12 @@ export function LivePublicFinanceDemo() {
 
       {result && !loading && slide === 'overview' && <section className="live-slide-page live-overview-page">
         <div className="live-source-grid">
-          <LiveMetric label="Full public source" value={result.fullSource.rowCount.toLocaleString()} note="records queried at source" />
-          <LiveMetric label="Selected scope" value={result.scopedSource.rowCount.toLocaleString()} note={result.scopeLabel} />
-          <LiveMetric label="Source columns" value={result.source.columnCount.toLocaleString()} note={`${LIVE_PUBLIC_DIMENSIONS.length} modeled dimensions`} />
-          <LiveMetric label="Total payments" value={money(result.scopedSource.totalAmount)} note="exact server-side sum" />
-          <LiveMetric label="Analysis health" value={`${result.analysisHealth.toFixed(0)}/100`} note={`${result.dimensions.filter((dimension) => !dimension.error).length} dimensions completed`} />
-          <LiveMetric label="Query runtime" value={`${(result.queryDurationMs / 1000).toFixed(1)}s`} note={`${result.requestCount} public API requests`} />
+          <LiveMetric label="Full public source" help="The current total number of payment records reported by the public source, calculated at the source rather than downloaded to the browser." value={result.fullSource.rowCount.toLocaleString()} note="records queried at source" />
+          <LiveMetric label="Selected scope" help="The number of records remaining after the current date scope and hierarchy or category drill are applied." value={result.scopedSource.rowCount.toLocaleString()} note={result.scopeLabel} />
+          <LiveMetric label="Source columns" help="The source schema contains more columns than the dashboard models. The application uses a curated set of finance dimensions for the demonstration." value={result.source.columnCount.toLocaleString()} note={`${LIVE_PUBLIC_DIMENSIONS.length} modeled dimensions`} />
+          <LiveMetric label="Total payments" help="The exact sum of payment amount for the selected source scope and drill cohort, calculated by the public data service." value={money(result.scopedSource.totalAmount)} note="exact server-side sum" />
+          <LiveMetric label="Analysis health" help="A coverage and query-readiness indicator based on available periods, completed dimensions, and source scale. It is not a causal-confidence score." value={`${result.analysisHealth.toFixed(0)}/100`} note={`${result.dimensions.filter((dimension) => !dimension.error).length} dimensions completed`} />
+          <LiveMetric label="Query runtime" help="Elapsed time and request count for the source-side aggregate queries that produced this dashboard state." value={`${(result.queryDurationMs / 1000).toFixed(1)}s`} note={`${result.requestCount} public API requests`} />
         </div>
         <section className="live-executive-strip">
           <article><span>Latest month</span><strong>{current?.label ?? '—'}</strong><small>{current ? `${money(current.actual)} spend · ${current.transactions.toLocaleString()} transactions${current.partialPeriod ? ' · partial month' : ''}` : 'No monthly history returned'}</small></article>
@@ -193,7 +194,7 @@ export function LivePublicFinanceDemo() {
 
       {result && !loading && slide === 'drivers' && <section className="live-slide-page live-drivers-page"><div className="live-analysis-grid"><section className="live-dimension-panel"><div className="live-section-head"><div><span className="deck-kicker">DIMENSION DETAIL</span><h3>{selectedSummary?.label ?? 'Dimension'} analysis</h3><p>{selectedSummary?.description ?? 'Select a dimension to inspect the largest payment categories.'}</p></div><strong>Concentration · waterfall · zoom heatmap</strong></div>{selectedSummary && !selectedSummary.error && selectedSummary.values.length ? <LiveDimensionVisualLab result={result} summary={selectedSummary} appToken={appToken} onFocus={setFilter} /> : <div className="live-empty"><strong>Dimension result unavailable</strong><p>{selectedSummary?.error ?? 'No categories were returned.'}</p></div>}</section><aside className="live-dimension-directory"><div className="live-section-head"><div><span className="deck-kicker">10-DIMENSION SCAN</span><h3>Choose the next branch</h3><p>Each selection updates the chart lab and the latest-period category evidence.</p></div></div><div className="live-dimension-cards">{result.dimensions.map((dimension) => <button type="button" key={dimension.field} className={dimension.field === selectedSummary?.field ? 'active' : ''} onClick={() => setSelectedDimension(dimension.field)}><span>{dimension.label}</span><strong>{dimension.values[0]?.value ?? 'Unavailable'}</strong><small>{dimension.values[0] ? `${money(dimension.values[0].amount)} · ${percent(dimension.values[0].shareOfSpend)}` : dimension.error?.slice(0, 90)}</small></button>)}</div></aside></div></section>}
 
-      {result && !loading && slide === 'hierarchy' && <section className="live-slide-page live-hierarchy-page"><><div className="hierarchy-view-switch" role="group" aria-label="Hierarchy visualization"><button type="button" className={hierarchyView === 'arc' ? 'active' : ''} onClick={() => setHierarchyView('arc')}>Animated arc</button><button type="button" className={hierarchyView === 'org' ? 'active' : ''} onClick={() => setHierarchyView('org')}>Org chart</button></div>{hierarchyView === 'arc' ? <LiveHierarchyArcExplorer result={result} scope={scope} appToken={appToken} /> : <LiveHierarchyOrgChart result={result} appToken={appToken} />}</></section>}
+      {result && !loading && slide === 'hierarchy' && <section className="live-slide-page live-hierarchy-page"><><div className="hierarchy-view-switch" role="group" aria-label="Hierarchy visualization"><span className="section-label-with-help">Hierarchy view <InfoTip text="Animated arc emphasizes branch transitions and node evidence. Org chart emphasizes the formal parent-to-child reporting structure." label="Hierarchy view" side="bottom" /></span><button type="button" title="Show the animated parent-child arc with node evidence and branch transitions." className={hierarchyView === 'arc' ? 'active' : ''} onClick={() => setHierarchyView('arc')}>Animated arc</button><button type="button" title="Show the same hierarchy as a conventional organization chart." className={hierarchyView === 'org' ? 'active' : ''} onClick={() => setHierarchyView('org')}>Org chart</button></div>{hierarchyView === 'arc' ? <LiveHierarchyArcExplorer result={result} scope={scope} appToken={appToken} /> : <LiveHierarchyOrgChart result={result} appToken={appToken} />}</></section>}
 
       {result && !loading && slide === 'ai' && <section className="live-slide-page live-ai-page"><LivePublicAiPanel result={result} /></section>}
 
@@ -207,6 +208,6 @@ export function LivePublicFinanceDemo() {
   </section>;
 }
 
-function LiveMetric({ label, value, note }: { label: string; value: string; note: string }) {
-  return <article className="live-source-metric"><span>{label}</span><strong>{value}</strong><small>{note}</small></article>;
+function LiveMetric({ label, value, note, help }: { label: string; value: string; note: string; help?: string }) {
+  return <article className="live-source-metric"><span className="live-metric-label">{label}{help && <InfoTip text={help} label={label} side="bottom" />}</span><strong>{value}</strong><small>{note}</small></article>;
 }
