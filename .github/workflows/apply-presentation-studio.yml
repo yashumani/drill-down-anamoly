@@ -1,0 +1,45 @@
+name: Apply validated Presentation Studio package
+
+on:
+  push:
+    branches: ["presentation-studio-v1"]
+    paths: [".presentation-patch/APPLY"]
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout implementation branch
+        uses: actions/checkout@v6
+        with:
+          ref: presentation-studio-v1
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Expand and validate Presentation Studio
+        run: |
+          set -euo pipefail
+          cat .presentation-patch/chunk-* | base64 -d > /tmp/presentation-studio.tar.bz2
+          tar -xjf /tmp/presentation-studio.tar.bz2 -C .
+          rm -rf .presentation-patch
+          rm .github/workflows/apply-presentation-studio.yml
+
+          npm ci --no-audit --no-fund
+          npm test
+          npm run build -- --base=/drill-down-anamoly/
+          npm run check:bundle
+
+          git add -A
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Add deterministic Presentation Studio and guarded LLM design mode"
+          git push origin HEAD:presentation-studio-v1
