@@ -36,7 +36,7 @@ import { NewsIntelPanel } from './components/NewsIntelPanel';
 import { isPaletteId, ThemePicker } from './components/ThemePicker';
 import type { PaletteId } from './components/ThemePicker';
 import { TimeSeriesCockpit } from './components/TimeSeriesCockpit';
-import { InfoTip } from './components/InfoTip';
+import { PresentationStudio } from './components/PresentationStudio';
 import type { ChatAction } from './lib/chatEngine';
 import type { DataRow, DimensionScore, MetricPolarity, Predicate } from './types';
 
@@ -97,6 +97,7 @@ export default function AppShell() {
     return isPaletteId(saved) ? saved : 'midnight';
   });
   const [error, setError] = useState('');
+  const [presentationOpen, setPresentationOpen] = useState(false);
 
   const profiles = useMemo(() => profileFields(rows), [rows]);
   const datasetSession = useMemo(() => createDatasetSession({ rows, source: datasetSource, contractReport }), [rows, datasetSource, contractReport]);
@@ -399,8 +400,9 @@ export default function AppShell() {
       onOpenAdvanced={openAdvanced}
       onOpenPublic={() => setWorkspace('public-demo')}
       onOpenQuality={() => setWorkspace('quality')}
+      onOpenPresentation={() => setPresentationOpen(true)}
     /> : workspace === 'public-demo' ? <LivePublicFinanceDemo /> : workspace === 'quality' ? <DataQualityPanel rows={rows} report={qualityReport} onLoadCleanDemo={loadCleanDemo} onLoadQualityDemo={loadQualityDemo} /> : <>
-      <div className="advanced-mode-banner"><div><span className="eyebrow">ADVANCED ANALYSIS</span><strong>Every control, every evidence layer.</strong><small>Return to Quick Answer whenever the specialist detail is no longer useful.</small></div><div className="advanced-mode-actions"><button type="button" className="quiet-button" onClick={exportInvestigation}>Export investigation</button><button type="button" onClick={() => setWorkspace('guided')}>← Back to slide presentation</button></div></div>
+      <div className="advanced-mode-banner"><div><span className="eyebrow">ADVANCED ANALYSIS</span><strong>Every control, every evidence layer.</strong><small>Return to Quick Answer whenever the specialist detail is no longer useful.</small></div><div className="advanced-mode-actions"><button type="button" onClick={() => setPresentationOpen(true)}>Create presentation</button><button type="button" className="quiet-button" onClick={exportInvestigation}>Export investigation</button><button type="button" onClick={() => setWorkspace('guided')}>← Back to slide presentation</button></div></div>
 
       <ExplorationControlBar
         mode={explorerMode}
@@ -442,10 +444,10 @@ export default function AppShell() {
       </details>
 
       <section className="executive-metrics">
-        <Metric label={currentPoint ? `${currentPoint.label} actual` : 'Selected-scope actual'} help="Observed value for the current reporting period and drill scope. Invalid or missing measure rows are excluded from the calculation." value={format(currentPoint?.actual ?? result.actual)} helper={`${humanize(actualKey)} · ${timeSeries?.coverage.validMeasureRows.toLocaleString() ?? result.validRowCount.toLocaleString()} valid rows`} />
-        <Metric label={expectedKey ? 'Plan / expected' : 'Rolling typical'} help={expectedKey ? 'The selected budget, plan, target, or forecast used as the comparison value.' : 'No official comparison field is selected, so this is an explicitly labeled rolling historical reference rather than a budget.'} value={format(currentPoint?.expected ?? result.expected)} helper={expectedKey ? humanize(expectedKey) : 'Rolling median baseline'} />
-        <Metric label="Current-period impact" help="Actual minus comparison after applying whether higher or lower values are better. This is the business-facing favorable or unfavorable movement." value={`${executiveImpact >= 0 ? '+' : ''}${format(executiveImpact)}`} helper={`${currentPoint?.impactDirection ?? result.impactDirection} · ${windowLabel(timeWindow)} driver scope`} tone={executiveTone} />
-        <Metric label="Analysis health" help="A readiness indicator based on time coverage, valid measures, comparison coverage, available history, and model diagnostics. It is not a probability that the insight is correct." value={timeSeries ? `${timeSeries.modelHealth.score.toFixed(0)}/100` : plainAnomaly(result.anomalyScore)} helper={timeSeries ? `${humanize(timeSeries.modelHealth.status)} · run ${timeSeries.runId}` : 'Standardized movement strength'} tone={timeSeries?.modelHealth.status === 'healthy' ? undefined : 'warn'} />
+        <Metric label={currentPoint ? `${currentPoint.label} actual` : 'Selected-scope actual'} value={format(currentPoint?.actual ?? result.actual)} helper={`${humanize(actualKey)} · ${timeSeries?.coverage.validMeasureRows.toLocaleString() ?? result.validRowCount.toLocaleString()} valid rows`} />
+        <Metric label={expectedKey ? 'Plan / expected' : 'Rolling typical'} value={format(currentPoint?.expected ?? result.expected)} helper={expectedKey ? humanize(expectedKey) : 'Rolling median baseline'} />
+        <Metric label="Current-period impact" value={`${executiveImpact >= 0 ? '+' : ''}${format(executiveImpact)}`} helper={`${currentPoint?.impactDirection ?? result.impactDirection} · ${windowLabel(timeWindow)} driver scope`} tone={executiveTone} />
+        <Metric label="Analysis health" value={timeSeries ? `${timeSeries.modelHealth.score.toFixed(0)}/100` : plainAnomaly(result.anomalyScore)} helper={timeSeries ? `${humanize(timeSeries.modelHealth.status)} · run ${timeSeries.runId}` : 'Standardized movement strength'} tone={timeSeries?.modelHealth.status === 'healthy' ? undefined : 'warn'} />
       </section>
 
       <TimeSeriesCockpit
@@ -493,11 +495,24 @@ export default function AppShell() {
 
       <details className="analyst-details"><summary>Analyst evidence</summary><section className="technical-strip"><span><strong>{result.validRowCount.toLocaleString()}</strong> valid measure rows</span><span><strong>{result.excludedMeasureRows.toLocaleString()}</strong> excluded measure rows</span><span><strong>{result.dimensionsScanned}</strong> business factors</span><span><strong>{result.anomalyScore.toFixed(2)}</strong> standardized deviation</span><span><strong>{metricPolarity === 'higher_is_better' ? 'Higher' : 'Lower'}</strong> is better</span><span><strong>{windowLabel(timeWindow)}</strong> selected window</span><span><strong>{result.aggregationMethod.replace('_', ' ')}</strong> attribution</span><span><strong>{result.runId}</strong> calculation run</span></section><section className="table-panel"><h2>Factor audit</h2><p>Detailed evidence for every business factor reviewed after excluding time fields and quality-ineligible columns.</p><div className="table-wrap"><table><thead><tr><th>#</th><th>Factor</th><th>Score</th><th>Leading group</th><th>Business impact</th><th>Support</th><th>Impact</th></tr></thead><tbody>{result.dimensionScores.map((dimension, index) => <tr key={dimension.dimension} onClick={() => setSelectedDimension(dimension.dimension)}><td>{index + 1}</td><td>{humanize(dimension.dimension)}</td><td>{dimension.score.toFixed(1)}</td><td>{dimension.topCategory?.value}</td><td className={Number(dimension.topCategory?.businessImpact) < 0 ? 'bad' : 'good'}>{format(dimension.topCategory?.businessImpact ?? 0)}</td><td>{dimension.topCategory ? `${(dimension.topCategory.support * 100).toFixed(1)}%` : '—'}</td><td>{(dimension.impact * 100).toFixed(1)}%</td></tr>)}</tbody></table></div></section></details>
     </>}
+    <PresentationStudio
+      open={presentationOpen}
+      onClose={() => setPresentationOpen(false)}
+      result={result}
+      timeSeries={timeSeries}
+      dataQuality={qualityReport}
+      metricDefinition={metricDefinition}
+      datasetSession={datasetSession}
+      predicates={predicates}
+      planningLens={planningLens}
+      actualKey={actualKey}
+      expectedKey={expectedKey || undefined}
+    />
   </main>;
 }
 
-function Metric({ label, value, helper, tone, help }: { label: string; value: string; helper?: string; tone?: string; help?: string }) {
-  return <div className="metric friendly-metric"><span className="metric-label">{label}{help && <InfoTip text={help} label={label} side="bottom" />}</span><strong className={tone}>{value}</strong>{helper && <small>{helper}</small>}</div>;
+function Metric({ label, value, helper, tone }: { label: string; value: string; helper?: string; tone?: string }) {
+  return <div className="metric friendly-metric"><span>{label}</span><strong className={tone}>{value}</strong>{helper && <small>{helper}</small>}</div>;
 }
 
 function Panel({ title, subtitle, children }: { title: string; subtitle: string; children: ReactNode }) {
