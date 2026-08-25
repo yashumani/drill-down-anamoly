@@ -1,0 +1,15 @@
+{
+  "targetSha": "a0152e61ffd7cb88e6240a8ea1089fcf8b4ca125",
+  "liveSite": {
+    "url": "https://yashumani.github.io/drill-down-anamoly/",
+    "httpStatus": 200,
+    "assetUrl": "https://yashumani.github.io/drill-down-anamoly/assets/index-BxEJSAEk.js",
+    "bundleHttpStatus": 200,
+    "containsPresentationStudio": true,
+    "containsExecutiveInfographic": true,
+    "containsAnomalyRegister": true,
+    "containsQuestionsAnswered": true
+  },
+  "verified": true,
+  "checkedAt": "2026-08-25T23:01:41Z"
+}
