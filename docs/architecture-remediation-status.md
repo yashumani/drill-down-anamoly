@@ -28,6 +28,14 @@ These are governed prototype implementations. Production model calibration, work
 - AI evaluation checks for evidence coverage, numerical grounding, causal-language risk, and calculation-run linkage.
 - Outbound LLM evidence preview, local Ollama preset, BYO OpenAI-compatible provider support, and hardened request behavior.
 
+
+### Deterministic presentation output
+
+- Presentation Studio builds finance-ready 16:9 infographic presets directly from the current calculation, time-series, driver, quality, and evidence context.
+- Executive summary, anomaly-register, and questions-answered presets require no AI.
+- SVG, 1920 × 1080 PNG, print/PDF, and evidence-JSON outputs preserve calculation run and dataset-session linkage.
+- Optional LLM design assistance is schema-limited to title, subtitle, theme, density, emphasis, and callout fields; it cannot modify financial values.
+
 ### Platform, governance, and operational controls
 
 - Provider-neutral browser and remote-aggregate analytics interfaces.

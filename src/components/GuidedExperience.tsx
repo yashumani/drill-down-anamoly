@@ -40,6 +40,7 @@ interface Props {
   onOpenAdvanced: (dimension?: string) => void;
   onOpenPublic: () => void;
   onOpenQuality: () => void;
+  onOpenPresentation: () => void;
 }
 
 const questions: Array<{
@@ -115,6 +116,7 @@ export function GuidedExperience({
   onOpenAdvanced,
   onOpenPublic,
   onOpenQuality,
+  onOpenPresentation,
 }: Props) {
   const [question, setQuestion] = useState<GuidedQuestion>('variance');
   const [slide, setSlide] = useState<GuidedSlideId>('source');
@@ -229,7 +231,7 @@ export function GuidedExperience({
       </div>
       {timeSeries?.points.length ? <div className="deck-mini-chart"><EChart option={option} height={250} ariaLabel="Simplified actual, plan, and business impact trend" /></div> : <div className="deck-no-chart"><strong>No time series available</strong><span>The answer is based on cross-sectional variance and driver evidence.</span></div>}
     </div>
-    <div className="deck-answer-actions"><button type="button" onClick={() => goTo('drivers')}>Review the drivers →</button><button type="button" onClick={() => goTo('ai')}>Ask the AI analyst →</button><button type="button" className="quiet-button" onClick={() => onOpenAdvanced(topDriver?.dimension)}>Open all evidence</button></div>
+    <div className="deck-answer-actions"><button type="button" onClick={onOpenPresentation}>Create presentation slide</button><button type="button" onClick={() => goTo('drivers')}>Review the drivers →</button><button type="button" onClick={() => goTo('ai')}>Ask the AI analyst →</button><button type="button" className="quiet-button" onClick={() => onOpenAdvanced(topDriver?.dimension)}>Open all evidence</button></div>
   </section>;
 
   const driversSlide = <section className="deck-page" aria-labelledby="deck-drivers-title">
@@ -242,7 +244,7 @@ export function GuidedExperience({
         <span>Strongest combined pattern</span>
         <strong>{result.interactions[0] ? result.interactions[0].predicates.map((predicate) => `${humanize(predicate.dimension)} = ${predicate.value}`).join(' + ') : 'No supported interaction'}</strong>
         <p>{result.interactions[0] ? `${compact(Math.abs(result.interactions[0].businessImpact))} ${result.interactions[0].impactDirection} impact across ${(result.interactions[0].support * 100).toFixed(1)}% of the current population.` : 'The current population did not produce a stable multidimensional interaction above the support threshold.'}</p>
-        <div><button type="button" onClick={() => goTo('ai')}>Ask AI about these drivers →</button><button type="button" className="quiet-button" onClick={() => onOpenAdvanced(topDriver?.dimension)}>Open advanced evidence</button></div>
+        <div><button type="button" onClick={onOpenPresentation}>Create driver slide</button><button type="button" onClick={() => goTo('ai')}>Ask AI about these drivers →</button><button type="button" className="quiet-button" onClick={() => onOpenAdvanced(topDriver?.dimension)}>Open advanced evidence</button></div>
       </aside>
     </div>
   </section>;
@@ -263,7 +265,7 @@ export function GuidedExperience({
 
   return <section className="presentation-deck" aria-label="FP&A slideshow workflow">
     <nav className="deck-progress" aria-label="Presentation pages">
-      {guidedSlides.map((item, index) => <button key={item.id} type="button" title={`Open ${item.label}`} className={slide === item.id ? 'active' : index < slideIndex ? 'complete' : ''} onClick={() => goTo(item.id)} aria-current={slide === item.id ? 'step' : undefined}><span>{String(index + 1).padStart(2, '0')}</span><strong>{item.label}</strong></button>)}
+      {guidedSlides.map((item, index) => <button key={item.id} type="button" className={slide === item.id ? 'active' : index < slideIndex ? 'complete' : ''} onClick={() => goTo(item.id)} aria-current={slide === item.id ? 'step' : undefined}><span>{String(index + 1).padStart(2, '0')}</span><strong>{item.label}</strong></button>)}
     </nav>
     <div className="deck-stage" aria-live="polite">{pages[slide]}</div>
     <footer className="deck-footer">

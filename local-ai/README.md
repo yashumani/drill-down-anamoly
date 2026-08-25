@@ -1,6 +1,6 @@
 # FP&A Variance Copilot local model
 
-This repository uses the same local-Ollama pattern as Mangrok, but with a finance-specific system profile.
+This repository includes a finance-specific local Ollama profile for evidence-grounded FP&A commentary.
 The repository stores the model configuration and prompt, not model weights.
 
 ## Install and create the model
