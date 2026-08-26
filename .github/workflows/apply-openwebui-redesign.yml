@@ -1,0 +1,66 @@
+name: Apply Open WebUI-inspired interface redesign
+
+on:
+  push:
+    branches: ["openwebui-interface-redesign-v1"]
+    paths: [".openwebui-package/APPLY"]
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout redesign branch
+        uses: actions/checkout@v6
+        with:
+          ref: openwebui-interface-redesign-v1
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Expand, validate, and commit redesign
+        run: |
+          set -euo pipefail
+          cat .openwebui-package/chunk-* | base64 -d > /tmp/openwebui-redesign.tar.bz2
+          echo "d1cce3f90351d557805becf0947c136c7a1994dfcc2740b4f878c98acde7ed85  /tmp/openwebui-redesign.tar.bz2" | sha256sum -c -
+          tar -xjf /tmp/openwebui-redesign.tar.bz2 -C .
+
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path('README.md')
+          text = path.read_text(encoding='utf-8')
+          marker = 'Live application: `https://yashumani.github.io/drill-down-anamoly/`\n'
+          section = '''
+
+## Interface design
+
+The application uses an Open WebUI-inspired workspace shell adapted to FP&A analysis: persistent workspace navigation, a compact dataset-and-metric top bar, a central analysis canvas, responsive mobile navigation, one-click upload, and direct access to Presentation Studio. The redesign preserves this application's own finance terminology, calculations, visualizations, evidence contracts, and brand identity; it does not copy Open WebUI source code or branding.
+
+See `docs/openwebui-interface-adaptation.md`.
+'''
+          if '## Interface design' not in text:
+              text = text.replace(marker, marker + section, 1)
+              path.write_text(text, encoding='utf-8')
+          PY
+
+          rm -rf .openwebui-package
+          rm .github/workflows/apply-openwebui-redesign.yml
+
+          npm ci --no-audit --no-fund
+          npm test
+          npm run build -- --base=/drill-down-anamoly/
+          npm run check:bundle
+
+          git add -A
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Redesign application with Open WebUI-inspired workspace shell"
+          git push origin HEAD:openwebui-interface-redesign-v1
