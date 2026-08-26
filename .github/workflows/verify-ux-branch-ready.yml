@@ -1,0 +1,33 @@
+name: Verify simplified anomaly journey branch
+
+on:
+  push:
+    branches: ["ux-anomaly-journey-v1"]
+    paths: ["docs/ux-anomaly-journey-v1.md"]
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - name: Verify source cleanliness and release gates
+        run: |
+          set -euo pipefail
+          test -f src/components/AnalysisJourneyNav.tsx
+          grep -q "UX JOURNEY V1" src/openwebui-adapt.css
+          grep -q "AnalysisJourneyNav" src/AppShell.tsx
+          test ! -d .ux-journey
+          test ! -d .ux-clean
+          test ! -d .ready
+          npm ci --no-audit --no-fund
+          npm test
+          npm run build -- --base=/drill-down-anamoly/
+          npm run check:bundle
