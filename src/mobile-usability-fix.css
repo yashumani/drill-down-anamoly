@@ -1,0 +1,31 @@
+.ow-shell .info-tip{position:relative;z-index:1;display:inline-flex;align-items:center;margin-inline-start:3px;vertical-align:middle}
+.ow-shell main button.info-tip-trigger{width:18px!important;min-width:18px!important;height:18px!important;min-height:18px!important;display:inline-grid!important;place-items:center!important;padding:0!important;border:1px solid var(--ow-border-strong)!important;border-radius:50%!important;color:var(--ow-muted)!important;background:var(--ow-surface-soft)!important;box-shadow:none!important;font-size:.58rem!important;font-weight:700!important;line-height:1!important;cursor:help;touch-action:manipulation}
+.ow-shell .info-tip-trigger:is(:hover,:focus-visible){border-color:color-mix(in srgb,var(--ow-accent) 55%,var(--ow-border))!important;color:var(--ow-text-strong)!important;background:var(--ow-active)!important}
+.ow-shell .info-tip-popover{position:absolute!important;z-index:2200!important;width:max-content;min-width:180px;max-width:min(280px,calc(100vw - 32px))!important;padding:9px 11px!important;border:1px solid var(--ow-border-strong)!important;border-radius:10px!important;color:var(--ow-text)!important;background:var(--ow-surface-raised)!important;box-shadow:0 14px 38px rgba(0,0,0,.28)!important;font-size:.7rem!important;line-height:1.45!important;text-align:left;text-transform:none;white-space:normal;opacity:0!important;visibility:hidden!important;pointer-events:none!important}
+.ow-shell .info-tip-top .info-tip-popover{left:50%;bottom:calc(100% + 8px);transform:translateX(-50%)}
+.ow-shell .info-tip-bottom .info-tip-popover{left:50%;top:calc(100% + 8px);transform:translateX(-50%)}
+.ow-shell .info-tip-left .info-tip-popover{top:50%;right:calc(100% + 8px);transform:translateY(-50%)}
+.ow-shell .info-tip-right .info-tip-popover{top:50%;left:calc(100% + 8px);transform:translateY(-50%)}
+.ow-shell .info-tip[data-open="true"]{z-index:2201}
+.ow-shell .info-tip[data-open="true"] .info-tip-popover{opacity:1!important;visibility:visible!important;pointer-events:auto!important}
+@media(hover:hover) and (pointer:fine){.ow-shell .info-tip:hover{z-index:2201}.ow-shell .info-tip:hover .info-tip-popover{opacity:1!important;visibility:visible!important;pointer-events:auto!important}}
+.ow-shell .live-explore-bar{position:relative!important;top:auto!important;margin:0 0 8px!important;padding:11px!important;border:1px solid var(--ow-border)!important;border-radius:14px!important;color:var(--ow-text)!important;background:var(--ow-surface)!important;box-shadow:none!important;backdrop-filter:none!important}
+.ow-shell .live-explore-bar :is(.live-explore-intro,.live-explore-fields,.live-explore-actions,.live-token-settings){min-width:0}
+.ow-shell .live-explore-bar :is(select,input,button){border-color:var(--ow-border)!important;box-shadow:none!important}
+.ow-shell .live-token-settings{border:1px solid var(--ow-border)!important;border-radius:10px!important;background:var(--ow-surface-soft)!important}
+@media(max-width:760px){
+.ow-shell .info-tip-popover{position:fixed!important;inset:auto 12px calc(70px + env(safe-area-inset-bottom)) 12px!important;width:auto!important;min-width:0!important;max-width:none!important;max-height:min(34dvh,260px);overflow:auto;transform:none!important;padding:12px 14px!important;border-radius:13px!important;font-size:.78rem!important;line-height:1.5!important}
+.ow-shell .live-slide-nav{display:flex!important;grid-template-columns:none!important;gap:6px!important;padding:1px 0 4px;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x proximity;scrollbar-width:none}
+.ow-shell .live-slide-nav::-webkit-scrollbar{display:none}
+.ow-shell .live-slide-nav button{flex:0 0 148px;min-width:148px;min-height:42px;scroll-snap-align:start}
+.ow-shell .live-slide-nav strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ow-shell .live-explore-bar{display:grid!important;grid-template-columns:minmax(0,1fr)!important;gap:11px!important;padding:12px!important}
+.ow-shell .live-explore-bar :is(.live-explore-intro,.live-explore-fields,.live-explore-actions,.live-token-settings){grid-column:1!important;width:100%}
+.ow-shell .live-explore-intro{padding-bottom:9px;border-bottom:1px solid var(--ow-border)}
+.ow-shell .live-explore-intro small{overflow:visible;white-space:normal}
+.ow-shell .live-explore-fields{display:grid!important;grid-template-columns:minmax(0,1fr)!important;gap:10px!important}
+.ow-shell .live-explore-bar :is(select,input){width:100%!important;min-width:0!important;min-height:44px!important;font-size:.82rem!important}
+.ow-shell .live-explore-actions{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px!important}
+.ow-shell .live-explore-actions button{width:100%;min-height:44px!important;white-space:normal}
+}
+@media(max-width:390px){.ow-shell .live-explore-actions{grid-template-columns:1fr!important}}
