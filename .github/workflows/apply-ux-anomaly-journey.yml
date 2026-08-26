@@ -1,0 +1,47 @@
+name: Apply simplified anomaly investigation journey
+
+on:
+  push:
+    branches: ["ux-anomaly-journey-v1"]
+    paths: [".ux-journey-package/APPLY"]
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout implementation branch
+        uses: actions/checkout@v6
+        with:
+          ref: ux-anomaly-journey-v1
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Expand, validate, and commit the UX journey
+        run: |
+          set -euo pipefail
+          cat .ux-journey-package/chunk-* | base64 -d > /tmp/ux-anomaly-journey.tar.bz2
+          echo "59b30bb739da93c969152adb98c57797d7fca1d06b41889e3bbe8d334010b5d4  /tmp/ux-anomaly-journey.tar.bz2" | sha256sum -c -
+          tar -xjf /tmp/ux-anomaly-journey.tar.bz2 -C .
+
+          rm -rf .ux-journey-package
+          rm .github/workflows/apply-ux-anomaly-journey.yml
+
+          npm ci --no-audit --no-fund
+          npm test
+          npm run build -- --base=/drill-down-anamoly/
+          npm run check:bundle
+
+          git add -A
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Simplify anomaly detection journey and repair laptop layout"
+          git push origin HEAD:ux-anomaly-journey-v1
