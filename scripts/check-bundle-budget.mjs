@@ -5,7 +5,8 @@ const root = new URL('../dist', import.meta.url).pathname;
 const limits = {
   totalJavaScript: 1_800_000,
   largestJavaScript: 1_300_000,
-  totalCss: 170_000,
+  // Includes the touch-safe help layer and mobile live-demo controls.
+  totalCss: 176_000,
 };
 
 async function walk(directory) {
