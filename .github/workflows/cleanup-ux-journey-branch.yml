@@ -1,0 +1,42 @@
+name: Clean UX journey branch transfer artifacts
+
+on:
+  push:
+    branches: ["ux-anomaly-journey-v1"]
+    paths: [".ux-clean/CLEAN"]
+
+permissions:
+  contents: write
+
+jobs:
+  clean:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ux-anomaly-journey-v1
+          fetch-depth: 0
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - name: Clean and validate
+        run: |
+          set -euo pipefail
+          test -f src/components/AnalysisJourneyNav.tsx
+          grep -q "UX JOURNEY V1" src/openwebui-adapt.css
+          rm -rf .ux-clean .ux-journey
+          rm -f UX_JOURNEY_READY.md
+          rm -f .github/workflows/finalize-ux-anomaly-journey.yml
+          rm -f .github/workflows/finalize-ux-anomaly-journey-2.yml
+          rm .github/workflows/cleanup-ux-journey-branch.yml
+          npm ci --no-audit --no-fund
+          npm test
+          npm run build -- --base=/drill-down-anamoly/
+          npm run check:bundle
+          git add -A
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Clean UX journey branch and validate release"
+          git push origin HEAD:ux-anomaly-journey-v1
