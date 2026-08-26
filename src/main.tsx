@@ -14,6 +14,7 @@ import './arc-explorer.css';
 import './hierarchy.css';
 import './presentation-studio.css';
 import './openwebui-adapt.css';
+import './mobile-usability-fix.css';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
