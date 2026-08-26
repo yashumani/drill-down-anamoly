@@ -34,6 +34,11 @@ jobs:
 
           python -c "from pathlib import Path; p=Path('README.md'); t=p.read_text(encoding='utf-8'); m='Live application: \`https://yashumani.github.io/drill-down-anamoly/\`\\n'; s='\\n## Interface design\\n\\nThe application uses an Open WebUI-inspired workspace shell adapted to FP&A analysis: persistent workspace navigation, a compact dataset-and-metric top bar, a central analysis canvas, responsive mobile navigation, one-click upload, and direct access to Presentation Studio. The redesign preserves this application’s own finance terminology, calculations, visualizations, evidence contracts, and brand identity; it does not copy Open WebUI source code or branding.\\n\\nSee \`docs/openwebui-interface-adaptation.md\`.\\n'; p.write_text(t if '## Interface design' in t else t.replace(m, m+s, 1), encoding='utf-8')"
 
+          # The new design layer replaces these prior visual override layers. Removing them
+          # avoids conflicting responsive rules and keeps the CSS bundle within budget.
+          sed -i "/depo-inspired.css/d;/final-enhancements.css/d;/mobile.css/d;/visual-ux-polish.css/d" src/main.tsx
+          rm -f src/depo-inspired.css src/final-enhancements.css src/mobile.css src/visual-ux-polish.css
+
           rm -rf .openwebui-package
           rm .github/workflows/apply-openwebui-redesign.yml
 
