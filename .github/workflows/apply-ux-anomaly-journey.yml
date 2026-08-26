@@ -1,0 +1,100 @@
+name: Apply simplified anomaly investigation journey
+
+on:
+  push:
+    branches: ["ux-anomaly-journey-v1"]
+    paths: [".ux-journey/APPLY"]
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout UX branch
+        uses: actions/checkout@v6
+        with:
+          ref: ux-anomaly-journey-v1
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Apply, validate, and commit journey redesign
+        run: |
+          set -euo pipefail
+          cp .ux-journey/OpenWebShell.tsx src/components/OpenWebShell.tsx
+          cp .ux-journey/AnalysisJourneyNav.tsx src/components/AnalysisJourneyNav.tsx
+          cp .ux-journey/anomalyJourneyUx.test.ts src/lib/anomalyJourneyUx.test.ts
+          cat .ux-journey/journey.css >> src/openwebui-adapt.css
+
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          app_path = Path('src/AppShell.tsx')
+          app = app_path.read_text(encoding='utf-8')
+          marker = "import { OpenWebShell } from './components/OpenWebShell';"
+          if "./components/AnalysisJourneyNav" not in app:
+              if marker not in app:
+                  raise SystemExit('OpenWebShell import marker not found')
+              app = app.replace(marker, marker + "\nimport { AnalysisJourneyNav } from './components/AnalysisJourneyNav';", 1)
+
+          pattern = re.compile(r"\s*\{workspace === 'advanced' && <section className=\"ow-workspace-intro\">.*?</section>\}", re.S)
+          replacement = '''
+              {workspace === 'advanced' && <>
+                <AnalysisJourneyNav onOpenQuality={() => setWorkspace('quality')} onOpenPresentation={() => setPresentationOpen(true)} />
+                <section className="ow-workspace-intro ow-workspace-summary">
+                  <div><span>Explore & analyze</span><h1>Investigate one question at a time.</h1><p>Start with the material movement, explain it through drivers and hierarchy, then validate the evidence before sharing.</p></div>
+                  <div className="ow-workspace-intro-meta"><span>{windowLabel(timeWindow)}</span><span>{result.dimensionsScanned} dimensions</span><span>{result.runId}</span></div>
+                </section>
+              </>}'''
+          app, count = pattern.subn(replacement, app, count=1)
+          if count != 1:
+              raise SystemExit(f'Expected one advanced intro block; replaced {count}.')
+          app_path.write_text(app, encoding='utf-8')
+
+          doc_path = Path('docs/openwebui-interface-adaptation.md')
+          doc = doc_path.read_text(encoding='utf-8')
+          section = '''
+
+          ## Anomaly investigation journey
+
+          Explore & Analyze now follows one consistent six-step path:
+
+          1. Scope — confirm the metric, comparison, reporting period, and population.
+          2. Detect — identify the material or unusual time movement.
+          3. Explain — rank dimensions, categories, and supported combinations.
+          4. Drill — follow explicit parent-child hierarchy paths.
+          5. Validate — review Data Quality and analytical limitations.
+          6. Share — open Presentation Studio and create management-ready output.
+
+          The sidebar groups destinations by task—Start, Investigate, Output, and Demo—instead of presenting every capability as an equal feature. Secondary actions are contained in one overflow menu, while Upload and Presentation remain one action away.
+
+          ### Laptop layout acceptance
+
+          At 1366 × 768 and similar laptop viewports, the sidebar defaults to a compact rail, the top bar retains only essential context, investigation steps scroll horizontally when needed, action groups wrap within their containers, and the advanced workspace scrolls inside the central canvas rather than clipping charts or controls.
+          '''
+          section = '\n'.join(line.strip() for line in section.splitlines())
+          if '## Anomaly investigation journey' not in doc:
+              doc_path.write_text(doc.rstrip() + '\n' + section + '\n', encoding='utf-8')
+          PY
+
+          rm -rf .ux-journey
+          rm .github/workflows/apply-ux-anomaly-journey.yml
+
+          npm ci --no-audit --no-fund
+          npm test
+          npm run build -- --base=/drill-down-anamoly/
+          npm run check:bundle
+
+          git add -A
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Simplify anomaly investigation journey and fix laptop layout"
+          git push origin HEAD:ux-anomaly-journey-v1
