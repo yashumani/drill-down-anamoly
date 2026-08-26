@@ -1,41 +1,60 @@
 # FP&A Variance Copilot
 
-An evidence-first FP&A investigation workspace for Actual-versus-Plan analysis, finance time intelligence, multidimensional driver attribution, hierarchy exploration, data-readiness checks, public-data demonstrations, grounded conversational analytics, and deterministic presentation output.
+An evidence-first FP&A workspace for Actual-versus-Plan analysis, finance time intelligence, multidimensional driver attribution, hierarchy exploration, data-readiness checks, a multi-million-row public demonstration, grounded conversational analytics, and deterministic presentation output.
 
 Live application: `https://yashumani.github.io/drill-down-anamoly/`
 
-## Interface design
+## Interface and user journey
 
-The application uses an Open WebUI-inspired workspace shell adapted to FP&A analysis: persistent workspace navigation, a compact dataset-and-metric top bar, a central analysis canvas, responsive mobile navigation, one-click upload, and direct access to Presentation Studio. The redesign preserves this application’s own finance terminology, calculations, visualizations, evidence contracts, and brand identity; it does not copy Open WebUI source code or branding.
+The application uses an Open WebUI-inspired workspace shell adapted to FP&A analysis. It keeps persistent workspace navigation, a compact analysis-context bar, responsive mobile navigation, data upload, and direct access to Presentation Studio while preserving its own finance terminology, calculations, evidence contracts, and brand identity. No Open WebUI source code, logos, or branding are copied.
 
-See `docs/openwebui-interface-adaptation.md`.
+### Quick Answer
+
+The default path is organized around five business decisions:
+
+```text
+Data → Goal → Detect → Explain → Share
+```
+
+1. Choose sample data, upload CSV/JSON, or open the live public demonstration.
+2. Choose the management question and confirm Actual, comparison, and reporting period.
+3. Review one business-impact result, four plain-language answers, and one compact trend.
+4. Inspect the strongest supported drivers.
+5. Create a deterministic presentation or use the optional evidence-grounded finance guide.
+
+### Advanced Analysis
+
+Specialist work is separated into five stages:
+
+```text
+Scope → Detect → Explain → Validate → Share
+```
+
+- **Scope:** choose metric, comparison, period, dimension, category, and drill population.
+- **Detect:** review trend, materiality, pace, and unusual periods.
+- **Explain:** switch between single drivers, combined patterns, and parent-child hierarchy.
+- **Validate:** review data readiness and evaluate internal or external context as hypotheses.
+- **Share:** create a slide, ask follow-up questions, export evidence, or inspect the factor audit.
+
+See `docs/openwebui-interface-adaptation.md` and `docs/anomaly-investigation-journey.md`.
 
 ## Product workspaces
 
 ### Quick Answer
 
-A page-by-page finance workflow designed to avoid a long scrolling dashboard:
+A simplified five-step workflow designed for first-time users, finance managers, and operating reviews.
 
-1. choose data;
-2. choose the business question;
-3. confirm the finance setup;
-4. receive the management answer;
-5. inspect the strongest drivers;
-6. ask the finance guide or an optional LLM.
-
-The Answer and Drivers pages can open Presentation Studio directly.
-
-### Advanced Analysis
+### Explore & Analyze
 
 The full specialist workspace contains:
 
 - Actual versus Plan, Budget, Target, Forecast, prior period, or a clearly labeled rolling baseline;
-- daily, weekly, monthly, quarterly, MTD, QTD, YTD, rolling 15-month, and rolling 24-month analytical windows;
-- sum, support-weighted average, and period-end attribution strategies;
-- business-impact polarity for higher-is-better and lower-is-better metrics;
-- quality-approved all-dimension scans and supported multidimensional interactions;
+- daily, weekly, monthly, quarterly, MTD, QTD, YTD, rolling 15-month, and rolling 24-month windows;
+- sum, support-weighted average, and period-end attribution;
+- higher-is-better and lower-is-better business-impact polarity;
+- all-dimension scans and supported multidimensional interactions;
 - time-aligned driver attribution, finance alerts, run-rate monitoring, and calculation evidence;
-- parent-child hierarchy mapping, org-chart exploration, and animated hierarchy arcs;
+- parent-child mapping, org-chart exploration, and animated hierarchy arcs;
 - public-news and analyst-entered external hypothesis context;
 - deterministic conversational analytics and optional OpenAI-compatible or local Ollama models;
 - Presentation Studio for finance-ready infographic export.
@@ -46,7 +65,7 @@ A six-page live demonstration backed by the City of Los Angeles procurement data
 
 ### Data Quality
 
-A supporting trust workspace for schema, completeness, validity, uniqueness, consistency, distribution, timeliness, identifier, privacy, and anomaly-readiness checks. Data quality informs the confidence and limitations supplied to the finance guide, optional LLM, and exported presentation evidence.
+A supporting trust workspace for schema, completeness, validity, uniqueness, consistency, distribution, timeliness, identifiers, privacy, and anomaly-readiness checks.
 
 ## Presentation Studio
 
@@ -54,24 +73,24 @@ The current deterministic investigation can be converted into a 16:9 executive i
 
 Presets:
 
-- Executive infographic: KPI cards, leading drivers, executive callout, and the core FP&A questions answered.
-- Anomaly register: material or unusual periods plus the strongest supported drivers.
-- Questions answered: a management-review slide organized around the questions leaders typically ask.
+- Executive infographic;
+- Anomaly register;
+- Questions answered.
 
 Exports:
 
-- editable vector SVG;
+- editable SVG;
 - 1920 × 1080 PNG;
-- browser print / PDF;
-- evidence JSON containing the calculation-run and dataset-session linkage.
+- browser print/PDF;
+- evidence JSON containing calculation-run and dataset-session linkage.
 
-Titles, subtitles, themes, emphasis, and callouts can be changed manually. An optional local or OpenAI-compatible LLM may propose design wording and visual emphasis. Its accepted response schema contains design fields only, so it cannot modify Actual, comparison, variance, impact, anomaly, support, quality, or evidence values.
+An optional LLM may propose title, subtitle, theme, density, emphasis, and callout changes. It cannot modify Actual, comparison, variance, business impact, anomaly scores, driver values, quality scores, evidence IDs, calculation run IDs, or dataset-session IDs.
 
 See `docs/presentation-studio.md`.
 
 ## Finance Data Contract v1
 
-The browser accepts general CSV and JSON through automatic profiling. Contract-compliant data is preferred because it deterministically maps finance concepts.
+General CSV and JSON files are automatically profiled. Contract-compliant data is preferred because it deterministically maps finance concepts.
 
 Recommended wide format:
 
@@ -94,13 +113,11 @@ fiscal_year_start_month
 dim_<business_dimension>        any number of dimensions
 ```
 
-Long-format `period_date, scenario, value, ...` files are also recognized and pivoted. Contract v1 accepts one metric identity per file; it rejects multi-metric inputs rather than silently combining unlike units.
+Long-format `period_date, scenario, value, ...` files are also recognized and pivoted. Contract v1 accepts one metric identity per file and rejects multi-metric inputs rather than silently combining unlike units.
 
 See `docs/finance-data-contract-v1.md`.
 
 ## Analytical authority
-
-Deterministic calculations remain authoritative:
 
 ```text
 Dataset session
@@ -111,37 +128,23 @@ Time-intelligence and attribution engines
       ↓
 Evidence ledger
       ↓
-Quick Answer / Advanced Analysis / Presentation Studio
+Quick Answer / Explore & Analyze / Presentation Studio
       ↓
 Deterministic finance guide / optional grounded LLM
 ```
 
-The LLM explains verified evidence or proposes presentation design fields. It does not calculate the financial result, choose unrestricted SQL, convert news into causal proof, or change exported numbers.
+The LLM explains verified evidence or proposes presentation-design fields. It does not calculate the financial result, choose unrestricted SQL, convert news into causal proof, or change exported numbers.
 
-### Aggregation-aware attribution
+### Attribution behavior
 
 - `sum` reconciles additive Actual and comparison totals;
-- `average` uses support-weighted group contributions so category impacts reconcile to the selected-scope average impact;
-- `period_end` selects the latest dated population before attribution;
-- ratios and distinct counts are recognized semantic types, but detailed attribution remains disabled until governed calculation strategies are supplied.
+- `average` uses support-weighted contributions;
+- `period_end` selects the latest dated population;
+- ratios and distinct counts remain disabled for detailed attribution until governed calculation strategies are supplied.
 
-### Driver scoring
+Dimension scores are investigation-priority heuristics, not causal probabilities or statistical significance values. News and analyst notes are untrusted hypothesis material unless supported by structured validation evidence.
 
-Dimension scores are investigation-priority heuristics based on grouped movement, distinctiveness, concentration, support, and cardinality. They are not causal probabilities or statistical significance values.
-
-### External context
-
-News and analyst notes are treated as untrusted hypothesis material. The application distinguishes observed internal evidence from possible external explanations and includes limitations in the evidence ledger.
-
-## Evidence-first AI
-
-The deterministic agent returns a structured response containing intent, answer, claims, evidence IDs, confidence, validated UI actions, suggested questions, limitations, calculation-run ID, and evidence-ledger ID.
-
-Optional LLM calls receive compact finance, metric, quality, time, driver, interaction, and limitation evidence—not raw uploaded rows by default. An outbound-evidence preview is available before model use.
-
-### Local private model
-
-The repository includes a versioned Ollama profile:
+## Local private model
 
 ```bash
 ollama pull llama3.2
@@ -157,29 +160,7 @@ Model:    fpa-variance-copilot
 API key:  blank
 ```
 
-This is a technical-user same-device mode, not a hosted zero-setup model. Enterprise deployments should use an authenticated model gateway.
-
-## Dataset sessions and reproducibility
-
-Every loaded dataset receives:
-
-- a session ID and deterministic content hash;
-- source metadata;
-- retained Finance Data Contract report;
-- data-quality report;
-- inferred finance defaults;
-- metric semantic definition;
-- time-field candidates.
-
-Calculations carry versions, run IDs, aggregation methods, attribution bases, reconciliation status, warnings, and evidence IDs. Presentation exports retain the same calculation and dataset linkage.
-
-## Security boundary
-
-This repository is a public product prototype. It is suitable for public demonstrations and controlled masked-data pilots—not unreviewed confidential production finance data.
-
-Current safeguards include browser-session upload handling, compact outbound LLM evidence, in-memory API keys, HTTPS-only external endpoints except explicit localhost development, untrusted-context instructions, Content Security Policy, threat modeling, CodeQL, dependency auditing, and bundle budgets.
-
-Production still requires authentication, tenant isolation, row-level security, server-held secrets, DLP, audit logging, persistence, retention controls, and incident response.
+This is a technical-user same-device mode. Enterprise deployment should use an authenticated model gateway.
 
 ## Development
 
@@ -192,44 +173,24 @@ Validation:
 
 ```bash
 npm test
-npm run build
+npm run build -- --base=/drill-down-anamoly/
 npm run check:bundle
 ```
 
-## Repository structure
+## Security boundary
 
-```text
-src/
-  AppShell.tsx                  # workspace and calculation orchestration
-  components/                   # slides, analysis, charts, chat, presentation studio
-  data/                         # demo data, themes, semantic labels
-  lib/
-    anomaly.ts                  # variance and driver attribution
-    timeIntelligence.ts         # finance time aggregation and monitoring
-    financeDataContract.ts      # canonical finance input mapping
-    datasetSession.ts           # dataset identity and retained contract/quality state
-    metricSemantics.ts          # metric-definition scaffold
-    evidenceLedger.ts           # claim-addressable evidence
-    agentOrchestrator.ts        # intent, claims, evidence, action validation
-    llm.ts                      # optional evidence-grounded model client
-    presentationStudio.ts       # deterministic slide model and SVG/PNG export
-    dataQuality.ts              # dataset and field profiling
-    livePublicFinance.ts        # Socrata public-data adapter
-local-ai/                       # versioned Ollama model profile
-services/                       # future authenticated APIs and gateways
-docs/                           # architecture, contracts, methodology, and feature guides
-```
+This public repository is suitable for demonstrations and controlled masked-data pilots, not unreviewed confidential production finance data. Production still requires authentication, tenant isolation, row-level security, server-held secrets, DLP, audit logging, persistence, retention controls, and incident response.
 
 ## Remaining enterprise work
 
-- authenticated backend-for-frontend and warehouse execution;
+- authenticated analytics backend and warehouse execution;
 - tenant and row-level authorization;
 - persisted investigation and commentary approval workflow;
 - governed metric, scenario, fiscal-calendar, and hierarchy service;
 - production model gateway and telemetry;
 - ratio and distinct-count attribution;
 - production forecast and external-event calibration;
-- browser E2E, accessibility, device, and load testing;
+- full browser E2E, accessibility, device, and load testing;
 - protected main branch and release approvals.
 
-The tracked status is maintained in `docs/architecture-remediation-status.md`.
+See `docs/architecture-remediation-status.md`.

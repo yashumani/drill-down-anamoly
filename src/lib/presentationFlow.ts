@@ -1,10 +1,9 @@
 export const guidedSlides = [
   { id: 'source', label: 'Data', shortLabel: 'Choose data' },
-  { id: 'question', label: 'Question', shortLabel: 'Ask a question' },
-  { id: 'setup', label: 'Setup', shortLabel: 'Confirm setup' },
-  { id: 'answer', label: 'Answer', shortLabel: 'See the answer' },
-  { id: 'drivers', label: 'Drivers', shortLabel: 'Review drivers' },
-  { id: 'ai', label: 'AI analyst', shortLabel: 'Ask AI' },
+  { id: 'question', label: 'Goal', shortLabel: 'Choose the decision' },
+  { id: 'answer', label: 'Detect', shortLabel: 'See the movement' },
+  { id: 'drivers', label: 'Explain', shortLabel: 'Find the drivers' },
+  { id: 'ai', label: 'Share', shortLabel: 'Present or ask AI' },
 ] as const;
 
 export type GuidedSlideId = typeof guidedSlides[number]['id'];

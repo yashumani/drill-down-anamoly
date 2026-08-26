@@ -251,13 +251,11 @@ export function OpenWebShell({
           <span className={analysisHealthy ? 'healthy' : 'watch'}><Icon name="check" size={15} /> Quality {qualityScore.toFixed(0)}</span>
         </div>
         <div className="ow-topbar-actions">
-          <button type="button" className="ow-model-status" title="Financial values are calculated by deterministic analytical engines. The LLM is optional and explanation-only.">
-            <span className="ow-status-dot healthy" />
-            <span><small>Analysis mode</small><strong>Evidence-first</strong></span>
-          </button>
-          <button type="button" className="ow-icon-action ow-presentation-action" onClick={onOpenPresentation} title="Open Presentation Studio"><Icon name="presentation" /><span>Present</span></button>
-          <label className="ow-icon-action ow-upload-action" title="Upload CSV or JSON"><Icon name="upload" /><span>Upload</span><input type="file" accept=".csv,.json" onChange={(event) => upload(event.target.files?.[0])} /></label>
-          <div className="ow-topbar-theme"><ThemePicker value={palette} onChange={onPalette} /></div>
+          <span className={`ow-analysis-status ${analysisHealthy ? 'healthy' : 'watch'}`} title="Financial values are calculated by deterministic analytical engines. The LLM is optional and explanation-only.">
+            <span className={`ow-status-dot ${analysisHealthy ? 'healthy' : 'watch'}`} />
+            <span>{analysisHealthy ? 'Ready' : 'Review'}</span>
+          </span>
+          <button type="button" className="ow-icon-action ow-presentation-action" onClick={onOpenPresentation} title="Create an evidence-backed presentation"><Icon name="presentation" /><span>Present</span></button>
           <button type="button" className="ow-avatar" title="Local browser session" aria-label="Local browser session">FP</button>
         </div>
       </header>

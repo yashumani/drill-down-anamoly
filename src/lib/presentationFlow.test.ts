@@ -11,6 +11,7 @@ import {
 describe('guided presentation flow', () => {
   it('advances and reverses through the hierarchy', () => {
     expect(nextGuidedSlide('source')).toBe('question');
+    expect(nextGuidedSlide('question')).toBe('answer');
     expect(nextGuidedSlide('answer')).toBe('drivers');
     expect(previousGuidedSlide('ai')).toBe('drivers');
   });
