@@ -1,0 +1,41 @@
+name: Remove temporary UX branch verifier
+
+on:
+  push:
+    branches: ["ux-anomaly-journey-v1"]
+    paths: [".ready2/GO"]
+
+permissions:
+  contents: write
+
+jobs:
+  clean:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ux-anomaly-journey-v1
+          fetch-depth: 0
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - name: Final validation and cleanup
+        run: |
+          set -euo pipefail
+          test -f src/components/AnalysisJourneyNav.tsx
+          grep -q "UX JOURNEY V1" src/openwebui-adapt.css
+          grep -q "AnalysisJourneyNav" src/AppShell.tsx
+          rm -rf .ready2
+          rm -f .github/workflows/verify-ux-branch-ready.yml
+          rm .github/workflows/clean-ux-verifier.yml
+          npm ci --no-audit --no-fund
+          npm test
+          npm run build -- --base=/drill-down-anamoly/
+          npm run check:bundle
+          git add -A
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Remove temporary UX validation workflow"
+          git push origin HEAD:ux-anomaly-journey-v1
