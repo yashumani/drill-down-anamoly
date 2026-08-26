@@ -33,10 +33,11 @@ import { ExternalFactorValidationPanel } from './components/ExternalFactorValida
 import { GuidedExperience } from './components/GuidedExperience';
 import { LivePublicFinanceDemo } from './components/LivePublicFinanceDemo';
 import { NewsIntelPanel } from './components/NewsIntelPanel';
-import { isPaletteId, ThemePicker } from './components/ThemePicker';
+import { isPaletteId } from './components/ThemePicker';
 import type { PaletteId } from './components/ThemePicker';
 import { TimeSeriesCockpit } from './components/TimeSeriesCockpit';
 import { PresentationStudio } from './components/PresentationStudio';
+import { OpenWebShell } from './components/OpenWebShell';
 import type { ChatAction } from './lib/chatEngine';
 import type { DataRow, DimensionScore, MetricPolarity, Predicate } from './types';
 
@@ -94,7 +95,7 @@ export default function AppShell() {
   const [newsAnalysis, setNewsAnalysis] = useState<NewsAnalysisResult | null>(null);
   const [palette, setPalette] = useState<PaletteId>(() => {
     const saved = localStorage.getItem('anomaly-palette');
-    return isPaletteId(saved) ? saved : 'midnight';
+    return isPaletteId(saved) ? saved : 'slate';
   });
   const [error, setError] = useState('');
   const [presentationOpen, setPresentationOpen] = useState(false);
@@ -323,12 +324,6 @@ export default function AppShell() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
-  const workspaceNavigation = <nav className={presentationWorkspace ? 'presentation-workspace-nav' : 'workspace-tabs'} aria-label="Experience depth">
-    <button type="button" className={workspace === 'guided' ? 'active' : ''} onClick={() => setWorkspace('guided')}>Quick answer <span>Slides</span></button>
-    <button type="button" className={workspace === 'advanced' ? 'active' : ''} onClick={() => setWorkspace('advanced')}>Advanced analysis</button>
-    <button type="button" className={workspace === 'public-demo' ? 'active' : ''} onClick={() => setWorkspace('public-demo')}>Live public demo <span>3.8M+</span></button>
-    <button type="button" className={workspace === 'quality' ? 'active' : ''} onClick={() => setWorkspace('quality')}>Data quality <span>{qualityReport.overallScore.toFixed(0)}</span></button>
-  </nav>;
 
   const guidedAiPanel = <ChatPanel
     rows={analysisRows}
@@ -350,20 +345,36 @@ export default function AppShell() {
     displayMode="presentation"
   />;
 
-  return <main data-theme={palette} data-workspace={workspace} data-layout={layoutMode} data-explorer-mode={explorerMode} data-dataset-session={datasetSession.sessionId}>
-    {presentationWorkspace ? <header className="presentation-appbar">
-      <button type="button" className="presentation-brand" onClick={() => setWorkspace('guided')}><span>FP&A</span><strong>Variance Copilot</strong></button>
-      {workspaceNavigation}
-      <div className="presentation-appbar-actions"><ThemePicker value={palette} onChange={changePalette} /><label className="presentation-upload">Use my data<input type="file" accept=".csv,.json" onChange={(event) => loadFile(event.target.files?.[0])} /></label></div>
-    </header> : <>
-      <header className="hero compact-hero">
-        <div><span className="eyebrow">FP&A VARIANCE COPILOT</span><h1>{layoutMode === 'phone' ? 'Answer first. Drill deeper.' : 'Start with the answer. Drill deeper only when you need to.'}</h1><p>{layoutMode === 'phone' ? 'Quick slides are optimized for the phone. Open Advanced Analysis when you need the full evidence and model controls.' : 'Quick Answer is a page-by-page presentation. Advanced Analysis preserves every time, driver, evidence, news, and AI control for specialist investigation.'}</p></div>
-        <div className="header-tools"><ThemePicker value={palette} onChange={changePalette} /><button type="button" className="quiet-button" onClick={() => setWorkspace('public-demo')}>Live 3.8M-row demo</button><label className="upload">Use my data<input type="file" accept=".csv,.json" onChange={(event) => loadFile(event.target.files?.[0])} /></label></div>
-      </header>
-      {workspaceNavigation}
-    </>}
-
-    {error && <div className="error">{error}</div>}
+  return <OpenWebShell
+    workspace={workspace}
+    layoutMode={layoutMode}
+    palette={palette}
+    presentationMode={presentationWorkspace}
+    datasetName={datasetSession.source.name}
+    datasetSessionId={datasetSession.sessionId}
+    rowCount={datasetSession.rows.length}
+    metricName={metricDefinition.name}
+    actualLabel={humanize(actualKey)}
+    comparisonLabel={expectedKey ? humanize(expectedKey) : 'Rolling baseline'}
+    periodLabel={windowLabel(timeWindow)}
+    qualityScore={qualityReport.overallScore}
+    analysisHealthy={qualityReport.analysisReady && (!timeSeries || timeSeries.modelHealth.status !== 'insufficient')}
+    onWorkspace={setWorkspace}
+    onPalette={changePalette}
+    onNewAnalysis={loadCleanDemo}
+    onOpenPresentation={() => setPresentationOpen(true)}
+    onUploadFile={loadFile}
+  >
+    <main data-theme={palette} data-workspace={workspace} data-layout={layoutMode} data-explorer-mode={explorerMode} data-dataset-session={datasetSession.sessionId}>
+      {error && <div className="error">{error}</div>}
+      {workspace === 'advanced' && <section className="ow-workspace-intro">
+        <div><span>Explore & analyze</span><h1>Investigate the movement, then follow the evidence.</h1><p>Use the compact command bar to change the population, compare scenarios, open hierarchy branches, and inspect the calculation trail.</p></div>
+        <div className="ow-workspace-intro-meta"><span>{windowLabel(timeWindow)}</span><span>{result.dimensionsScanned} dimensions</span><span>{result.runId}</span></div>
+      </section>}
+      {workspace === 'quality' && <section className="ow-workspace-intro">
+        <div><span>Data quality</span><h1>Understand what can be trusted before the result is shared.</h1><p>Profile fields, review blockers, and see how data readiness changes the confidence of the analysis.</p></div>
+        <div className="ow-workspace-intro-meta"><span>{qualityReport.overallScore.toFixed(0)}/100</span><span>{qualityReport.blockers} blockers</span><span>{qualityReport.warnings} warnings</span></div>
+      </section>}
 
     {(workspace === 'advanced' || workspace === 'quality') && <section className="dataset-contract-banner" aria-label="Dataset and metric contract">
       <div><span>Dataset session</span><strong>{datasetSession.source.name}</strong><small>{datasetSession.rows.length.toLocaleString()} rows · hash {datasetSession.contentHash}</small></div>
@@ -508,7 +519,8 @@ export default function AppShell() {
       actualKey={actualKey}
       expectedKey={expectedKey || undefined}
     />
-  </main>;
+    </main>
+  </OpenWebShell>;
 }
 
 function Metric({ label, value, helper, tone }: { label: string; value: string; helper?: string; tone?: string }) {
