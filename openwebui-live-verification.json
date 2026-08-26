@@ -1,0 +1,19 @@
+{
+  "targetSha": "aa065c91bd836e506984eea4c5146161c6afdf69",
+  "liveSite": {
+    "url": "https://yashumani.github.io/drill-down-anamoly/",
+    "httpStatus": 200,
+    "javascriptAsset": "assets/index-CHSldw2U.js",
+    "cssAsset": "assets/index-B6DNbuYi.css",
+    "containsOpenWebShell": true,
+    "containsWorkspaceSidebar": true,
+    "containsResponsiveMobileNavigation": true,
+    "containsPresentationStudio": true
+  },
+  "screenshots": {
+    "desktop": "1440x900",
+    "mobile": "390x844"
+  },
+  "verified": true,
+  "checkedAt": "2026-08-26T01:33:32Z"
+}
