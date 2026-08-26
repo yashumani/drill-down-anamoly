@@ -38,6 +38,8 @@ import type { PaletteId } from './components/ThemePicker';
 import { TimeSeriesCockpit } from './components/TimeSeriesCockpit';
 import { PresentationStudio } from './components/PresentationStudio';
 import { OpenWebShell } from './components/OpenWebShell';
+import { AdvancedJourneyNav, AdvancedStageFooter } from './components/AdvancedJourneyNav';
+import type { AdvancedStage } from './components/AdvancedJourneyNav';
 import type { ChatAction } from './lib/chatEngine';
 import type { DataRow, DimensionScore, MetricPolarity, Predicate } from './types';
 
@@ -82,8 +84,8 @@ export default function AppShell() {
   const [selectedDimension, setSelectedDimension] = useState<string>('region');
   const [selectedCategoryValue, setSelectedCategoryValue] = useState('');
   const [explorerMode, setExplorerMode] = useState<ExplorerMode>('basic');
-  const [showCombinations, setShowCombinations] = useState(false);
-  const [showHierarchy, setShowHierarchy] = useState(false);
+  const [advancedStage, setAdvancedStage] = useState<AdvancedStage>('scope');
+  const [explainView, setExplainView] = useState<'drivers' | 'combinations' | 'hierarchy'>('drivers');
   const [timeField, setTimeField] = useState('month');
   const [timeGrain, setTimeGrain] = useState<TimeGrain>('month');
   const [timeWindow, setTimeWindow] = useState<TimeWindow>('15m');
@@ -230,11 +232,15 @@ export default function AppShell() {
 
   function loadCleanDemo() {
     applyDataset(createSampleData(), 'actual', 'target', { source: { kind: 'embedded', name: 'Finance sample' } });
+    setAdvancedStage('scope');
+    setExplainView('drivers');
     setWorkspace('guided');
   }
 
   function loadQualityDemo() {
     applyDataset(createQualityDemoData(), 'actual', 'target', { source: { kind: 'embedded', name: 'Data quality demonstration' } });
+    setAdvancedStage('scope');
+    setExplainView('drivers');
     setWorkspace('quality');
   }
 
@@ -319,9 +325,20 @@ export default function AppShell() {
   }
 
   function openAdvanced(dimension?: string) {
-    if (dimension) setSelectedDimension(dimension);
+    if (dimension) {
+      setSelectedDimension(dimension);
+      setExplainView('drivers');
+      setAdvancedStage('explain');
+    } else {
+      setAdvancedStage('scope');
+    }
     setWorkspace('advanced');
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function changeWorkspace(next: Workspace) {
+    if (next === 'advanced' && workspace !== 'advanced') setAdvancedStage('scope');
+    setWorkspace(next);
   }
 
 
@@ -359,7 +376,7 @@ export default function AppShell() {
     periodLabel={windowLabel(timeWindow)}
     qualityScore={qualityReport.overallScore}
     analysisHealthy={qualityReport.analysisReady && (!timeSeries || timeSeries.modelHealth.status !== 'insufficient')}
-    onWorkspace={setWorkspace}
+    onWorkspace={changeWorkspace}
     onPalette={changePalette}
     onNewAnalysis={loadCleanDemo}
     onOpenPresentation={() => setPresentationOpen(true)}
@@ -367,16 +384,12 @@ export default function AppShell() {
   >
     <main data-theme={palette} data-workspace={workspace} data-layout={layoutMode} data-explorer-mode={explorerMode} data-dataset-session={datasetSession.sessionId}>
       {error && <div className="error">{error}</div>}
-      {workspace === 'advanced' && <section className="ow-workspace-intro">
-        <div><span>Explore & analyze</span><h1>Investigate the movement, then follow the evidence.</h1><p>Use the compact command bar to change the population, compare scenarios, open hierarchy branches, and inspect the calculation trail.</p></div>
-        <div className="ow-workspace-intro-meta"><span>{windowLabel(timeWindow)}</span><span>{result.dimensionsScanned} dimensions</span><span>{result.runId}</span></div>
-      </section>}
       {workspace === 'quality' && <section className="ow-workspace-intro">
         <div><span>Data quality</span><h1>Understand what can be trusted before the result is shared.</h1><p>Profile fields, review blockers, and see how data readiness changes the confidence of the analysis.</p></div>
         <div className="ow-workspace-intro-meta"><span>{qualityReport.overallScore.toFixed(0)}/100</span><span>{qualityReport.blockers} blockers</span><span>{qualityReport.warnings} warnings</span></div>
       </section>}
 
-    {(workspace === 'advanced' || workspace === 'quality') && <section className="dataset-contract-banner" aria-label="Dataset and metric contract">
+    {workspace === 'quality' && <section className="dataset-contract-banner" aria-label="Dataset and metric contract">
       <div><span>Dataset session</span><strong>{datasetSession.source.name}</strong><small>{datasetSession.rows.length.toLocaleString()} rows · hash {datasetSession.contentHash}</small></div>
       <div><span>Finance contract</span><strong>{datasetSession.contractReport.detected ? `v${datasetSession.contractReport.version} · ${datasetSession.contractReport.mode}` : 'Automatic profiling'}</strong><small>{datasetSession.contractReport.detected ? `${datasetSession.contractReport.normalizedDimensionFields.length} declared dimensions` : 'Use the standard contract for deterministic field mapping'}</small></div>
       <div><span>Metric semantics</span><strong>{metricDefinition.name}</strong><small>{metricDefinition.aggregation.replace('_', ' ')} · {metricDefinition.semanticCompleteness}/100 complete · {metricDefinition.certificationStatus}</small></div>
@@ -409,102 +422,205 @@ export default function AppShell() {
       onLoadSample={loadCleanDemo}
       onUploadFile={loadFile}
       onOpenAdvanced={openAdvanced}
-      onOpenPublic={() => setWorkspace('public-demo')}
-      onOpenQuality={() => setWorkspace('quality')}
+      onOpenPublic={() => changeWorkspace('public-demo')}
+      onOpenQuality={() => changeWorkspace('quality')}
       onOpenPresentation={() => setPresentationOpen(true)}
     /> : workspace === 'public-demo' ? <LivePublicFinanceDemo /> : workspace === 'quality' ? <DataQualityPanel rows={rows} report={qualityReport} onLoadCleanDemo={loadCleanDemo} onLoadQualityDemo={loadQualityDemo} /> : <>
-      <div className="advanced-mode-banner"><div><span className="eyebrow">ADVANCED ANALYSIS</span><strong>Every control, every evidence layer.</strong><small>Return to Quick Answer whenever the specialist detail is no longer useful.</small></div><div className="advanced-mode-actions"><button type="button" onClick={() => setPresentationOpen(true)}>Create presentation</button><button type="button" className="quiet-button" onClick={exportInvestigation}>Export investigation</button><button type="button" onClick={() => setWorkspace('guided')}>← Back to slide presentation</button></div></div>
-
-      <ExplorationControlBar
-        mode={explorerMode}
-        planningLens={planningLens}
-        planningOptions={planningLenses.map((lens) => ({ id: lens.id, label: lens.label }))}
-        numericFields={numeric.map((profile) => profile.name)}
-        actualKey={actualKey}
-        expectedKey={expectedKey}
-        metricPolarity={metricPolarity}
-        timeWindow={timeWindow}
-        dimensions={result.dimensionScores.map((dimension) => dimension.dimension)}
-        selectedDimension={selectedScore?.dimension ?? selectedDimension}
-        categoryValues={selectedScore?.categories.map((category) => category.value) ?? []}
-        selectedCategory={selectedCategoryValue}
+      <AdvancedJourneyNav
+        stage={advancedStage}
         predicates={predicates}
-        onMode={setExplorerMode}
-        onPlanningLens={(next) => setPlanningLens(next as PlanningLens)}
-        onActual={(next) => { setActualKey(next); setPredicates([]); }}
-        onExpected={(next) => { setExpectedKey(next); setPredicates([]); }}
-        onPolarity={(next) => { setMetricPolarity(next); setPredicates([]); }}
-        onWindow={(next) => { setTimeWindow(next); setPredicates([]); }}
-        onDimension={(next) => { setSelectedDimension(next); setSelectedCategoryValue(''); }}
-        onCategory={setSelectedCategoryValue}
-        onFocus={() => document.querySelector('.driver-split')?.scrollIntoView({ behavior: 'smooth', block: 'center' })}
-        onDrill={() => selectedScore && selectedCategoryValue && drill([{ dimension: selectedScore.dimension, value: selectedCategoryValue }])}
-        onCombinations={() => { setShowCombinations(true); window.setTimeout(() => document.getElementById('combined-drivers')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80); }}
-        onHierarchy={() => { setShowHierarchy(true); window.setTimeout(() => document.getElementById('hierarchy-data-explorer')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80); }}
-        onReset={() => { setPredicates([]); setSelectedCategoryValue(''); }}
+        periodLabel={windowLabel(timeWindow)}
+        metricName={metricDefinition.name}
+        onStage={setAdvancedStage}
       />
 
-      {(qualityReport.blockers > 0 || qualityReport.warnings > 0) && <button type="button" className={`analysis-quality-warning ${qualityReport.blockers ? 'critical' : ''}`} onClick={() => setWorkspace('quality')}>
-        <strong>Data quality: {qualityReport.overallScore.toFixed(0)}/100</strong>
-        <span>{qualityReport.blockers ? `${qualityReport.blockers} blocker(s) can change or invalidate the analysis.` : `${qualityReport.warnings} warning(s) should be reviewed.`} Open the supporting Data Quality Explorer.</span>
-      </button>}
+      <section className={`analysis-stage-page stage-${advancedStage}`} aria-label={`${advancedStage} stage`}>
+        {advancedStage === 'scope' && <>
+          <header className="analysis-stage-header">
+            <div><span>01 · Scope</span><h1>Define the population once.</h1><p>Choose the metric, period, dimension, and category. Preview first; drill only when you intend to change every downstream calculation.</p></div>
+            <button type="button" className="quiet-button" onClick={() => changeWorkspace('guided')}>Use Quick Answer</button>
+          </header>
 
-      <details id="hierarchy-data-explorer" className="hierarchy-data-details" open={showHierarchy} onToggle={(event) => setShowHierarchy(event.currentTarget.open)}>
-        <summary><span>Hierarchy explorer</span><strong>Map parent-child columns and open the animated arc tree</strong></summary>
-        <HierarchyDataExplorer rows={analysisRows} />
-      </details>
+          <ExplorationControlBar
+            mode={explorerMode}
+            planningLens={planningLens}
+            planningOptions={planningLenses.map((lens) => ({ id: lens.id, label: lens.label }))}
+            numericFields={numeric.map((profile) => profile.name)}
+            actualKey={actualKey}
+            expectedKey={expectedKey}
+            metricPolarity={metricPolarity}
+            timeWindow={timeWindow}
+            dimensions={result.dimensionScores.map((dimension) => dimension.dimension)}
+            selectedDimension={selectedScore?.dimension ?? selectedDimension}
+            categoryValues={selectedScore?.categories.map((category) => category.value) ?? []}
+            selectedCategory={selectedCategoryValue}
+            predicates={predicates}
+            onMode={setExplorerMode}
+            onPlanningLens={(next) => setPlanningLens(next as PlanningLens)}
+            onActual={(next) => { setActualKey(next); setPredicates([]); }}
+            onExpected={(next) => { setExpectedKey(next); setPredicates([]); }}
+            onPolarity={(next) => { setMetricPolarity(next); setPredicates([]); }}
+            onWindow={(next) => { setTimeWindow(next); setPredicates([]); }}
+            onDimension={(next) => { setSelectedDimension(next); setSelectedCategoryValue(''); }}
+            onCategory={setSelectedCategoryValue}
+            onFocus={() => { setExplainView('drivers'); setAdvancedStage('explain'); }}
+            onDrill={() => selectedScore && selectedCategoryValue && drill([{ dimension: selectedScore.dimension, value: selectedCategoryValue }])}
+            onCombinations={() => { setExplainView('combinations'); setAdvancedStage('explain'); }}
+            onHierarchy={() => { setExplainView('hierarchy'); setAdvancedStage('explain'); }}
+            onReset={() => { setPredicates([]); setSelectedCategoryValue(''); }}
+          />
 
-      <section className="executive-metrics">
-        <Metric label={currentPoint ? `${currentPoint.label} actual` : 'Selected-scope actual'} value={format(currentPoint?.actual ?? result.actual)} helper={`${humanize(actualKey)} · ${timeSeries?.coverage.validMeasureRows.toLocaleString() ?? result.validRowCount.toLocaleString()} valid rows`} />
-        <Metric label={expectedKey ? 'Plan / expected' : 'Rolling typical'} value={format(currentPoint?.expected ?? result.expected)} helper={expectedKey ? humanize(expectedKey) : 'Rolling median baseline'} />
-        <Metric label="Current-period impact" value={`${executiveImpact >= 0 ? '+' : ''}${format(executiveImpact)}`} helper={`${currentPoint?.impactDirection ?? result.impactDirection} · ${windowLabel(timeWindow)} driver scope`} tone={executiveTone} />
-        <Metric label="Analysis health" value={timeSeries ? `${timeSeries.modelHealth.score.toFixed(0)}/100` : plainAnomaly(result.anomalyScore)} helper={timeSeries ? `${humanize(timeSeries.modelHealth.status)} · run ${timeSeries.runId}` : 'Standardized movement strength'} tone={timeSeries?.modelHealth.status === 'healthy' ? undefined : 'warn'} />
+          {(qualityReport.blockers > 0 || qualityReport.warnings > 0) && <button type="button" className={`analysis-quality-warning ${qualityReport.blockers ? 'critical' : ''}`} onClick={() => changeWorkspace('quality')}>
+            <strong>Data quality: {qualityReport.overallScore.toFixed(0)}/100</strong>
+            <span>{qualityReport.blockers ? `${qualityReport.blockers} blocker(s) can change or invalidate the analysis.` : `${qualityReport.warnings} warning(s) should be reviewed.`} Open Data Quality for details.</span>
+          </button>}
+
+          <section className="executive-metrics">
+            <Metric label={currentPoint ? `${currentPoint.label} actual` : 'Selected-scope actual'} value={format(currentPoint?.actual ?? result.actual)} helper={`${humanize(actualKey)} · ${timeSeries?.coverage.validMeasureRows.toLocaleString() ?? result.validRowCount.toLocaleString()} valid rows`} />
+            <Metric label={expectedKey ? 'Plan / expected' : 'Rolling typical'} value={format(currentPoint?.expected ?? result.expected)} helper={expectedKey ? humanize(expectedKey) : 'Rolling median baseline'} />
+            <Metric label="Current-period impact" value={`${executiveImpact >= 0 ? '+' : ''}${format(executiveImpact)}`} helper={`${currentPoint?.impactDirection ?? result.impactDirection} · ${windowLabel(timeWindow)} scope`} tone={executiveTone} />
+            <Metric label="Analysis health" value={timeSeries ? `${timeSeries.modelHealth.score.toFixed(0)}/100` : plainAnomaly(result.anomalyScore)} helper={timeSeries ? `${humanize(timeSeries.modelHealth.status)} · run ${timeSeries.runId}` : 'Standardized movement strength'} tone={timeSeries?.modelHealth.status === 'healthy' ? undefined : 'warn'} />
+          </section>
+
+          <details className="analysis-context-details">
+            <summary>Data and calculation context</summary>
+            <section className="dataset-contract-banner" aria-label="Dataset and metric contract">
+              <div><span>Dataset session</span><strong>{datasetSession.source.name}</strong><small>{datasetSession.rows.length.toLocaleString()} rows · hash {datasetSession.contentHash}</small></div>
+              <div><span>Finance contract</span><strong>{datasetSession.contractReport.detected ? `v${datasetSession.contractReport.version} · ${datasetSession.contractReport.mode}` : 'Automatic profiling'}</strong><small>{datasetSession.contractReport.detected ? `${datasetSession.contractReport.normalizedDimensionFields.length} declared dimensions` : 'Use Contract v1 for deterministic field mapping'}</small></div>
+              <div><span>Metric semantics</span><strong>{metricDefinition.name}</strong><small>{metricDefinition.aggregation.replace('_', ' ')} · {metricDefinition.semanticCompleteness}/100 complete · {metricDefinition.certificationStatus}</small></div>
+              <div><span>Driver attribution</span><strong>{result.attributionReconciles ? 'Reconciled' : 'Review required'}</strong><small>{result.aggregationMethod.replace('_', ' ')} · run {result.runId}</small></div>
+            </section>
+          </details>
+          <AdvancedStageFooter stage={advancedStage} onStage={setAdvancedStage} />
+        </>}
+
+        {advancedStage === 'detect' && <>
+          <header className="analysis-stage-header">
+            <div><span>02 · Detect</span><h1>Find the material movement before looking for a cause.</h1><p>Review the trend, pace, materiality, and unusual periods using the same population defined in Scope.</p></div>
+            <button type="button" className="quiet-button" onClick={() => setAdvancedStage('scope')}>Change scope</button>
+          </header>
+
+          <section className="executive-metrics compact-metrics">
+            <Metric label="Actual" value={format(currentPoint?.actual ?? result.actual)} helper={currentPoint?.label ?? windowLabel(timeWindow)} />
+            <Metric label="Plan / expected" value={format(currentPoint?.expected ?? result.expected)} helper={expectedKey ? humanize(expectedKey) : 'Rolling median baseline'} />
+            <Metric label="Business impact" value={`${executiveImpact >= 0 ? '+' : ''}${format(executiveImpact)}`} helper={currentPoint?.impactDirection ?? result.impactDirection} tone={executiveTone} />
+            <Metric label="Anomaly status" value={plainAnomaly(currentPoint?.anomalyScore ?? result.anomalyScore)} helper={`score ${(currentPoint?.anomalyScore ?? result.anomalyScore).toFixed(2)}`} tone={(currentPoint?.anomalyScore ?? result.anomalyScore) >= 2 ? 'warn' : undefined} />
+          </section>
+
+          <TimeSeriesCockpit
+            result={timeSeries}
+            candidates={timeCandidates}
+            timeField={activeTimeField}
+            grain={timeGrain}
+            window={timeWindow}
+            aggregation={aggregation}
+            fiscalYearStartMonth={fiscalYearStartMonth}
+            materialityPercent={materialityPercent}
+            onTimeField={changeTimeField}
+            onGrain={changeTimeGrain}
+            onWindow={(next) => { setTimeWindow(next); setPredicates([]); }}
+            onAggregation={(next) => { setAggregation(next); setPredicates([]); }}
+            onFiscalYearStartMonth={(next) => { setFiscalYearStartMonth(next); setPredicates([]); }}
+            onMaterialityPercent={setMaterialityPercent}
+          />
+
+          <section className={`story-banner ${selectedTone ?? ''}`}>
+            <div className="story-kicker">DETECTION SUMMARY</div>
+            <h2>The business impact is <span>{format(Math.abs(result.businessImpact))}</span> {result.impactDirection} across {windowLabel(timeWindow).toLowerCase()}.</h2>
+            <p>{plainSummary(result.businessImpact, result.variance, result.variancePct, result.anomalyScore, metricPolarity)}</p>
+            {result.warnings.length > 0 && <div className="analysis-warnings">{result.warnings.map((warning) => <span key={warning}>{warning}</span>)}</div>}
+          </section>
+          <AdvancedStageFooter stage={advancedStage} onStage={setAdvancedStage} />
+        </>}
+
+        {advancedStage === 'explain' && <>
+          <header className="analysis-stage-header">
+            <div><span>03 · Explain</span><h1>Move from the variance to the strongest supported drivers.</h1><p>Start with single dimensions, then use combinations or hierarchy only when the first view does not answer the business question.</p></div>
+            <button type="button" className="quiet-button" onClick={() => setAdvancedStage('scope')}>Change scope</button>
+          </header>
+
+          <nav className="analysis-view-tabs" aria-label="Driver explanation views">
+            <button type="button" className={explainView === 'drivers' ? 'active' : ''} onClick={() => setExplainView('drivers')}><strong>Single drivers</strong><span>Rank dimensions and categories</span></button>
+            <button type="button" className={explainView === 'combinations' ? 'active' : ''} onClick={() => setExplainView('combinations')}><strong>Combined patterns</strong><span>Values that matter together</span></button>
+            <button type="button" className={explainView === 'hierarchy' ? 'active' : ''} onClick={() => setExplainView('hierarchy')}><strong>Hierarchy</strong><span>Parent-child branch exploration</span></button>
+          </nav>
+
+          {explainView === 'drivers' && <section className="analysis-explain-grid">
+            <section className={`story-banner ${selectedTone ?? ''}`}>
+              <div className="story-kicker">STRONGEST CLUE</div>
+              <h2>{topDriver?.topCategory ? `${humanize(topDriver.dimension)} → ${topDriver.topCategory.value}` : 'No stable leading category'}</h2>
+              <p>{topDriver?.topCategory ? `${format(Math.abs(topDriver.topCategory.businessImpact))} ${topDriver.topCategory.impactDirection} impact across ${(topDriver.topCategory.support * 100).toFixed(1)}% of valid rows.` : 'Review the metric, comparison, and data-quality thresholds before attributing the movement.'}</p>
+            </section>
+            <Panel title="What is contributing most?" subtitle={`Rankings are aligned to ${windowLabel(timeWindow).toLowerCase()} and re-check every remaining quality-approved factor after each drill.`}><div className="driver-split"><DimensionLandscape scores={result.dimensionScores} onSelect={(dimension: DimensionScore) => setSelectedDimension(dimension.dimension)} /><ContributionBars score={selectedScore} onDrill={(predicate) => { setSelectedDimension(predicate.dimension); setSelectedCategoryValue(predicate.value); }} /></div></Panel>
+          </section>}
+
+          {explainView === 'combinations' && <section id="combined-drivers" className="analysis-combination-grid">
+            <Panel title="Combined drivers" subtitle="Use this only after reviewing single dimensions. Position shows concentration and impact; bubble size shows support."><CombinationExplorer interactions={result.interactions} onDrill={drill} /></Panel>
+            <Panel title="Investigation trail" subtitle="The current path applied to every calculation in this workspace."><DrillTree predicates={predicates} /></Panel>
+            <div className="breadcrumbs"><button onClick={() => setPredicates([])}>All business dimensions</button>{predicates.map((predicate, index) => <button key={`${predicate.dimension}-${predicate.value}`} onClick={() => setPredicates(predicates.slice(0, index + 1))}>→ {humanize(predicate.dimension)}: {predicate.value}</button>)}</div>
+          </section>}
+
+          {explainView === 'hierarchy' && <section id="hierarchy-data-explorer" className="analysis-hierarchy-view"><HierarchyDataExplorer rows={analysisRows} /></section>}
+          <AdvancedStageFooter stage={advancedStage} onStage={setAdvancedStage} />
+        </>}
+
+        {advancedStage === 'validate' && <>
+          <header className="analysis-stage-header">
+            <div><span>04 · Validate</span><h1>Separate observed drivers from possible explanations.</h1><p>Confirm data readiness, compare business context, and treat news or external events as hypotheses until the evidence supports them.</p></div>
+            <button type="button" className="quiet-button" onClick={() => changeWorkspace('quality')}>Open Data Quality</button>
+          </header>
+
+          <section className="analysis-validation-strip">
+            <article><span>Data quality</span><strong>{qualityReport.overallScore.toFixed(0)}/100</strong><small>{qualityReport.blockers ? `${qualityReport.blockers} blocker(s)` : `${qualityReport.warnings} warning(s)`}</small></article>
+            <article><span>Analysis health</span><strong>{timeSeries ? `${timeSeries.modelHealth.score.toFixed(0)}/100` : 'No time model'}</strong><small>{timeSeries?.modelHealth.status ?? 'Cross-sectional analysis'}</small></article>
+            <article><span>External context</span><strong>{newsAnalysis ? `${newsAnalysis.activeCount + newsAnalysis.passiveCount} articles` : 'Not scanned'}</strong><small>{newsAnalysis ? 'Hypothesis evidence available' : 'Optional validation input'}</small></article>
+          </section>
+
+          <FpaInsightPanel rows={analysisRows} predicates={predicates} result={result} dataQuality={qualityReport} planningLens={planningLens} newsAnalysis={newsAnalysis} timeSeries={timeSeries} />
+
+          <section className="analysis-validation-grid">
+            <NewsIntelPanel onContextReady={setNewsContext} onAnalysisReady={setNewsAnalysis} />
+            <ExternalFactorValidationPanel
+              rows={rows}
+              result={result}
+              predicates={predicates}
+              actualKey={actualKey}
+              expectedKey={expectedKey || undefined}
+              metricPolarity={metricPolarity}
+              timeField={activeTimeField}
+              defaultEventDate={timeSeries?.currentPeriod?.periodStart}
+            />
+          </section>
+          <AdvancedStageFooter stage={advancedStage} onStage={setAdvancedStage} />
+        </>}
+
+        {advancedStage === 'share' && <>
+          <header className="analysis-stage-header">
+            <div><span>05 · Share</span><h1>Communicate the result without changing the evidence.</h1><p>Create a deterministic slide, use the finance guide for follow-up questions, or export the full investigation record.</p></div>
+            <button type="button" className="quiet-button" onClick={() => changeWorkspace('guided')}>Return to Quick Answer</button>
+          </header>
+
+          <section className="analysis-share-actions">
+            <button type="button" onClick={() => setPresentationOpen(true)}><span>Presentation Studio</span><strong>Create a 16:9 executive infographic</strong><small>No AI is required; numbers remain locked to this run.</small></button>
+            <button type="button" onClick={exportInvestigation}><span>Evidence export</span><strong>Download the investigation snapshot</strong><small>Includes the dataset session, calculation run, and evidence ledger.</small></button>
+            <button type="button" onClick={() => changeWorkspace('quality')}><span>Trust review</span><strong>Open Data Quality</strong><small>{qualityReport.overallScore.toFixed(0)}/100 readiness · {qualityReport.blockers} blockers.</small></button>
+          </section>
+
+          <section className="analysis-share-layout">
+            <ChatPanel rows={analysisRows} dimensions={dimensions} actualKey={actualKey} expectedKey={expectedKey || undefined} metricPolarity={metricPolarity} predicates={predicates} result={result} dataQuality={qualityReport} datasetSession={datasetSession} metricDefinition={metricDefinition} timeSeries={timeSeries} externalContext={externalContext} manualContext={manualContext} onExternalContext={setManualContext} onAction={handleChatAction} />
+            <aside className="analysis-share-summary">
+              <span className="deck-kicker">MANAGEMENT SUMMARY</span>
+              <h2>{format(Math.abs(result.businessImpact))} {result.impactDirection}</h2>
+              <p>{plainSummary(result.businessImpact, result.variance, result.variancePct, result.anomalyScore, metricPolarity)}</p>
+              {topDriver?.topCategory && <div><span>Leading driver</span><strong>{humanize(topDriver.dimension)} → {topDriver.topCategory.value}</strong><small>{format(Math.abs(topDriver.topCategory.businessImpact))} {topDriver.topCategory.impactDirection} · {(topDriver.topCategory.support * 100).toFixed(1)}% support</small></div>}
+              <button type="button" onClick={() => setPresentationOpen(true)}>Create the slide</button>
+            </aside>
+          </section>
+
+          <details className="analyst-details"><summary>Analyst evidence and factor audit</summary><section className="technical-strip"><span><strong>{result.validRowCount.toLocaleString()}</strong> valid measure rows</span><span><strong>{result.excludedMeasureRows.toLocaleString()}</strong> excluded measure rows</span><span><strong>{result.dimensionsScanned}</strong> business factors</span><span><strong>{result.anomalyScore.toFixed(2)}</strong> standardized deviation</span><span><strong>{metricPolarity === 'higher_is_better' ? 'Higher' : 'Lower'}</strong> is better</span><span><strong>{windowLabel(timeWindow)}</strong> selected window</span><span><strong>{result.aggregationMethod.replace('_', ' ')}</strong> attribution</span><span><strong>{result.runId}</strong> calculation run</span></section><section className="table-panel"><h2>Factor audit</h2><p>Detailed evidence for every business factor reviewed after excluding time fields and quality-ineligible columns.</p><div className="table-wrap"><table><thead><tr><th>#</th><th>Factor</th><th>Score</th><th>Leading group</th><th>Business impact</th><th>Support</th><th>Impact</th></tr></thead><tbody>{result.dimensionScores.map((dimension, index) => <tr key={dimension.dimension} onClick={() => { setSelectedDimension(dimension.dimension); setExplainView('drivers'); setAdvancedStage('explain'); }}><td>{index + 1}</td><td>{humanize(dimension.dimension)}</td><td>{dimension.score.toFixed(1)}</td><td>{dimension.topCategory?.value}</td><td className={Number(dimension.topCategory?.businessImpact) < 0 ? 'bad' : 'good'}>{format(dimension.topCategory?.businessImpact ?? 0)}</td><td>{dimension.topCategory ? `${(dimension.topCategory.support * 100).toFixed(1)}%` : '—'}</td><td>{(dimension.impact * 100).toFixed(1)}%</td></tr>)}</tbody></table></div></section></details>
+          <AdvancedStageFooter stage={advancedStage} onStage={setAdvancedStage} />
+        </>}
       </section>
-
-      <TimeSeriesCockpit
-        result={timeSeries}
-        candidates={timeCandidates}
-        timeField={activeTimeField}
-        grain={timeGrain}
-        window={timeWindow}
-        aggregation={aggregation}
-        fiscalYearStartMonth={fiscalYearStartMonth}
-        materialityPercent={materialityPercent}
-        onTimeField={changeTimeField}
-        onGrain={changeTimeGrain}
-        onWindow={(next) => { setTimeWindow(next); setPredicates([]); }}
-        onAggregation={(next) => { setAggregation(next); setPredicates([]); }}
-        onFiscalYearStartMonth={(next) => { setFiscalYearStartMonth(next); setPredicates([]); }}
-        onMaterialityPercent={setMaterialityPercent}
-      />
-
-      <FpaInsightPanel rows={analysisRows} predicates={predicates} result={result} dataQuality={qualityReport} planningLens={planningLens} newsAnalysis={newsAnalysis} timeSeries={timeSeries} />
-
-      <ExternalFactorValidationPanel
-        rows={rows}
-        result={result}
-        predicates={predicates}
-        actualKey={actualKey}
-        expectedKey={expectedKey || undefined}
-        metricPolarity={metricPolarity}
-        timeField={activeTimeField}
-        defaultEventDate={timeSeries?.currentPeriod?.periodStart}
-      />
-
-      <section className="guided-layout">
-        <div className="guided-main">
-          <section className={`story-banner ${selectedTone ?? ''}`}><div className="story-kicker">SELECTED-WINDOW BOTTOM LINE</div><h2>The business impact is <span>{format(Math.abs(result.businessImpact))}</span> {result.impactDirection} across {windowLabel(timeWindow).toLowerCase()}.</h2><p>{plainSummary(result.businessImpact, result.variance, result.variancePct, result.anomalyScore, metricPolarity)}</p>{topDriver?.topCategory && <div className="next-clue"><span>Strongest clue</span><strong>{humanize(topDriver.dimension)} → {topDriver.topCategory.value}</strong><button onClick={() => setSelectedDimension(topDriver.dimension)}>Explore</button></div>}{result.warnings.length > 0 && <div className="analysis-warnings">{result.warnings.map((warning) => <span key={warning}>{warning}</span>)}</div>}</section>
-          <Panel title="What is contributing most?" subtitle={`Driver rankings are aligned to ${windowLabel(timeWindow).toLowerCase()} and automatically re-check every remaining quality-approved business factor after each drill.`}><div className="driver-split"><DimensionLandscape scores={result.dimensionScores} onSelect={(dimension: DimensionScore) => setSelectedDimension(dimension.dimension)} /><ContributionBars score={selectedScore} onDrill={(predicate) => { setSelectedDimension(predicate.dimension); setSelectedCategoryValue(predicate.value); }} /></div></Panel>
-        </div>
-        <div className="insight-sidebar">
-          <NewsIntelPanel onContextReady={setNewsContext} onAnalysisReady={setNewsAnalysis} />
-          <ChatPanel rows={analysisRows} dimensions={dimensions} actualKey={actualKey} expectedKey={expectedKey || undefined} metricPolarity={metricPolarity} predicates={predicates} result={result} dataQuality={qualityReport} datasetSession={datasetSession} metricDefinition={metricDefinition} timeSeries={timeSeries} externalContext={externalContext} manualContext={manualContext} onExternalContext={setManualContext} onAction={handleChatAction} />
-        </div>
-      </section>
-
-      <details className="more-analysis" open={showCombinations} onToggle={(event) => setShowCombinations(event.currentTarget.open)}><summary>More analysis</summary><div className="grid two"><Panel title="Combined drivers" subtitle="Values that become important when they occur together inside the selected finance window."><CombinationExplorer interactions={result.interactions} onDrill={drill} /></Panel><Panel title="Investigation trail" subtitle="The path you have taken so far."><DrillTree predicates={predicates} /></Panel></div><div className="breadcrumbs"><button onClick={() => setPredicates([])}>All business dimensions</button>{predicates.map((predicate, index) => <button key={`${predicate.dimension}-${predicate.value}`} onClick={() => setPredicates(predicates.slice(0, index + 1))}>→ {humanize(predicate.dimension)}: {predicate.value}</button>)}</div></details>
-
-      <details className="analyst-details"><summary>Analyst evidence</summary><section className="technical-strip"><span><strong>{result.validRowCount.toLocaleString()}</strong> valid measure rows</span><span><strong>{result.excludedMeasureRows.toLocaleString()}</strong> excluded measure rows</span><span><strong>{result.dimensionsScanned}</strong> business factors</span><span><strong>{result.anomalyScore.toFixed(2)}</strong> standardized deviation</span><span><strong>{metricPolarity === 'higher_is_better' ? 'Higher' : 'Lower'}</strong> is better</span><span><strong>{windowLabel(timeWindow)}</strong> selected window</span><span><strong>{result.aggregationMethod.replace('_', ' ')}</strong> attribution</span><span><strong>{result.runId}</strong> calculation run</span></section><section className="table-panel"><h2>Factor audit</h2><p>Detailed evidence for every business factor reviewed after excluding time fields and quality-ineligible columns.</p><div className="table-wrap"><table><thead><tr><th>#</th><th>Factor</th><th>Score</th><th>Leading group</th><th>Business impact</th><th>Support</th><th>Impact</th></tr></thead><tbody>{result.dimensionScores.map((dimension, index) => <tr key={dimension.dimension} onClick={() => setSelectedDimension(dimension.dimension)}><td>{index + 1}</td><td>{humanize(dimension.dimension)}</td><td>{dimension.score.toFixed(1)}</td><td>{dimension.topCategory?.value}</td><td className={Number(dimension.topCategory?.businessImpact) < 0 ? 'bad' : 'good'}>{format(dimension.topCategory?.businessImpact ?? 0)}</td><td>{dimension.topCategory ? `${(dimension.topCategory.support * 100).toFixed(1)}%` : '—'}</td><td>{(dimension.impact * 100).toFixed(1)}%</td></tr>)}</tbody></table></div></section></details>
     </>}
     <PresentationStudio
       open={presentationOpen}

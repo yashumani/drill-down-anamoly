@@ -16,7 +16,7 @@ import type { FinanceTimeSeriesResult, TimeWindow } from '../lib/timeIntelligenc
 import type { InvestigationResult, MetricPolarity } from '../types';
 import { EChart } from './EChart';
 
-type GuidedQuestion = 'variance' | 'pace' | 'trend' | 'drivers';
+export type GuidedQuestion = 'variance' | 'pace' | 'trend' | 'drivers';
 
 interface Props {
   numericFields: string[];
@@ -78,9 +78,9 @@ function chartOption(timeSeries: FinanceTimeSeriesResult | null): EChartsOption 
   const points = timeSeries?.points.slice(-12) ?? [];
   return {
     animationDuration: 180,
-    tooltip: { trigger: 'axis' },
-    legend: { data: ['Actual', 'Plan / expected', 'Business impact'] },
-    grid: { left: 58, right: 58, top: 42, bottom: 38 },
+    tooltip: { trigger: 'axis', confine: true },
+    legend: { data: ['Actual', 'Plan / expected', 'Business impact'], type: 'scroll' },
+    grid: { left: 54, right: 52, top: 42, bottom: 34, containLabel: true },
     xAxis: { type: 'category', data: points.map((point) => point.label), axisLabel: { hideOverlap: true } },
     yAxis: [
       { type: 'value', axisLabel: { formatter: (value: number) => compact(value) } },
@@ -151,8 +151,8 @@ export function GuidedExperience({
     ? `${timeSeries.trend.description} The time analysis uses ${timeSeries.allPoints.length} periods and has an analysis-health score of ${timeSeries.modelHealth.score.toFixed(0)}/100.`
     : 'No usable time field was detected, so the current answer is a cross-sectional variance view rather than a time-series conclusion.';
   const nextAction = topDriver?.topCategory
-    ? `Compare ${topDriver.topCategory.value} with unaffected categories, then use the AI analyst to test business context and external hypotheses before turning the pattern into a management action.`
-    : 'Open Data quality and confirm the metric, comparison, time field, and eligible business dimensions.';
+    ? `Compare ${topDriver.topCategory.value} with unaffected categories, then validate business context before turning the pattern into a management action.`
+    : 'Open Data Quality and confirm the metric, comparison, time field, and eligible business dimensions.';
 
   function goTo(next: GuidedSlideId) {
     setSlide(next);
@@ -184,42 +184,46 @@ export function GuidedExperience({
   }
 
   const sourceSlide = <section className="deck-page deck-source-page" aria-labelledby="deck-source-title">
-    <div className="deck-copy"><span className="deck-kicker">01 · DATA</span><h2 id="deck-source-title">Choose where the answer comes from.</h2><p>Start with the embedded finance scenario, use your own file, or open the multi-million-row public demonstration.</p></div>
+    <div className="deck-copy"><span className="deck-kicker">01 · DATA</span><h2 id="deck-source-title">Choose the data source.</h2><p>Start with the embedded finance scenario, upload your own file, or open the multi-million-row public demonstration.</p></div>
     <div className="deck-choice-grid deck-choice-grid-three">
       <button type="button" className="deck-choice-card primary" onClick={() => { onLoadSample(); goTo('question'); }}><span>FASTEST</span><strong>Finance sample</strong><small>{dataQuality.rowCount.toLocaleString()} rows are ready now</small><b>Continue →</b></button>
       <label className="deck-choice-card upload-card"><span>YOUR DATA</span><strong>Upload CSV or JSON</strong><small>Automatic profiling chooses safe starting fields</small><b>Select a file →</b><input type="file" accept=".csv,.json" onChange={(event) => uploadAndContinue(event.target.files?.[0])} /></label>
-      <button type="button" className="deck-choice-card public" onClick={onOpenPublic}><span>LIVE SCALE</span><strong>3.8M public rows</strong><small>Server-side aggregation across ten finance dimensions</small><b>Open live deck →</b></button>
+      <button type="button" className="deck-choice-card public" onClick={onOpenPublic}><span>LIVE SCALE</span><strong>3.8M public rows</strong><small>Server-side aggregation across ten finance dimensions</small><b>Open live demo →</b></button>
     </div>
   </section>;
 
-  const questionSlide = <section className="deck-page" aria-labelledby="deck-question-title">
-    <div className="deck-copy"><span className="deck-kicker">02 · QUESTION</span><h2 id="deck-question-title">What decision are you trying to make?</h2><p>Choose the business question. The application selects the appropriate first view and reporting window.</p></div>
-    <div className="deck-choice-grid deck-question-grid">{questions.map((item) => <button
-      key={item.id}
-      type="button"
-      className={question === item.id ? 'deck-choice-card active' : 'deck-choice-card'}
-      onClick={() => { setQuestion(item.id); onTimeWindow(item.window); goTo('setup'); }}
-    ><span>{item.id.toUpperCase()}</span><strong>{item.title}</strong><small>{item.description}</small><b>Choose →</b></button>)}</div>
-  </section>;
-
-  const setupSlide = <section className="deck-page" aria-labelledby="deck-setup-title">
-    <div className="deck-copy"><span className="deck-kicker">03 · SETUP</span><h2 id="deck-setup-title">Confirm four finance essentials.</h2><p>The statistical and calendar assumptions remain available, but they do not block the first answer.</p></div>
-    <div className="deck-setup-grid">
-      <label><span>Finance use case</span><select value={planningLens} onChange={(event) => onPlanningLens(event.target.value as PlanningLens)}>{planningLenses.map((lens) => <option key={lens.id} value={lens.id}>{lens.label}</option>)}</select><small>Changes the management framing and recommended validation.</small></label>
-      <label><span>What happened?</span><select value={actualKey} onChange={(event) => onActualKey(event.target.value)}>{numericFields.map((field) => <option key={field} value={field}>{humanize(field)}</option>)}</select><small>The Actual or observed financial measure.</small></label>
-      <label><span>Compared with</span><select value={expectedKey} onChange={(event) => onExpectedKey(event.target.value)}><option value="">Rolling typical value</option>{numericFields.filter((field) => field !== actualKey).map((field) => <option key={field} value={field}>{humanize(field)}</option>)}</select><small>Budget, forecast, target, or historical benchmark.</small></label>
-      <label><span>Reporting period</span><select value={timeWindow} onChange={(event) => onTimeWindow(event.target.value as TimeWindow)}><option value="90d">Last 90 days</option><option value="8w">Last 8 weeks</option><option value="13w">Last 13 weeks</option><option value="15m">Last 15 months</option><option value="24m">Last 24 months</option><option value="mtd">Month to date</option><option value="qtd">Quarter to date</option><option value="ytd">Year to date</option><option value="all">All available periods</option></select><small>Controls both the trend and the driver population.</small></label>
-    </div>
-    <div className="deck-assumption-row">
-      <label>Business direction<select value={metricPolarity} onChange={(event) => onMetricPolarity(event.target.value as MetricPolarity)}><option value="higher_is_better">Higher is better</option><option value="lower_is_better">Lower is better</option></select></label>
-      <div><span>Automatic assumptions</span><strong>{metricDefinition.name} · {timeSeries?.timeField ? humanize(timeSeries.timeField) : 'No time field'} · {timeSeries?.aggregation ? humanize(timeSeries.aggregation) : humanize(metricDefinition.aggregation)} · FY month {timeSeries?.fiscalYearStartMonth ?? metricDefinition.fiscalYearStartMonth}</strong><small>{metricDefinition.missingSemantics.length ? `Still requires ${metricDefinition.missingSemantics.join(', ')}. ` : 'Metric semantics are sufficiently declared for this prototype. '}Open Advanced Analysis for the full contract and calculation evidence.</small></div>
-      <button type="button" onClick={() => goTo('answer')}>Run the analysis →</button>
+  const questionSlide = <section className="deck-page deck-goal-page" aria-labelledby="deck-question-title">
+    <div className="deck-copy"><span className="deck-kicker">02 · GOAL</span><h2 id="deck-question-title">Choose the decision, then confirm the essentials.</h2><p>Defaults are already selected. Change only what matters for the business question you need to answer.</p></div>
+    <div className="guided-goal-layout">
+      <div className="deck-choice-grid deck-question-grid">{questions.map((item) => <button
+        key={item.id}
+        type="button"
+        className={question === item.id ? 'deck-choice-card active' : 'deck-choice-card'}
+        onClick={() => { setQuestion(item.id); onTimeWindow(item.window); }}
+      ><span>{item.id.toUpperCase()}</span><strong>{item.title}</strong><small>{item.description}</small></button>)}</div>
+      <section className="guided-essential-card" aria-label="Finance essentials">
+        <div className="guided-essential-heading"><div><span>Finance essentials</span><strong>Three choices drive the first answer.</strong></div><small>{selectedQuestion.title}</small></div>
+        <div className="guided-essential-grid">
+          <label><span>Actual measure</span><select value={actualKey} onChange={(event) => onActualKey(event.target.value)}>{numericFields.map((field) => <option key={field} value={field}>{humanize(field)}</option>)}</select></label>
+          <label><span>Compare with</span><select value={expectedKey} onChange={(event) => onExpectedKey(event.target.value)}><option value="">Rolling typical value</option>{numericFields.filter((field) => field !== actualKey).map((field) => <option key={field} value={field}>{humanize(field)}</option>)}</select></label>
+          <label><span>Reporting period</span><select value={timeWindow} onChange={(event) => onTimeWindow(event.target.value as TimeWindow)}><option value="90d">Last 90 days</option><option value="8w">Last 8 weeks</option><option value="13w">Last 13 weeks</option><option value="15m">Last 15 months</option><option value="24m">Last 24 months</option><option value="mtd">Month to date</option><option value="qtd">Quarter to date</option><option value="ytd">Year to date</option><option value="all">All available periods</option></select></label>
+        </div>
+        <details className="guided-assumption-details">
+          <summary>Review the assumptions used</summary>
+          <div className="guided-assumption-grid">
+            <label><span>Finance use case</span><select value={planningLens} onChange={(event) => onPlanningLens(event.target.value as PlanningLens)}>{planningLenses.map((lens) => <option key={lens.id} value={lens.id}>{lens.label}</option>)}</select></label>
+            <label><span>Business direction</span><select value={metricPolarity} onChange={(event) => onMetricPolarity(event.target.value as MetricPolarity)}><option value="higher_is_better">Higher is better</option><option value="lower_is_better">Lower is better</option></select></label>
+            <div><span>Automatic setup</span><strong>{metricDefinition.name} · {timeSeries?.timeField ? humanize(timeSeries.timeField) : 'No time field'} · {timeSeries?.aggregation ? humanize(timeSeries.aggregation) : humanize(metricDefinition.aggregation)}</strong><small>{metricDefinition.missingSemantics.length ? `Still requires ${metricDefinition.missingSemantics.join(', ')}.` : 'Metric semantics are sufficiently declared for this prototype.'}</small></div>
+          </div>
+        </details>
+        <div className="guided-run-row"><div><span>Ready to analyze</span><strong>{humanize(actualKey)} vs {expectedKey ? humanize(expectedKey) : 'rolling baseline'} · {windowLabel(timeWindow)}</strong></div><button type="button" onClick={() => goTo('answer')}>Analyze now →</button></div>
+      </section>
     </div>
   </section>;
 
   const answerSlide = <section className="deck-page deck-answer-page" aria-labelledby="deck-answer-title">
     <div className="deck-answer-hero">
-      <div><span className="deck-kicker">04 · ANSWER</span><h2 id="deck-answer-title">{headline}</h2><p>{selectedQuestion.description}</p></div>
+      <div><span className="deck-kicker">03 · DETECT</span><h2 id="deck-answer-title">{headline}</h2><p>{selectedQuestion.description}</p></div>
       <div className={`deck-one-number ${impactDirection}`}><span>{question === 'pace' && timeSeries?.runRate ? 'Projected impact' : 'Business impact'}</span><strong>{displayedImpact >= 0 ? '+' : '-'}{compact(Math.abs(displayedImpact))}</strong><small>{impactDirection} · {windowLabel(timeWindow)}</small></div>
     </div>
     <div className="deck-answer-body">
@@ -227,50 +231,49 @@ export function GuidedExperience({
         <article><span>What happened</span><p>{whatChanged}</p></article>
         <article><span>Where it lives</span><p>{whereItLives}</p></article>
         <article><span>Is it persistent?</span><p>{trendText}</p></article>
-        <article><span>What to do next</span><p>{nextAction}</p></article>
+        <article><span>Next action</span><p>{nextAction}</p></article>
       </div>
       {timeSeries?.points.length ? <div className="deck-mini-chart"><EChart option={option} height={250} ariaLabel="Simplified actual, plan, and business impact trend" /></div> : <div className="deck-no-chart"><strong>No time series available</strong><span>The answer is based on cross-sectional variance and driver evidence.</span></div>}
     </div>
-    <div className="deck-answer-actions"><button type="button" onClick={onOpenPresentation}>Create presentation slide</button><button type="button" onClick={() => goTo('drivers')}>Review the drivers →</button><button type="button" onClick={() => goTo('ai')}>Ask the AI analyst →</button><button type="button" className="quiet-button" onClick={() => onOpenAdvanced(topDriver?.dimension)}>Open all evidence</button></div>
+    <div className="deck-answer-actions"><button type="button" onClick={() => goTo('drivers')}>Explain the drivers →</button><button type="button" className="quiet-button" onClick={onOpenPresentation}>Create slide</button><details className="deck-more-actions"><summary>More</summary><div><button type="button" onClick={() => onOpenAdvanced(topDriver?.dimension)}>Open full evidence</button><button type="button" onClick={onOpenQuality}>Review data quality · {trustScore}/100</button></div></details></div>
   </section>;
 
-  const driversSlide = <section className="deck-page" aria-labelledby="deck-drivers-title">
-    <div className="deck-copy"><span className="deck-kicker">05 · DRIVERS</span><h2 id="deck-drivers-title">The strongest places to investigate.</h2><p>Every card comes from the same time-aligned all-dimension scan. Select a card to open its detailed category evidence.</p></div>
+  const driversSlide = <section className="deck-page deck-drivers-page" aria-labelledby="deck-drivers-title">
+    <div className="deck-copy"><span className="deck-kicker">04 · EXPLAIN</span><h2 id="deck-drivers-title">Start with the strongest supported drivers.</h2><p>Each item comes from the same time-aligned scan. Open Advanced Analysis only when you need category-level evidence or hierarchy detail.</p></div>
     <div className="deck-driver-layout">
-      <div className="deck-driver-grid">{result.dimensionScores.slice(0, 6).map((driver, index) => <button type="button" key={driver.dimension} onClick={() => onOpenAdvanced(driver.dimension)}>
-        <span>#{index + 1} · score {driver.score.toFixed(0)}</span><strong>{humanize(driver.dimension)}</strong><b>{driver.topCategory?.value ?? 'No stable category'}</b><small>{driver.topCategory ? `${compact(Math.abs(driver.topCategory.businessImpact))} ${driver.topCategory.impactDirection} · ${(driver.topCategory.support * 100).toFixed(1)}% support` : 'Open advanced evidence for details'}</small>
+      <div className="deck-driver-list">{result.dimensionScores.slice(0, 6).map((driver, index) => <button type="button" key={driver.dimension} onClick={() => onOpenAdvanced(driver.dimension)}>
+        <span>{String(index + 1).padStart(2, '0')}</span><div><strong>{humanize(driver.dimension)}</strong><b>{driver.topCategory?.value ?? 'No stable category'}</b><small>{driver.topCategory ? `${compact(Math.abs(driver.topCategory.businessImpact))} ${driver.topCategory.impactDirection} · ${(driver.topCategory.support * 100).toFixed(1)}% support` : 'Open advanced evidence for details'}</small></div><em>{driver.score.toFixed(0)}</em>
       </button>)}</div>
       <aside className="deck-driver-summary">
         <span>Strongest combined pattern</span>
         <strong>{result.interactions[0] ? result.interactions[0].predicates.map((predicate) => `${humanize(predicate.dimension)} = ${predicate.value}`).join(' + ') : 'No supported interaction'}</strong>
         <p>{result.interactions[0] ? `${compact(Math.abs(result.interactions[0].businessImpact))} ${result.interactions[0].impactDirection} impact across ${(result.interactions[0].support * 100).toFixed(1)}% of the current population.` : 'The current population did not produce a stable multidimensional interaction above the support threshold.'}</p>
-        <div><button type="button" onClick={onOpenPresentation}>Create driver slide</button><button type="button" onClick={() => goTo('ai')}>Ask AI about these drivers →</button><button type="button" className="quiet-button" onClick={() => onOpenAdvanced(topDriver?.dimension)}>Open advanced evidence</button></div>
+        <div className="deck-driver-actions"><button type="button" onClick={() => onOpenAdvanced(topDriver?.dimension)}>Open driver evidence</button><button type="button" className="quiet-button" onClick={onOpenPresentation}>Create driver slide</button><button type="button" className="deck-link-button" onClick={() => goTo('ai')}>Continue to Share →</button></div>
       </aside>
     </div>
   </section>;
 
-  const aiSlide = <section className="deck-page deck-ai-page" aria-labelledby="deck-ai-title">
-    <div className="deck-copy deck-ai-copy"><span className="deck-kicker">06 · AI ANALYST</span><h2 id="deck-ai-title">Talk to the same verified finance evidence.</h2><p>The deterministic finance guide works immediately. Open the visible LLM settings to connect an OpenAI-compatible endpoint, model, and in-memory API key.</p></div>
+  const aiSlide = <section className="deck-page deck-ai-page deck-share-page" aria-labelledby="deck-ai-title">
+    <div className="deck-share-intro"><span className="deck-kicker">05 · SHARE</span><h2 id="deck-ai-title">Turn the evidence into a decision-ready update.</h2><p>Create a deterministic infographic immediately. The finance guide works without AI; a connected model is optional for wording and follow-up questions.</p><div className="deck-share-actions"><button type="button" onClick={onOpenPresentation}>Create presentation</button><button type="button" className="quiet-button" onClick={() => onOpenAdvanced(topDriver?.dimension)}>Open advanced evidence</button></div><div className="deck-share-trust"><span>Evidence trust</span><strong>{trustScore}/100</strong><small>{dataQuality.blockers ? `${dataQuality.blockers} blocker(s) require review.` : 'No blocking data-quality issue was detected.'}</small></div></div>
     <div className="deck-ai-panel">{aiPanel}</div>
   </section>;
 
   const pages: Record<GuidedSlideId, ReactNode> = {
     source: sourceSlide,
     question: questionSlide,
-    setup: setupSlide,
     answer: answerSlide,
     drivers: driversSlide,
     ai: aiSlide,
   };
 
-  return <section className="presentation-deck" aria-label="FP&A slideshow workflow">
-    <nav className="deck-progress" aria-label="Presentation pages">
+  return <section className="presentation-deck" aria-label="FP&A guided workflow">
+    <nav className="deck-progress" aria-label="Guided analysis stages">
       {guidedSlides.map((item, index) => <button key={item.id} type="button" className={slide === item.id ? 'active' : index < slideIndex ? 'complete' : ''} onClick={() => goTo(item.id)} aria-current={slide === item.id ? 'step' : undefined}><span>{String(index + 1).padStart(2, '0')}</span><strong>{item.label}</strong></button>)}
     </nav>
     <div className="deck-stage" aria-live="polite">{pages[slide]}</div>
     <footer className="deck-footer">
       <button type="button" onClick={() => goTo(previousGuidedSlide(slide))} disabled={slideIndex === 0}>← Previous</button>
-      <div><strong>{guidedSlides[slideIndex].shortLabel}</strong><span>Page {slideIndex + 1} of {guidedSlides.length} · use ← and → keys</span></div>
+      <div><strong>{guidedSlides[slideIndex].shortLabel}</strong><span>Step {slideIndex + 1} of {guidedSlides.length} · use ← and → keys</span></div>
       <button type="button" onClick={() => goTo(nextGuidedSlide(slide))} disabled={slideIndex === guidedSlides.length - 1}>Next →</button>
     </footer>
   </section>;
