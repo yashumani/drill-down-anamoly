@@ -1,0 +1,71 @@
+name: Verify simplified anomaly journey live UI v2
+
+on:
+  push:
+    branches: ["ux-journey-live-verification-v1"]
+    paths: [".ux-live-verification/RUN2"]
+
+permissions:
+  contents: write
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout verification branch
+        uses: actions/checkout@v6
+        with:
+          ref: ux-journey-live-verification-v1
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+
+      - name: Confirm target bundle is live
+        env:
+          SITE: https://yashumani.github.io/drill-down-anamoly/
+        run: |
+          set -euo pipefail
+          html="$(curl -fsSL --retry 4 --max-time 30 "$SITE")"
+          asset="$(printf '%s' "$html" | grep -oE 'assets/index-[A-Za-z0-9_-]+\.js' | head -1)"
+          curl -fsSL --retry 4 --max-time 40 "${SITE}${asset}" -o /tmp/live-app.js
+          grep -Fq 'Scope → Detect → Explain → Validate → Share' /tmp/live-app.js
+          grep -Fq '05 · SHARE' /tmp/live-app.js
+          grep -Fq 'Investigation workflow' /tmp/live-app.js
+          echo "Target UX journey is live through ${asset}."
+
+      - name: Install Playwright
+        run: |
+          npm install --no-save --package-lock=false playwright@1.55.0
+          npx playwright install --with-deps chromium
+
+      - name: Audit all journey states
+        env:
+          BASE_URL: https://yashumani.github.io/drill-down-anamoly/
+          TARGET_SHA: 551a1b45424a592f4ebffa9b006901b520fd27ca
+        run: node scripts/verify-ux-journey-live.mjs
+
+      - name: Upload visual audit evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ux-journey-live-verification-v2
+          path: ux-journey-live-verification
+          retention-days: 3
+
+      - name: Record verification and remove one-use files
+        if: success()
+        run: |
+          set -euo pipefail
+          rm -f .github/workflows/verify-ux-journey-live.yml
+          rm -f .github/workflows/verify-ux-journey-live-v2.yml
+          rm -f scripts/verify-ux-journey-live.mjs
+          rm -rf .ux-live-verification
+          git add -A
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Record live anomaly journey UX verification"
+          git push origin HEAD:ux-journey-live-verification-v1
