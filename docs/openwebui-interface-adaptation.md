@@ -2,28 +2,46 @@
 
 ## Objective
 
-The application now uses a workspace shell inspired by the interaction patterns of Open WebUI while retaining the FP&A Variance Copilot's own product identity, calculations, terminology, visualizations, and evidence contracts.
+The application uses a workspace shell inspired by Open WebUI interaction patterns while retaining the FP&A Variance Copilot's own product identity, calculations, terminology, visualizations, and evidence contracts.
 
-The redesign addresses the previous accumulation of dashboard headers, repeated navigation, oversized control rows, and presentation-specific layouts that made the product feel fragmented.
+The first shell release solved product fragmentation but still exposed too many controls at once and inherited presentation-layout rules that could crop or overlap content on common laptop displays. The current refinement separates navigation from analysis and organizes the anomaly workflow by user decision.
 
-## Adapted interaction patterns
+## Application shell
 
-- Persistent left navigation for the four primary workspaces.
-- A compact top bar showing the current dataset, metric, quality status, presentation action, upload action, and analysis mode.
-- A central content canvas for Quick Answer, Explore & Analyze, Live Public Demo, and Data Quality.
-- Clear separation between deterministic financial calculations and optional model-assisted explanation.
-- Compact neutral surfaces, soft borders, restrained shadows, and subtle accent colors.
-- Desktop sidebar collapse, tablet behavior, mobile drawer, and mobile bottom navigation.
-- One-click access to a new analysis, data upload, and Presentation Studio.
-- A persistent current-analysis summary showing dataset, metric, comparison, row count, reporting period, and dataset-session identifier.
+- Persistent desktop navigation for the four primary workspaces.
+- Compact top bar showing workspace, dataset context, data readiness, and Presentation Studio.
+- One upload entry point and one theme entry point in the sidebar instead of duplicate controls across the page.
+- Central scroll-managed canvas for active work.
+- Collapsible desktop sidebar, mobile drawer, and mobile bottom navigation.
+- Persistent current-analysis summary with dataset, metric, comparison, period, row count, and dataset-session ID.
+
+## Product journeys
+
+### Quick Answer
+
+```text
+Data → Goal → Detect → Explain → Share
+```
+
+This path keeps setup to three essential business choices and presents one management-ready answer before deeper evidence.
+
+### Advanced Analysis
+
+```text
+Scope → Detect → Explain → Validate → Share
+```
+
+Each stage exposes one coherent class of work. Single drivers, combined patterns, and hierarchy are subviews of Explain rather than separate competing sections.
+
+See `docs/anomaly-investigation-journey.md` for the complete interaction contract.
 
 ## What was deliberately not copied
 
-The implementation does not copy Open WebUI source code, branding, logos, wording, or product-specific assets. It adapts familiar application-shell patterns to the finance investigation workflow.
+The implementation does not copy Open WebUI source code, branding, logos, wording, or product-specific assets. It adapts familiar workspace-shell and progressive-disclosure patterns to a finance investigation workflow.
 
 ## Preserved finance behavior
 
-The interface redesign does not alter:
+The interface refinement does not alter:
 
 - Actual, Plan, Budget, Target, Forecast, or prior-period calculations;
 - metric polarity or aggregation rules;
@@ -37,23 +55,23 @@ The interface redesign does not alter:
 - optional local or OpenAI-compatible model boundaries;
 - Presentation Studio values or exports.
 
-## Responsive behavior
+## Laptop and responsive behavior
 
-### Desktop
+### Desktop and laptop
 
-The left navigation remains visible and can collapse to an icon rail. Presentation workspaces continue to use the available viewport height, while specialist analytical pages scroll inside the central content canvas.
+The sidebar narrows on standard laptop widths, secondary top-bar context is progressively hidden, and analytical pages use stage navigation plus contained scrolling. Short-height displays reduce chrome before reducing chart space.
 
 ### Tablet
 
-The sidebar can collapse, the top bar reduces secondary context, and analytical grids reflow without hiding evidence.
+The sidebar collapses to an icon rail, analytical grids reflow, and the investigation stage remains visible without compressing action labels into overlapping controls.
 
 ### Phone
 
-The sidebar becomes a drawer, the primary workspaces are available in a bottom navigation bar, compact upload and presentation actions remain accessible, and wide charts or tables use contained scrolling.
+The sidebar becomes a drawer, primary workspaces remain in bottom navigation, stage navigation scrolls horizontally, and actions stack into touch-safe rows.
 
-## Theme behavior
+## Design consolidation
 
-The existing curated palettes remain available. The Open WebUI-inspired neutral shell supplies the base light or dark canvas, while the selected palette supplies accent, favorable, unfavorable, and chart emphasis colors.
+The Open WebUI-inspired stylesheet is authoritative for the shell and journey layouts. Obsolete guided-workflow CSS is no longer loaded, and legacy palette/app-shell rules were removed from the presentation layer to prevent conflicting grid and viewport behavior.
 
 ## Accessibility and usability
 
@@ -61,13 +79,15 @@ The existing curated palettes remain available. The Open WebUI-inspired neutral 
 - The mobile drawer supports Escape-to-close and a dismissible backdrop.
 - Controls retain visible focus states and descriptive titles.
 - Reduced-motion preferences disable nonessential transitions.
-- Information tips and existing chart descriptions remain available.
+- Information tips and chart descriptions remain available.
+- Preview and drill are explicitly differentiated so users understand whether they are changing a view or changing the analytical population.
 
 ## Release acceptance criteria
 
-- All existing analytical regression tests pass.
-- The TypeScript and Vite production build passes.
+- All analytical and journey regression tests pass.
+- TypeScript and Vite production builds pass.
 - The production bundle remains within budget.
-- The four workspaces are reachable on desktop and mobile.
+- No horizontal document overflow appears at 1366 × 768, 1440 × 900, 1024 × 768, or 390 × 844.
+- The five Quick Answer stages and five Advanced Analysis stages are reachable without clipped controls.
 - Upload and Presentation Studio remain one action away.
-- Financial results before and after the redesign are unchanged for the same dataset and configuration.
+- Financial results before and after the UI change are identical for the same dataset and configuration.
