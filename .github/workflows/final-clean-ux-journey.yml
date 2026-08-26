@@ -1,0 +1,45 @@
+name: Final clean simplified anomaly journey
+
+on:
+  push:
+    branches: ["ux-anomaly-journey-v1"]
+    paths: [".ready/GO"]
+
+permissions:
+  contents: write
+
+jobs:
+  final-clean:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ux-anomaly-journey-v1
+          fetch-depth: 0
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - name: Validate final source and remove all temporary files
+        run: |
+          set -euo pipefail
+          test -f src/components/AnalysisJourneyNav.tsx
+          grep -q "UX JOURNEY V1" src/openwebui-adapt.css
+          grep -q "AnalysisJourneyNav" src/AppShell.tsx
+          rm -rf .ready .ux-clean .ux-journey
+          rm -f UX_JOURNEY_READY.md
+          rm -f .github/workflows/apply-ux-anomaly-journey.yml
+          rm -f .github/workflows/finalize-ux-anomaly-journey.yml
+          rm -f .github/workflows/finalize-ux-anomaly-journey-2.yml
+          rm -f .github/workflows/cleanup-ux-journey-branch.yml
+          rm .github/workflows/final-clean-ux-journey.yml
+          npm ci --no-audit --no-fund
+          npm test
+          npm run build -- --base=/drill-down-anamoly/
+          npm run check:bundle
+          git add -A
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Finalize laptop-safe anomaly investigation journey"
+          git push origin HEAD:ux-anomaly-journey-v1
