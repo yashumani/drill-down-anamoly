@@ -4,6 +4,12 @@ An evidence-first FP&A investigation workspace for Actual-versus-Plan analysis, 
 
 Live application: `https://yashumani.github.io/drill-down-anamoly/`
 
+## Interface design
+
+The application uses an Open WebUI-inspired workspace shell adapted to FP&A analysis: persistent workspace navigation, a compact dataset-and-metric top bar, a central analysis canvas, responsive mobile navigation, one-click upload, and direct access to Presentation Studio. The redesign preserves this application’s own finance terminology, calculations, visualizations, evidence contracts, and brand identity; it does not copy Open WebUI source code or branding.
+
+See `docs/openwebui-interface-adaptation.md`.
+
 ## Product workspaces
 
 ### Quick Answer
