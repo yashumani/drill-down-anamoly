@@ -1,0 +1,116 @@
+name: Apply CopilotKit FP&A integration
+
+on:
+  push:
+    branches: ["copilotkit-fpa-integration-v2"]
+    paths: [".copilotkit-setup/APPLY"]
+
+permissions:
+  contents: write
+
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout integration branch
+        uses: actions/checkout@v6
+        with:
+          ref: copilotkit-fpa-integration-v2
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Patch application and install CopilotKit
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          import json
+
+          chat = Path('src/components/ChatPanel.tsx')
+          text = chat.read_text(encoding='utf-8')
+          text = text.replace("import { useEffect, useMemo, useState } from 'react';", "import { lazy, Suspense, useEffect, useMemo, useState } from 'react';", 1)
+          marker = "import type { FinanceTimeSeriesResult } from '../lib/timeIntelligence';\n"
+          additions = "import { copilotKitConfigured } from '../lib/copilotKitConfig';\nimport { CopilotKitSetupCard } from './CopilotKitSetupCard';\n"
+          if additions not in text:
+              text = text.replace(marker, marker + additions, 1)
+          text = text.replace('export function ChatPanel({', 'function LegacyChatPanel({', 1)
+          setup_marker = "\n\n    {displayMode === 'presentation' && <div className=\"llm-visibility-callout\">"
+          if '<CopilotKitSetupCard />' not in text:
+              text = text.replace(setup_marker, "\n\n    {!copilotKitConfigured && <CopilotKitSetupCard />}" + setup_marker, 1)
+          wrapper = '''
+
+const CopilotFinanceExperience = lazy(() => import('./CopilotFinanceExperience'));
+type ChatPanelProps = Parameters<typeof LegacyChatPanel>[0];
+
+export function ChatPanel(props: ChatPanelProps) {
+  if (!copilotKitConfigured) return <LegacyChatPanel {...props} />;
+  return <Suspense fallback={<aside className={`chat-panel chat-${props.displayMode ?? 'sidebar'}`}><div className="chat-head"><div><span className="chat-kicker">COPILOTKIT FP&A AGENT</span><h2>Connecting the evidence-first runtime…</h2></div></div></aside>}>
+    <CopilotFinanceExperience {...props} />
+  </Suspense>;
+}
+'''
+          if 'type ChatPanelProps = Parameters<typeof LegacyChatPanel>[0];' not in text:
+              text = text.rstrip() + wrapper
+          chat.write_text(text, encoding='utf-8')
+
+          main = Path('src/main.tsx')
+          text = main.read_text(encoding='utf-8')
+          if "./components/CopilotKitBoundary" not in text:
+              text = text.replace("import AppShell from './AppShell';", "import AppShell from './AppShell';\nimport { CopilotKitBoundary } from './components/CopilotKitBoundary';", 1)
+          text = text.replace('    <AppShell />', '    <CopilotKitBoundary><AppShell /></CopilotKitBoundary>', 1)
+          main.write_text(text, encoding='utf-8')
+
+          gitignore = Path('.gitignore')
+          ignored = gitignore.read_text(encoding='utf-8').rstrip() + '\n'
+          for item in ['.env', '.env.*', '!.env.example', '!**/.env.example']:
+              if item not in ignored.splitlines():
+                  ignored += item + '\n'
+          gitignore.write_text(ignored, encoding='utf-8')
+
+          runtime_package = Path('services/copilotkit-runtime/package.json')
+          package = json.loads(runtime_package.read_text(encoding='utf-8'))
+          package['dependencies']['tsx'] = '4.20.5'
+          package['devDependencies'].pop('tsx', None)
+          package['devDependencies']['@types/node'] = '24.5.2'
+          runtime_package.write_text(json.dumps(package, indent=2) + '\n', encoding='utf-8')
+
+          readme = Path('README.md')
+          text = readme.read_text(encoding='utf-8')
+          anchor = '## Product workspaces\n'
+          section = '''## CopilotKit agent orchestration
+
+The optional CopilotKit integration supplies an AG-UI runtime, compact evidence context, and validated frontend actions for dimension selection, drill, back, and reset. Deterministic finance calculations remain authoritative, and raw uploaded rows are not registered as agent context.
+
+GitHub Pages hosts only the React client. Run or deploy `services/copilotkit-runtime`, then connect its HTTPS endpoint from the AI workspace. When no runtime is configured, the deterministic Finance Guide and existing local/BYO model path remain available.
+
+See `docs/copilotkit-integration.md`.
+
+'''
+          if '## CopilotKit agent orchestration' not in text:
+              text = text.replace(anchor, section + anchor, 1)
+          readme.write_text(text, encoding='utf-8')
+          PY
+
+          npm install --save-exact @copilotkit/react-core@1.69.2 zod@3.25.76 --no-audit --no-fund
+          npm install --prefix services/copilotkit-runtime --no-audit --no-fund
+          npm run typecheck --prefix services/copilotkit-runtime
+          npm test
+          npm run build -- --base=/drill-down-anamoly/
+          npm run check:bundle
+
+      - name: Commit validated integration and remove one-use workflow
+        run: |
+          set -euo pipefail
+          rm -rf .copilotkit-setup
+          rm .github/workflows/apply-copilotkit-fpa.yml
+          git add -A
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Integrate CopilotKit with deterministic FP&A evidence"
+          git push origin HEAD:copilotkit-fpa-integration-v2
