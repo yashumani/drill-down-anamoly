@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
-import type { EChartsOption, ECElementEvent } from 'echarts';
+import type { EChartsOption } from 'echarts';
+import type { ECElementEvent } from 'echarts/core';
 import { EChart } from './EChart';
 import { downloadHierarchyTemplate } from '../lib/hierarchyContract';
 import {

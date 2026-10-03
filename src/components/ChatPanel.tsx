@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
 import { demoBusinessContext, demoQuestions } from '../data/demoNews';
 import { runDeterministicAgent } from '../lib/agentOrchestrator';
 import { buildEvidenceLedger } from '../lib/evidenceLedger';
@@ -16,6 +16,8 @@ import {
   selectLocalOllamaModel,
 } from '../lib/llmPresets';
 import type { FinanceTimeSeriesResult } from '../lib/timeIntelligence';
+import { copilotKitConfigured } from '../lib/copilotKitConfig';
+import { CopilotKitSetupCard } from './CopilotKitSetupCard';
 import type { DataRow, InvestigationResult, MetricPolarity, Predicate } from '../types';
 
 interface Message { role: 'user' | 'assistant'; text: string; evidenceIds?: string[]; runId?: string; }
@@ -45,7 +47,7 @@ function persistNonSecretConfig(config: LlmConfig) {
   }
 }
 
-export function ChatPanel({
+function LegacyChatPanel({
   rows,
   dimensions,
   actualKey,
@@ -248,6 +250,8 @@ export function ChatPanel({
   return <aside className={`chat-panel chat-${displayMode}`} aria-label="Ask FP&A">
     <div className="chat-head"><div><span className="chat-kicker">AI / LLM ANALYST</span><h2>Explain performance and pacing</h2></div><button className="icon-button" type="button" onClick={() => setSettingsOpen((value) => !value)}>{connectionLabel}</button></div>
 
+    {!copilotKitConfigured && <CopilotKitSetupCard />}
+
     {displayMode === 'presentation' && <div className="llm-visibility-callout"><div><strong>Use the built-in finance guide now</strong><span>Or connect the local FP&A Ollama preset or another OpenAI-compatible endpoint.</span></div><b>{llm.enabled && connectionOk ? 'LLM READY' : llm.enabled ? 'LLM CONFIGURED' : 'DETERMINISTIC MODE'} · {evidenceLedger.items.length} evidence items</b></div>}
 
     {settingsOpen && <div className="llm-settings">
@@ -273,4 +277,14 @@ export function ChatPanel({
     <div className="chat-suggestions">{suggestions.map((suggestion) => <button key={suggestion} type="button" onClick={() => ask(suggestion)}>{suggestion}</button>)}</div>
     <div className="chat-input-row"><input value={input} onChange={(event) => setInput(event.target.value)} onKeyDown={(event) => { if (event.key === 'Enter') ask(input); }} placeholder="Ask: Are we pacing to hit the quarter?" aria-label="Ask a finance question" /><button type="button" disabled={busy} onClick={() => ask(input)}>{busy ? 'Thinking…' : 'Ask'}</button></div>
   </aside>;
+}
+
+const CopilotFinanceExperience = lazy(() => import('./CopilotFinanceExperience'));
+type ChatPanelProps = Parameters<typeof LegacyChatPanel>[0];
+
+export function ChatPanel(props: ChatPanelProps) {
+  if (!copilotKitConfigured) return <LegacyChatPanel {...props} />;
+  return <Suspense fallback={<aside className={`chat-panel chat-${props.displayMode ?? 'sidebar'}`}><div className="chat-head"><div><span className="chat-kicker">COPILOTKIT FP&amp;A AGENT</span><h2>Connecting the evidence-first runtime.</h2></div></div></aside>}>
+    <CopilotFinanceExperience {...props} />
+  </Suspense>;
 }

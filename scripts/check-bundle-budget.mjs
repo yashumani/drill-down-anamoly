@@ -1,7 +1,8 @@
 import { readdir, stat } from 'node:fs/promises';
 import { join, relative } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const root = new URL('../dist', import.meta.url).pathname;
+const root = fileURLToPath(new URL('../dist', import.meta.url));
 const limits = {
   totalJavaScript: 1_800_000,
   largestJavaScript: 1_300_000,

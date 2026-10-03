@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
-import type { EChartsOption, ECElementEvent } from 'echarts';
+import type { EChartsOption } from 'echarts';
+import type { ECElementEvent } from 'echarts/core';
 import { buildArcHierarchyLayout, buildArcLeafInsight, arcNodePathLabel } from '../lib/arcHierarchy';
 import type { ArcHierarchyNodeInput } from '../lib/arcHierarchy';
 import { EChart } from './EChart';

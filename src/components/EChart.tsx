@@ -1,7 +1,38 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import * as echarts from 'echarts';
-import type { EChartsOption, ECElementEvent } from 'echarts';
+import { BarChart, GraphChart, HeatmapChart, LineChart, ScatterChart, TreeChart } from 'echarts/charts';
+import {
+  DataZoomComponent,
+  GridComponent,
+  LegendComponent,
+  MarkLineComponent,
+  ToolboxComponent,
+  TooltipComponent,
+  VisualMapContinuousComponent,
+} from 'echarts/components';
+import { init, use } from 'echarts/core';
+import type { ECharts, ECElementEvent } from 'echarts/core';
+import { UniversalTransition } from 'echarts/features';
+import { CanvasRenderer } from 'echarts/renderers';
+import type { EChartsOption } from 'echarts';
 import { COMPACT_CHART_MAX_WIDTH, responsiveChartOption } from '../lib/responsiveChart';
+
+use([
+  BarChart,
+  GraphChart,
+  HeatmapChart,
+  LineChart,
+  ScatterChart,
+  TreeChart,
+  DataZoomComponent,
+  GridComponent,
+  LegendComponent,
+  MarkLineComponent,
+  ToolboxComponent,
+  TooltipComponent,
+  VisualMapContinuousComponent,
+  CanvasRenderer,
+  UniversalTransition,
+]);
 
 export function EChart({
   option,
@@ -15,7 +46,7 @@ export function EChart({
   ariaLabel?: string;
 }) {
   const elementRef = useRef<HTMLDivElement>(null);
-  const chartRef = useRef<echarts.ECharts | null>(null);
+  const chartRef = useRef<ECharts | null>(null);
   const [containerWidth, setContainerWidth] = useState(0);
   const compact = containerWidth > 0 && containerWidth <= COMPACT_CHART_MAX_WIDTH;
   const responsiveOption = useMemo(() => responsiveChartOption(option, containerWidth), [option, containerWidth]);
@@ -24,7 +55,7 @@ export function EChart({
   useEffect(() => {
     const element = elementRef.current;
     if (!element) return;
-    const chart = echarts.init(element, undefined, { renderer: 'canvas' });
+    const chart = init(element, undefined, { renderer: 'canvas' });
     chartRef.current = chart;
     setContainerWidth(element.clientWidth);
     const observer = new ResizeObserver((entries) => {

@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
-import type { EChartsOption, ECElementEvent } from 'echarts';
+import type { EChartsOption } from 'echarts';
+import type { ECElementEvent } from 'echarts/core';
 import type { InteractionSegment, Predicate } from '../types';
 import { EChart } from './EChart';
 import { InfoTip } from './InfoTip';
