@@ -5,7 +5,7 @@ import {
   useAgentContext,
   useCopilotKit,
   useFrontendTool,
-} from '@copilotkit/react-core/v2';
+} from '@copilotkit/react-core/v2/headless';
 import { z } from 'zod';
 import { runDeterministicAgent } from '../lib/agentOrchestrator';
 import { buildEvidenceLedger } from '../lib/evidenceLedger';
@@ -168,7 +168,8 @@ export default function CopilotFinanceExperience({
   }, [onAction]);
 
   const { agent, isReady } = useAgent({
-    agentId: copilotKitAgentId,
+    agentId: `fpa-copilot-${datasetSession.sessionId}`,
+    runtimeAgentId: copilotKitAgentId,
     threadId: `fpa-${datasetSession.sessionId}`,
     updates: [UseAgentUpdate.OnMessagesChanged, UseAgentUpdate.OnRunStatusChanged],
     throttleMs: 100,

@@ -38,6 +38,19 @@ Scope → Detect → Explain → Validate → Share
 
 See `docs/openwebui-interface-adaptation.md` and `docs/anomaly-investigation-journey.md`.
 
+## CopilotKit agent orchestration
+
+The optional CopilotKit integration supplies an AG-UI runtime, compact evidence context, and
+validated frontend actions for dimension selection, drill, back, and reset. Deterministic
+finance calculations remain authoritative, and raw uploaded rows are not registered as agent
+context.
+
+GitHub Pages hosts only the React client. Run or deploy `services/copilotkit-runtime`, then
+connect its HTTPS endpoint from the AI workspace. When no runtime is configured, the
+deterministic Finance Guide and existing local/BYO model path remain available.
+
+See [`docs/copilotkit-integration.md`](docs/copilotkit-integration.md).
+
 ## Product workspaces
 
 ### Quick Answer

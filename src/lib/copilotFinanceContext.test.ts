@@ -9,8 +9,9 @@ describe('CopilotKit finance context', () => {
       predicates: [{ dimension: 'region', value: 'West' }],
       result: {
         runId: 'run-1',
-        validRows: 10,
-        excludedRows: 1,
+        rowCount: 11,
+        validRowCount: 10,
+        excludedMeasureRows: 1,
         aggregationMethod: 'sum',
         attributionReconciles: true,
         businessImpact: -125,
@@ -47,14 +48,17 @@ describe('CopilotKit finance context', () => {
         polarity: 'higher_is_better',
       } as any,
       timeSeries: null,
-      evidenceLedger: { id: 'ledger-1', items: [{ id: 'variance:run-1' }] },
+      evidenceLedger: { ledgerId: 'ledger-1', items: [{ id: 'variance:run-1' }] },
       externalContext: 'A product launch occurred.',
     });
 
     const serialized = JSON.stringify(context);
     expect(context.dataset.sessionId).toBe('dataset-1');
     expect(context.scope.calculationRunId).toBe('run-1');
+    expect(context.scope.validRows).toBe(10);
+    expect(context.scope.excludedRows).toBe(1);
     expect(context.drivers[0].dimension).toBe('product');
+    expect(context.evidence.ledgerId).toBe('ledger-1');
     expect(context.evidence.evidenceIds).toEqual(['variance:run-1']);
     expect(serialized).not.toContain('private@example.com');
     expect(serialized).not.toContain('customer_email');

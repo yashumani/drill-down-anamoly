@@ -1,6 +1,7 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import AppShell from './AppShell';
+import { CopilotKitBoundary } from './components/CopilotKitBoundary';
 import './styles.css';
 import './ux.css';
 import './demo.css';
@@ -18,6 +19,6 @@ import './mobile-usability-fix.css';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <AppShell />
+    <CopilotKitBoundary><AppShell /></CopilotKitBoundary>
   </StrictMode>,
 );
