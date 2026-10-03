@@ -1,16 +1,10 @@
 import 'dotenv/config';
 import express from 'express';
-import { z } from 'zod';
 import { BuiltInAgent, CopilotRuntime } from '@copilotkit/runtime/v2';
 import { createCopilotExpressHandler } from '@copilotkit/runtime/v2/express';
+import { parseRuntimeEnvironment } from './environment.js';
 
-const environment = z.object({
-  PORT: z.coerce.number().int().positive().default(4000),
-  COPILOTKIT_MODEL: z.string().min(1).default('openai/gpt-4.1-mini'),
-  COPILOTKIT_ALLOWED_ORIGINS: z.string().default('http://localhost:5173,https://yashumani.github.io'),
-  OPENAI_API_KEY: z.string().optional(),
-  OPENAI_BASE_URL: z.string().url().optional(),
-}).parse(process.env);
+const environment = parseRuntimeEnvironment(process.env);
 
 const prompt = `You are the FP&A Variance Copilot.
 
@@ -63,6 +57,6 @@ app.use('/api/copilotkit', createCopilotExpressHandler({
   mode: 'single-route',
 }));
 
-app.listen(environment.PORT, () => {
-  console.log(`FP&A CopilotKit runtime listening on http://127.0.0.1:${environment.PORT}/api/copilotkit`);
+app.listen(environment.PORT, environment.HOST, () => {
+  console.log(`FP&A CopilotKit runtime listening on http://${environment.HOST}:${environment.PORT}/api/copilotkit`);
 });

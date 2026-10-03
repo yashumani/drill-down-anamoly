@@ -44,8 +44,14 @@ export function buildCopilotFinanceContext(input: CopilotFinanceContextInput) {
   const currentPeriod = (timeSeries?.currentPeriod ?? {}) as Record<string, unknown>;
   const ytd = (timeSeries?.ytd ?? {}) as Record<string, unknown>;
   const modelHealth = (timeSeries?.modelHealth ?? {}) as Record<string, unknown>;
+  const sensitiveDimensions = new Set((input.dataQuality.sensitiveColumns ?? []).map((dimension) => dimension.toLowerCase()));
+  const isSensitiveDimension = (dimension: string) => sensitiveDimensions.has(dimension.toLowerCase());
+  const evidenceIdExposesSensitiveDimension = (id: string) => {
+    const delimitedId = `:${id.toLowerCase()}:`;
+    return [...sensitiveDimensions].some((dimension) => delimitedId.includes(`:${dimension}:`));
+  };
 
-  const dimensions = input.result.dimensionScores.slice(0, 12).map((score) => {
+  const dimensions = input.result.dimensionScores.filter((score) => !isSensitiveDimension(score.dimension)).slice(0, 12).map((score) => {
     const scoreRecord = score as unknown as Record<string, unknown>;
     const topCategory = score.topCategory ? compactCategory(score.topCategory) : null;
     return {
@@ -56,7 +62,9 @@ export function buildCopilotFinanceContext(input: CopilotFinanceContextInput) {
     };
   });
 
-  const interactions = input.result.interactions.slice(0, 6).map((interaction) => ({
+  const interactions = input.result.interactions.filter((interaction) => (
+    interaction.predicates.every((predicate) => !isSensitiveDimension(predicate.dimension))
+  )).slice(0, 6).map((interaction) => ({
     predicates: interaction.predicates.map((predicate) => ({ dimension: predicate.dimension, value: String(predicate.value) })),
     businessImpact: finite(interaction.businessImpact),
     count: finite(interaction.count),
@@ -83,7 +91,7 @@ export function buildCopilotFinanceContext(input: CopilotFinanceContextInput) {
       comparisonField: input.expectedKey ?? null,
     },
     scope: {
-      predicates: input.predicates.map((predicate) => ({ dimension: predicate.dimension, value: String(predicate.value) })),
+      predicates: input.predicates.filter((predicate) => !isSensitiveDimension(predicate.dimension)).map((predicate) => ({ dimension: predicate.dimension, value: String(predicate.value) })),
       validRows: finite(result.validRowCount),
       excludedRows: finite(result.excludedMeasureRows),
       calculationRunId: text(result.runId),
@@ -136,7 +144,7 @@ export function buildCopilotFinanceContext(input: CopilotFinanceContextInput) {
     externalHypotheses: input.externalContext?.trim() ? input.externalContext.trim().slice(0, 2500) : null,
     evidence: {
       ledgerId: input.evidenceLedger.ledgerId,
-      evidenceIds: input.evidenceLedger.items.slice(0, 40).map((item) => item.id),
+      evidenceIds: input.evidenceLedger.items.filter((item) => !evidenceIdExposesSensitiveDimension(item.id)).slice(0, 40).map((item) => item.id),
     },
     limitations: Array.isArray(result.warnings) ? result.warnings.slice(0, 12) : [],
   };

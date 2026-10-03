@@ -52,6 +52,8 @@ The repository includes `services/copilotkit-runtime`, a standalone Express runt
 
 The current self-hosted runner stores thread state in memory. Restarts clear history.
 
+The runtime binds to `HOST=127.0.0.1` by default. Set `HOST` explicitly for a deployment that must accept traffic outside its own network namespace. The included Docker image uses `HOST=0.0.0.0`, so expose it only through an authenticated HTTPS ingress; changing the bind address does not add authentication.
+
 ### Managed CopilotKit Intelligence
 
 Managed Intelligence can be evaluated later when authenticated user identity, durable threads, and organizational approval are available. It should not be enabled with one shared demo user ID because that would mix thread ownership across visitors.

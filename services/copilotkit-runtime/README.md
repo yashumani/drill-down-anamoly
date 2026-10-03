@@ -17,6 +17,8 @@ The default endpoint is:
 http://127.0.0.1:4000/api/copilotkit
 ```
 
+The service defaults `HOST` to `127.0.0.1`, so local development is reachable only from the same machine. Set `HOST` explicitly when another network namespace must reach the runtime. The included Docker image deliberately sets `HOST=0.0.0.0`; publish it only behind the authentication and HTTPS controls described below.
+
 In the application, open the AI workspace, expand **Use CopilotKit agent orchestration**, paste the endpoint, and select **Connect and reload**.
 
 ## Hosted model
@@ -41,6 +43,7 @@ Inside a container, use a hostname that reaches the host or private model networ
 
 ## Security boundary
 
+- Keep the loopback `HOST=127.0.0.1` default for local use. Bind to `0.0.0.0` only when the deployment network and ingress controls are configured deliberately.
 - Restrict `COPILOTKIT_ALLOWED_ORIGINS` to approved application origins.
 - Keep provider keys in the runtime environment, never in the React bundle.
 - Put the service behind HTTPS and authentication before using confidential finance data.
