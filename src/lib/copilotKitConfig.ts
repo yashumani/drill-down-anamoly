@@ -22,29 +22,16 @@ export function normalizeCopilotKitRuntimeUrl(value: string) {
   const trimmed = value.trim();
   if (!trimmed) return '';
   const parsed = new URL(trimmed);
-  const localHost = ['localhost', '127.0.0.1', '[::1]'].includes(parsed.hostname);
+  const localHost = ['localhost', '127.0.0.1'].includes(parsed.hostname);
   if (parsed.protocol !== 'https:' && !(parsed.protocol === 'http:' && localHost)) {
     throw new Error('Use HTTPS for remote CopilotKit runtimes. HTTP is allowed only for localhost development.');
   }
   return parsed.toString().replace(/\/$/, '');
 }
 
-function runtimeFromQuery() {
-  if (typeof window === 'undefined') return '';
-  const value = new URLSearchParams(window.location.search).get('copilotRuntime') ?? '';
-  if (!value) return '';
-  try {
-    const normalized = normalizeCopilotKitRuntimeUrl(value);
-    safeStorageSet(RUNTIME_STORAGE_KEY, normalized);
-    return normalized;
-  } catch {
-    return '';
-  }
-}
-
 const configuredRuntime = typeof window === 'undefined'
   ? ''
-  : runtimeFromQuery() || safeStorageGet(RUNTIME_STORAGE_KEY) || String(import.meta.env.VITE_COPILOTKIT_RUNTIME_URL ?? '').trim();
+  : safeStorageGet(RUNTIME_STORAGE_KEY) || String(import.meta.env.VITE_COPILOTKIT_RUNTIME_URL ?? '').trim();
 
 export const copilotKitRuntimeUrl = (() => {
   try {

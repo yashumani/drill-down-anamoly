@@ -17,10 +17,17 @@ import type { FinanceTimeSeriesResult } from '../lib/timeIntelligence';
 import type { DataRow, InvestigationResult, MetricPolarity, Predicate } from '../types';
 import { buildCopilotFinanceContext } from '../lib/copilotFinanceContext';
 import {
+  describeCopilotAvailability,
+  shouldUseDeterministicFallback,
+} from '../lib/copilotLifecycle';
+import type { CopilotRunOutcome } from '../lib/copilotLifecycle';
+import {
   copilotKitAgentId,
   copilotKitRuntimeUrl,
   disconnectCopilotKitRuntime,
 } from '../lib/copilotKitConfig';
+import { CopilotKitRecoveryNotice } from './CopilotFeatureErrorBoundary';
+import { useCopilotRuntimeState } from './CopilotRuntimeState';
 
 interface CopilotFinanceExperienceProps {
   rows: DataRow[];
@@ -175,6 +182,13 @@ export default function CopilotFinanceExperience({
     throttleMs: 100,
   });
   const { copilotkit } = useCopilotKit();
+  const { runtimeStatus, runtimeError } = useCopilotRuntimeState();
+  const availability = describeCopilotAvailability(
+    runtimeStatus,
+    isReady,
+    agent.isRunning,
+    Object.hasOwn(copilotkit.agents, copilotKitAgentId),
+  );
 
   const visibleMessages = agent.messages.map((message, index) => ({
     id: String((message as { id?: unknown }).id ?? index),
@@ -202,20 +216,46 @@ export default function CopilotFinanceExperience({
       timeField: timeSeries?.timeField,
     }, evidenceLedger);
     setSuggestions(deterministic.suggestedQuestions);
-    if (!isReady) {
-      setLocalNote(`${deterministic.answer}\n\nCopilotKit runtime is still connecting, so the deterministic finance guide answered this turn.`);
+    if (!availability.canRun) {
+      setLocalNote(`${deterministic.answer}\n\nCopilotKit is not ready (${availability.label}), so the deterministic finance guide answered this turn.`);
       return;
     }
+    const runId = crypto.randomUUID();
+    let runOutcome: CopilotRunOutcome = 'unknown';
+    let runFailureMessage = '';
+    const runSubscription = agent.subscribe({
+      onRunFailed: ({ error, input: runInput }) => {
+        if (runInput.runId !== runId) return;
+        runOutcome = 'failure';
+        runFailureMessage = error.message;
+      },
+      onRunErrorEvent: ({ event, input: runInput }) => {
+        if (runInput.runId !== runId) return;
+        runOutcome = 'failure';
+        runFailureMessage = event.message;
+      },
+      onRunFinishedEvent: ({ input: runInput, outcome }) => {
+        if (runInput.runId !== runId || runOutcome === 'failure') return;
+        runOutcome = outcome;
+      },
+    });
     try {
       agent.addMessage({ id: crypto.randomUUID(), role: 'user', content: question });
-      await copilotkit.runAgent({ agent });
+      await copilotkit.runAgent({ agent, runId });
+      if (shouldUseDeterministicFallback(runOutcome)) {
+        const failureDetail = runFailureMessage ? ` (${runFailureMessage})` : '';
+        setLocalNote(`${deterministic.answer}\n\nCopilotKit did not complete this turn${failureDetail}, so the deterministic finance guide answered instead.`);
+      }
     } catch (error) {
       setLocalNote(`${deterministic.answer}\n\nCopilotKit connection note: ${error instanceof Error ? error.message : String(error)}`);
+    } finally {
+      runSubscription.unsubscribe();
     }
   }
 
   return <aside className={`chat-panel chat-${displayMode} copilotkit-finance-agent`} aria-label="CopilotKit FP&A agent">
-    <div className="chat-head"><div><span className="chat-kicker">COPILOTKIT FP&amp;A AGENT</span><h2>Explain, navigate, and drill through verified evidence</h2></div><div className="llm-settings-actions"><span className="chat-status">{isReady ? agent.isRunning ? 'Running tools…' : 'Runtime ready' : 'Connecting…'}</span><button className="icon-button" type="button" onClick={disconnectCopilotKitRuntime}>Disconnect</button></div></div>
+    <div className="chat-head"><div><span className="chat-kicker">COPILOTKIT FP&amp;A AGENT</span><h2>Explain, navigate, and drill through verified evidence</h2></div><div className="llm-settings-actions"><span className="chat-status">{availability.label}</span><button className="icon-button" type="button" onClick={disconnectCopilotKitRuntime}>Disconnect</button></div></div>
+    {runtimeStatus === 'error' && <CopilotKitRecoveryNotice compact detail={runtimeError} />}
     <div className="llm-visibility-callout"><div><strong>Deterministic finance remains authoritative</strong><span>CopilotKit receives compact evidence and can invoke only validated UI actions. It never receives raw uploaded rows from this bridge.</span></div><b>{evidenceLedger.items.length} evidence items · run {result.runId}</b></div>
 
     <details className="context-box">

@@ -17,6 +17,11 @@ import {
 } from '../lib/llmPresets';
 import type { FinanceTimeSeriesResult } from '../lib/timeIntelligence';
 import { copilotKitConfigured } from '../lib/copilotKitConfig';
+import {
+  CopilotFeatureErrorBoundary,
+  CopilotKitRecoveryNotice,
+} from './CopilotFeatureErrorBoundary';
+import { useCopilotRuntimeState } from './CopilotRuntimeState';
 import { CopilotKitSetupCard } from './CopilotKitSetupCard';
 import type { DataRow, InvestigationResult, MetricPolarity, Predicate } from '../types';
 
@@ -65,6 +70,7 @@ function LegacyChatPanel({
   onAction,
   defaultSettingsOpen = false,
   displayMode = 'sidebar',
+  copilotRecoveryNotice = false,
 }: {
   rows: DataRow[];
   dimensions: string[];
@@ -83,6 +89,7 @@ function LegacyChatPanel({
   onAction: (action: ChatAction) => void;
   defaultSettingsOpen?: boolean;
   displayMode?: 'sidebar' | 'presentation';
+  copilotRecoveryNotice?: boolean;
 }) {
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState<Message[]>([{ role: 'assistant', text: 'Ask about MTD, QTD, YTD, pacing, material variance, business drivers, or external why-factor hypotheses.' }]);
@@ -250,6 +257,7 @@ function LegacyChatPanel({
   return <aside className={`chat-panel chat-${displayMode}`} aria-label="Ask FP&A">
     <div className="chat-head"><div><span className="chat-kicker">AI / LLM ANALYST</span><h2>Explain performance and pacing</h2></div><button className="icon-button" type="button" onClick={() => setSettingsOpen((value) => !value)}>{connectionLabel}</button></div>
 
+    {copilotRecoveryNotice && <CopilotKitRecoveryNotice compact />}
     {!copilotKitConfigured && <CopilotKitSetupCard />}
 
     {displayMode === 'presentation' && <div className="llm-visibility-callout"><div><strong>Use the built-in finance guide now</strong><span>Or connect the local FP&A Ollama preset or another OpenAI-compatible endpoint.</span></div><b>{llm.enabled && connectionOk ? 'LLM READY' : llm.enabled ? 'LLM CONFIGURED' : 'DETERMINISTIC MODE'} · {evidenceLedger.items.length} evidence items</b></div>}
@@ -280,11 +288,14 @@ function LegacyChatPanel({
 }
 
 const CopilotFinanceExperience = lazy(() => import('./CopilotFinanceExperience'));
-type ChatPanelProps = Parameters<typeof LegacyChatPanel>[0];
+type ChatPanelProps = Omit<Parameters<typeof LegacyChatPanel>[0], 'copilotRecoveryNotice'>;
 
 export function ChatPanel(props: ChatPanelProps) {
-  if (!copilotKitConfigured) return <LegacyChatPanel {...props} />;
-  return <Suspense fallback={<aside className={`chat-panel chat-${props.displayMode ?? 'sidebar'}`}><div className="chat-head"><div><span className="chat-kicker">COPILOTKIT FP&amp;A AGENT</span><h2>Connecting the evidence-first runtime.</h2></div></div></aside>}>
-    <CopilotFinanceExperience {...props} />
-  </Suspense>;
+  const { providerAvailable } = useCopilotRuntimeState();
+  if (!copilotKitConfigured || !providerAvailable) return <LegacyChatPanel {...props} />;
+  return <CopilotFeatureErrorBoundary fallback={<LegacyChatPanel {...props} copilotRecoveryNotice />}>
+    <Suspense fallback={<aside className={`chat-panel chat-${props.displayMode ?? 'sidebar'}`}><div className="chat-head"><div><span className="chat-kicker">COPILOTKIT FP&amp;A AGENT</span><h2>Connecting the evidence-first runtime.</h2></div></div></aside>}>
+      <CopilotFinanceExperience {...props} />
+    </Suspense>
+  </CopilotFeatureErrorBoundary>;
 }
