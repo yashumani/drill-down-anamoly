@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import { createSampleData } from './data/sampleData';
-import { createQualityDemoData } from './data/qualityDemo';
+import { createQualityDemoData, QUALITY_DEMO_SOURCE_LABEL } from './data/qualityDemo';
 import { investigate } from './lib/anomaly';
 import { analyzeDataQuality } from './lib/dataQuality';
 import { inferDatasetDefaults } from './lib/datasetDefaults';
@@ -238,7 +238,7 @@ export default function AppShell() {
   }
 
   function loadQualityDemo() {
-    applyDataset(createQualityDemoData(), 'actual', 'target', { source: { kind: 'embedded', name: 'Data quality demonstration' } });
+    applyDataset(createQualityDemoData(), 'actual', 'target', { source: { kind: 'embedded', name: QUALITY_DEMO_SOURCE_LABEL } });
     setAdvancedStage('scope');
     setExplainView('drivers');
     setWorkspace('quality');
@@ -399,7 +399,7 @@ export default function AppShell() {
     {workspace === 'quality' && <section className="controls top-controls" aria-label="Data quality controls">
       <div className="filter-scope"><span>Dataset</span><strong>{qualityReport.rowCount.toLocaleString()} rows · {qualityReport.columnCount.toLocaleString()} columns · {qualityReport.status}</strong></div>
       <button className="quiet-button" onClick={loadCleanDemo}>Reset clean demo</button>
-      <button className="quiet-button" onClick={loadQualityDemo}>Load quality demo</button>
+      <button className="quiet-button" onClick={loadQualityDemo}>Load masked quality demo</button>
     </section>}
 
     {workspace === 'guided' ? <GuidedExperience

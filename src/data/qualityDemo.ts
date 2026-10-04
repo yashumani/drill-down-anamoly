@@ -1,10 +1,14 @@
 import type { DataRow } from '../types';
 import { createSampleData } from './sampleData';
 
+export const QUALITY_DEMO_SOURCE_LABEL = 'Masked data quality demonstration';
+export const QUALITY_DEMO_ACTION_LABEL = 'Masked quality-issue demo';
+
 /**
- * Creates an intentionally imperfect dataset for demonstrating the Data Quality Explorer.
- * The issues are deterministic and clearly synthetic: missing values, mixed types,
- * whitespace/case variants, invalid dates, outliers, ragged rows, duplicates, and PII-like fields.
+ * Creates an intentionally imperfect, deterministic, synthetic, and masked dataset for
+ * demonstrating the Data Quality Explorer. It includes missing values, mixed types,
+ * whitespace/case variants, invalid dates, outliers, ragged rows, duplicates, and a
+ * sensitive-looking field whose populated values are all an explicit mask token.
  */
 export function createQualityDemoData(rows = 900): DataRow[] {
   const base = createSampleData(rows).map((row, index) => {
@@ -12,7 +16,7 @@ export function createQualityDemoData(rows = 900): DataRow[] {
       ...row,
       sourceSystem: 'CRM-DEMO',
       regionCopy: row.region,
-      customerEmail: index % 19 === 0 ? `demo.customer.${index}@example.com` : null,
+      customerEmail: index % 19 === 0 ? '[MASKED_EMAIL]' : null,
       optionalNote: null,
     };
 
