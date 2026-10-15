@@ -1738,6 +1738,35 @@
           }
         }
       }
+    },
+    "reference_types": {
+      "type": "object",
+      "maxProperties": 32,
+      "propertyNames": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 128
+      },
+      "additionalProperties": {
+        "type": "object",
+        "minProperties": 1,
+        "maxProperties": 256,
+        "propertyNames": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "additionalProperties": {
+          "enum": [
+            "string",
+            "integer",
+            "decimal",
+            "boolean",
+            "date",
+            "datetime"
+          ]
+        }
+      }
     }
   },
   "required": [

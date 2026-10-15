@@ -65,3 +65,13 @@ Both clean Windows Python 3.9.21 and 3.12.14 wheel runs report `Ran 65 tests` / 
 - Source SHA-256: `7836f6646ed76b82fda7b69695ce33263015ae78dd7c7612a6bb35f634cd0b8b`
 
 The optional Studio follows the original 58-test core milestone. Its seven additional HTTP tests pass on both local runtimes. Browser/visual/download completion remains unverified due to the missing-platform-directory computer-use error.
+
+## Reviewed corrections after 71d4ef49
+
+Source review found two real defects, independently reproduced before fixes. Real CLI processes showed valid quarter variance incorrectly unavailable because reference calendar `complete` remained a string and a separate baseline measure remained untyped. A JavaScript test with delayed validation showed export downloading edited text that had never been validated.
+
+The fixes share explicit approval-bound reference schemas between CLI/Studio, enforce native types required by registered operations, and capture one immutable export snapshot for validation/download. Invalid/incomplete calendar or baseline data still produces not_evaluated. Tests now cover the actual installed CLI variance path, separate baseline measure, exact 6000/6600/-600 quarter arithmetic, explicit schema validation/approval changes, shared Studio typing and editing during delayed export validation.
+
+Local targeted/full verification at this stage: 74 Python methods pass and 75 JavaScript tests pass. Clean wheel and current push CI must be repeated after the final commit.
+
+CI identity correction: run38659452365 was the exact-head **push** run for the alpha. Run38659457325 tested the **PR merge commit**. Those are different evidence scopes. Subsequent release checks record event, checked-out SHA and expected GITHUB_SHA, and separately inspect push-triggered runs for the exact source commit.

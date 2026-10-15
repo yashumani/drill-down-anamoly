@@ -6,7 +6,7 @@ import json
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 import tempfile
-from .adapters import read_csv
+from .adapters import read_csv, reference_csv_types
 from .contracts import ConfigError, load_bundle, bundle_digest
 from .engine import evaluate
 from .profiling import profile
@@ -64,10 +64,7 @@ def process(payload):
         if type(name) is not str or not name or len(name)>128 or type(text) is not str:raise ConfigError('invalid_studio_reference')
         try:header=next(csv.reader(io.StringIO(text)),[])
         except csv.Error:raise ConfigError('invalid_csv') from None
-        ref_types={f:t for f,t in types.items() if f in header}
-        for rule in config['rules']:
-            if rule['operator']=='reconcile' and rule['params']['reference']==name:
-                ref_types[rule['params']['control_measure']]='decimal'
+        ref_types=reference_csv_types(config,name,header,types)
         references[name]=parse_csv(text,ref_types)
     return {'report':evaluate(rows,config,references=references,evaluation_time=payload.get('evaluation_time') or None,mode='preview')}
 

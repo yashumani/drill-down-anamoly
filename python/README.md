@@ -85,3 +85,18 @@ reporting-assurance studio --port 0
 Open the printed loopback URL. The Studio profiles counts, proposes editable nonblocking draft rules, previews through the same Python executor, and exports the exact validated JSON in the editor. It never approves a bundle or executes a production gate. Its server binds only 127.0.0.1, rejects foreign Host/Origin requests, uses no remote assets/models, and retains no saved table between requests. Temporary CSV adapter files are removed. The Studio caps CSV at 1 MiB and requests at 2 MiB; use the API/CLI for larger documented inputs. Core import and evaluation do not start or require the server.
 
 Seven HTTP integration tests cover the profile → draft → preview → export-validation flow, API parity, exact bundle digest, declared date types, malformed requests and cross-origin rejection. Actual browser rendering, keyboard/mobile behavior and browser download completion remain unverified: this executor's computer-use runtime exits with a missing Windows platform-directory error. KNIME remains unverified; the known KNIME folder contains only a quickstart PDF, not a runnable installation.
+
+## Reference CSV types
+
+Reference schemas are independent of the primary table. Optional `reference_types` in the v1 bundle declares column types by reference name:
+
+```json
+"reference_types": {
+  "plan": {"budget": "decimal", "period": "string"},
+  "calendar": {"complete": "boolean", "period_state": "string", "period": "string"}
+}
+```
+
+These declarations are included in the approved bundle digest. Editing them invalidates approval. Registered operations also require their native reference types: reconciliation control measures and variance baseline measures are decimals; calendar `complete` is boolean and `period_state` is string. Conflicting declarations are rejected. This is conversion prescribed by the contract's typed roles, not inference from observed data. Only literal CSV `true`/`false` convert to booleans; invalid or missing calendar/baseline values remain unavailable evidence. CLI and Studio share this adapter. In-memory API callers still supply native typed scalars.
+
+Studio export captures one immutable editor snapshot before validation. The same text is sent for validation and downloaded after the response, even if editing continues. A changed editor is explicitly called out; the downloaded snapshot is never replaced with later unvalidated text. A delayed-response JavaScript unit test covers this race. It does not substitute for actual browser/visual verification.

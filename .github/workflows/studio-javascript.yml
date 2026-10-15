@@ -1,0 +1,26 @@
+name: Studio JavaScript regression
+
+on:
+  push:
+    branches: ["codex/multi-tier-reporting-assurance"]
+  pull_request:
+    branches: ["main"]
+
+permissions:
+  contents: read
+
+jobs:
+  studio-javascript:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+      - name: Record source identity
+        run: python scripts/record_ci_identity.py
+      - name: Install locked test tools
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Test delayed Studio export snapshot
+        run: npm test -- scripts/studio-export.test.mjs
