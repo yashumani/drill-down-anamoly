@@ -1,4 +1,5 @@
 /** Mock fetch tests of transport/precision/privacy; not browser verification. */
+import { readFileSync } from 'node:fs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { isLocalBrowserOrigin, localPythonApiUrl, requestPythonPreview, readLocalUtf8File } from './pythonAssuranceClient';
 
@@ -15,6 +16,15 @@ beforeEach(() => vi.stubGlobal('location', { origin: 'http://localhost:5173' }))
 afterEach(() => vi.unstubAllGlobals());
 
 describe('explicit local Python preview transport', () => {
+  it('keeps CSP aligned with only the fixed Python API path and preserves existing sources', () => {
+    const html = readFileSync(new URL('../../index.html', import.meta.url), 'utf8');
+    const policy = html.match(/http-equiv="Content-Security-Policy" content="([^"]+)"/)?.[1];
+    const connect = policy?.split(';').map(item => item.trim()).find(item => item.startsWith('connect-src '));
+    expect(connect?.split(/\s+/).slice(1)).toEqual(["'self'", 'https:',
+      'http://127.0.0.1:11434', 'http://localhost:11434', 'http://127.0.0.1:8765/api']);
+    expect(localPythonApiUrl('http://127.0.0.1:8765')).toBe('http://127.0.0.1:8765/api');
+  });
+
   it('decodes original UTF-8 strictly without changing identifiers, precision or line endings', async () => {
     const text = 'id,amount\r\n001,9007199254740993.00010\r\n';
     const content = new TextEncoder().encode(text);
@@ -44,7 +54,8 @@ describe('explicit local Python preview transport', () => {
 
   it.each(['https://remote.invalid', 'http://localhost:8765', 'http://127.0.0.1:8765/other',
     'http://user@127.0.0.1:8765', 'http://127.0.0.1:8765?data=1', 'http://127.0.0.1:8765#part',
-    'http://127.0.0.1.evil:8765', 'http://2130706433:8765', 'http://127.0.0.1:0'])('rejects an unsafe endpoint %s', endpoint => {
+    'http://127.0.0.1.evil:8765', 'http://2130706433:8765', 'http://127.0.0.1:0',
+    'http://127.0.0.1:8766', 'http://127.0.0.1:11434'])('rejects an unsafe endpoint %s', endpoint => {
     expect(() => localPythonApiUrl(endpoint)).toThrow('invalid_local_python_endpoint');
   });
 

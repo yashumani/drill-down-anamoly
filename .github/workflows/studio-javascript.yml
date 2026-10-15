@@ -30,3 +30,32 @@ jobs:
         run: npm run build
       - name: Enforce existing bundle budgets
         run: npm run check:bundle
+
+  browser-assurance:
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: Record checked-out browser source identity
+        run: python scripts/record_ci_identity.py
+      - name: Install development-only browser tools
+        run: |
+          npm ci --ignore-scripts --no-audit --no-fund
+          python -m pip install playwright==1.58.0
+          python -m playwright install chromium
+      - name: Build existing app without configured live provider
+        run: npm run build
+      - name: Verify native browser CSP CORS and stale evidence
+        run: python scripts/verify_browser_assurance.py --evidence-dir "${{ runner.temp }}/browser-assurance"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: reporting-assurance-browser-windows
+          path: ${{ runner.temp }}/browser-assurance/*

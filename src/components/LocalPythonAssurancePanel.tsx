@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { isLocalBrowserOrigin, localPythonApiUrl, readLocalUtf8File, requestPythonPreview } from '../lib/pythonAssuranceClient';
+import { LOCAL_PYTHON_ORIGIN, isLocalBrowserOrigin, localPythonApiUrl, readLocalUtf8File, requestPythonPreview } from '../lib/pythonAssuranceClient';
 import type { PythonPreviewReport } from '../lib/pythonAssuranceClient';
 
 type FileKind = 'csv' | 'rules' | 'controls';
@@ -7,7 +7,7 @@ const labels: Record<FileKind, string> = { csv: 'Original UTF-8 CSV', rules: 'Ex
 
 /** An explicit original-file preview, independent of the existing exploration profile. */
 export function LocalPythonAssurancePanel() {
-  const [endpoint, setEndpoint] = useState('http://127.0.0.1:8765');
+  const endpoint = LOCAL_PYTHON_ORIGIN;
   const [evaluationTime, setEvaluationTime] = useState('');
   const [referenceName, setReferenceName] = useState('controls');
   const [files, setFiles] = useState<Record<FileKind, string>>({ csv: '', rules: '', controls: '' });
@@ -75,7 +75,8 @@ export function LocalPythonAssurancePanel() {
     <pre><code>{`reporting-assurance studio --port 8765 --allow-origin ${origin || 'http://localhost:5173'}`}</code></pre>
     {!origin && <p role="status">Open this app locally over HTTP on localhost or 127.0.0.1 to enable the connection.</p>}
     <label htmlFor="python-assurance-endpoint">Local Python endpoint</label>
-    <input id="python-assurance-endpoint" value={endpoint} onChange={event => { invalidate(); setEndpoint(event.target.value); }} />
+    <input id="python-assurance-endpoint" value={endpoint} readOnly aria-describedby="python-assurance-endpoint-help" />
+    <p id="python-assurance-endpoint-help">This app permits only http://127.0.0.1:8765/api. Use port 8765 for this preview; other ports remain available through standalone Studio or the Python API/CLI.</p>
     {(['csv', 'rules', 'controls'] as FileKind[]).map(kind => <div key={kind}>
       <label htmlFor={`python-assurance-${kind}`}>{labels[kind]} (1 MiB limit)</label>
       <input id={`python-assurance-${kind}`} type="file" disabled={busy} accept={kind === 'rules' ? '.json,application/json' : '.csv,text/csv'} onChange={event => void openFile(kind, event.target.files?.[0])} />

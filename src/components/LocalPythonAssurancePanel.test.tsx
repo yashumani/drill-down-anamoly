@@ -22,5 +22,7 @@ describe('optional local Python panel structure', () => {
     expect(html).toContain('reporting-assurance studio --port 8765 --allow-origin http://localhost:5173');
     expect(html).not.toContain('Open this app locally over HTTP');
     expect(html).toContain('Control reference name');
+    expect(html).toMatch(/readonly=/i);
+    expect(html).toContain('only http://127.0.0.1:8765/api');
   });
 });
