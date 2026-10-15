@@ -23,8 +23,15 @@ def main(argv=None):
     parser.add_argument("--diagnostic-limit", type=int, default=0)
     parser.add_argument("--digest-only", action="store_true")
     parser.add_argument("--include-analysis", action="store_true", help="Run the bounded Tier 2 specification embedded in the rule bundle")
+    parser.add_argument("--explain", action="store_true", help="Add local controlled interpretation; never calls a model")
+    parser.add_argument("--include-numeric-evidence", action="store_true", help="Explicitly include aggregate Tier 2 values in the interpretation packet")
+    parser.add_argument("--interpretation-plan", metavar="LOCAL_JSON", help="Replay a bounded offline evidence selection; never loads executable adapters")
     args = parser.parse_args(argv)
     try:
+        if (args.interpretation_plan or args.include_numeric_evidence) and not args.explain:
+            raise ConfigError("explain_required")
+        if args.digest_only and args.explain:
+            raise ConfigError("incompatible_cli_options")
         path = Path(args.rules)
         if path.stat().st_size > MAX_CONFIG_BYTES: raise ConfigError("config_resource_limit")
         config = load_bundle(path.read_text(encoding="utf-8"))
@@ -49,14 +56,34 @@ def main(argv=None):
             except (csv.Error, UnicodeError): raise ConfigError("invalid_csv") from None
             ref_types = reference_csv_types(config, name, header, types)
             refs[name] = read_csv(filename, types=ref_types)
-        report = evaluate(rows, config, evaluation_time=args.evaluation_time, references=refs,
-                          mode=args.mode, trusted_digests=args.trusted_digest, diagnostic_limit=args.diagnostic_limit)
-        gate = report["gate"]
-        if args.include_analysis:
-            if "analysis" not in config: raise ConfigError("analysis_spec_required")
+        if args.include_analysis and "analysis" not in config:
+            raise ConfigError("analysis_spec_required")
+        options = dict(evaluation_time=args.evaluation_time, references=refs, mode=args.mode,
+                       trusted_digests=args.trusted_digest, diagnostic_limit=args.diagnostic_limit)
+        if args.explain:
+            from .interpretation import explain, load_selection, MAX_SELECTION_BYTES
+            selection = None
+            if args.interpretation_plan:
+                plan_path = Path(args.interpretation_plan)
+                if plan_path.stat().st_size > MAX_SELECTION_BYTES:
+                    raise ConfigError("selection_resource_limit")
+                try:
+                    selection = load_selection(plan_path.read_text(encoding="utf-8"))
+                except ConfigError:
+                    # A bad optional plan cannot erase the independently evaluated report.
+                    selection = {}
+            report = explain(rows, config, include_analysis=args.include_analysis,
+                include_numeric_evidence=args.include_numeric_evidence, selection=selection, **options)
+            deterministic = report["deterministic"]
+        elif args.include_analysis:
             from .analysis import analyze
-            report = analyze(rows, config, evaluation_time=args.evaluation_time, references=refs, mode=args.mode, trusted_digests=args.trusted_digest)
+            report = deterministic = analyze(rows, config, **options)
+        else:
+            report = deterministic = evaluate(rows, config, **options)
+        gate = deterministic.get("tier1", deterministic)["gate"]
         print(json.dumps(report, sort_keys=True, ensure_ascii=True, allow_nan=False))
+        if args.explain and report["interpretation"]["outcome"] != "pass":
+            return 2  # Interpretation execution failed; the deterministic gate is unchanged.
         return {"pass": 0, "non_gating": 0, "fail": 1, "blocked": 2}[gate]
     except ConfigError as exc:
         print(json.dumps({"outcome": "error", "reason": str(exc)})); return 2

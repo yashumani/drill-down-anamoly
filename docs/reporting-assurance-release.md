@@ -6,7 +6,7 @@ This is an installable, bounded alpha alongside the existing app. It is not full
 
 | Acceptance outcome | Evidence / limitation |
 | --- | --- |
-| Python package, API and CLI | Distribution `multi-tier-reporting-assurance` 0.1.0a1; import `reporting_assurance`; zero runtime dependencies. Clean wheel installs verified on Windows Python 3.9.21 and 3.12.14, including installed CLI subprocesses. |
+| Python package, API and CLI | Distribution `multi-tier-reporting-assurance` 0.1.0a1; import `reporting_assurance`; zero runtime dependencies. Clean wheel installs verified on Windows Python 3.9.21 and 3.12.14, including installed CLI subprocesses, controlled explanations and offline plan replay. |
 | Tier 1 rules | Ten registered typed operators: required_fields, types, unique, allowed_values, range, coverage, freshness, consistency, row_level, reconcile. No eval, callbacks, dynamic imports, SQL/shell, URL fetching or hidden input mutation. |
 | Strict versioned rule contract | JSON v1 rejects unknown fields/operators, duplicate JSON keys, invalid literals, dependencies/cycles and resource violations. Reference schemas are explicit and approval-bound; required native reference types come from registered roles. |
 | Approval and gate | Separate outcome, severity and gate; preview is non-gating. Production requires matching approval content plus a digest trusted by the caller. Edits invalidate approval. This does not authenticate a person or independent source. Missing/error required checks prevent a passing gate. |
@@ -17,13 +17,25 @@ This is an installable, bounded alpha alongside the existing app. It is not full
 | Draft suggestions | Observed metadata is separate from optional, nonblocking presence/type proposals. Observed categories/ranges/uniqueness never become approved boundaries or grain. |
 | Thin KNIME example | Delivered and explicitly unverified. Inspected known KNIME folder contains a quickstart PDF; no runnable installation or matching uninstall entry was found. |
 | Optional local Studio | Profiles counts, suggests editable drafts, previews through the same Python executor and exports the exact validated JSON snapshot. Seven HTTP integration methods plus seven JavaScript race/invalidation unit tests pass. Actual browser/visual/keyboard/mobile/download completion remains unverified. |
-| Existing app | 81 JavaScript tests, TypeScript/production build and unchanged bundle budgets pass locally after narrow dependency/type/Windows-path repairs. Connected Copilot runtime behavior and model operation remain unverified. Python Tier 3 remains unimplemented. |
+| Existing app | 81 JavaScript tests, TypeScript/production build and unchanged bundle budgets pass locally after narrow dependency/type/Windows-path repairs. Connected Copilot runtime behavior and model operation remain unverified. The optional Tier 3 constrained evidence-selection interface is implemented; no live provider or free-form model explanation is supplied or verified. |
+
+
+## Overnight continuation checklist (target 2026-10-15 12:00 UTC)
+
+| Usable outcome | Acceptance / current status | Next action |
+| --- | --- | --- |
+| Preserve existing Tier 1/2 and app readiness | Verified on source24c2624; revalidation required after new edits | Run relevant suites on the new source |
+| Optional Tier 3 grounded interpretation | Verified locally: 15 independent Tier 3 tests, constrained evidence selection and controlled rendering; no live provider | Inspect clean-wheel and exact-source CI evidence |
+| Installed Python/CLI end-to-end workflow | Verified from clean wheels on Windows 3.9.21/3.12.14, including Tier 3 and offline mock example | Inspect exact-source CI |
+| Existing app can explicitly use local Python | Incomplete; assess additive client plus opt-in loopback-origin bridge | Implement only with HTTP/client regression coverage |
+| Immutable pushed source and relevant CI | Prior checkpoint verified; new source pending | Commit/push and inspect exact-source jobs |
+| Actual browser, KNIME and live-model evidence | Browser blocked by provided Windows runtime; KNIME and live model unverified | Preserve explicit limitations; no bypass or external calls |
 
 ## Current local acceptance
 
-- `PYTHONPATH=python/src python -m unittest discover -s python/tests -q`: **76 methods pass**, including the four-sector oracle, 100 generated decimal/permutation cases, 100k rows, malformed/hostile input, privacy/no IO and resource bounds.
+- `PYTHONPATH=python/src python -m unittest discover -s python/tests -q`: **91 methods pass**, including the four-sector oracle, 100 generated decimal/permutation cases, 100k rows, malformed/hostile input, privacy/no IO and resource bounds.
 - `python -m build --no-isolation --outdir python/dist`: wheel and source distribution built.
-- `python scripts/verify_python_wheel.py`: isolated venv, `--no-index --no-deps`, unrelated working directory, all 76 methods, API/module-CLI/installed-entrypoint parity, optional Tier 2 CLI, and zero runtime dependencies pass on Windows **3.9.21 and 3.12.14**.
+- `python scripts/verify_python_wheel.py`: isolated venv, `--no-index --no-deps`, unrelated working directory, all 91 methods, API/module-CLI/installed-entrypoint parity, optional Tier 2 CLI, and zero runtime dependencies pass on Windows **3.9.21 and 3.12.14**.
 - `python scripts/verify_python_schemas.py`: independent jsonschema checks pass for rule bundles, Tier 1 and Tier 2 reports.
 - `npm test`: **31 files / 81 tests pass**. JavaScript Studio tests run actual inline application code in a Node VM with a controlled delayed response; this is not browser verification.
 - `npm run build`: TypeScript and Vite production build pass with no configured Copilot runtime. Large-chunk warning remains. No runtime/model call was made.
@@ -55,11 +67,15 @@ The supported platform/version claim is limited to verified matrix/local combina
 
 Local artifacts are development builds; no registry upload or name reservation is claimed.
 
-- `python/dist/multi_tier_reporting_assurance-0.1.0a1-py3-none-any.whl`: SHA-256 `6a608753b1ceeb05f0c40e799f39685085b80e365e599c85d287ded273b99961`.
-- `python/dist/multi_tier_reporting_assurance-0.1.0a1.tar.gz`: SHA-256 `fd96d6bcdb7a1893c1ddfa073b8158693367c8b44c21fc0f99d6501a09792d47`.
+- `python/dist/multi_tier_reporting_assurance-0.1.0a1-py3-none-any.whl`: SHA-256 `8ce4408806f7e523e94c228d2a0cd073b82678d70436ef68b54725cbfd1a066f`.
+- `python/dist/multi_tier_reporting_assurance-0.1.0a1.tar.gz`: SHA-256 `7c828964719ec395945ae5df6097552b84711a9de83e9a2943178b6adfa6b0d3`.
 
 ## Remaining work and boundaries
 
-Actual Studio browser/visual/download verification is blocked by the provided computer-use runtime's missing Windows platform-directory error (0x80070003); no alternative automation bypass was used. Actual KNIME validation requires its environment. Optional AI explanation, authenticated approval integration and broader Tier 2 methods are not implemented. The original browser app is not yet integrated with the authoritative Python executor. The moderate ECharts advisory requires a major migration; low SDK/KaTeX findings require upstream or separately verified compatibility work. The SDK dependency graph is large and remains isolated from the dependency-free Python runtime.
+Actual Studio browser/visual/download verification is blocked by the provided computer-use runtime's missing Windows platform-directory error (0x80070003); no alternative automation bypass was used. Actual KNIME validation requires its environment. Live AI provider execution/free-form explanation, authenticated approval integration and broader Tier 2 methods are not implemented. The constrained offline Tier 3 interface is implemented and tested with mock adapters only. The original browser app is not yet integrated with the authoritative Python executor. The moderate ECharts advisory requires a major migration; low SDK/KaTeX findings require upstream or separately verified compatibility work. The SDK dependency graph is large and remains isolated from the dependency-free Python runtime.
 
 The synthetic source-line controls cover January only. Fixtures do not certify a real source population, business policy, permission system or full transaction history. The corrected margin example is revenue 100+900 and cost 80+450: aggregate margin 47%, segment margins 20% and 50%, unweighted mean 35%.
+
+## Optional Tier 3 interface acceptance
+
+The 15 new independent methods cover explicit adapter opt-in, no IO/network in default or offline mock operation, immutable evidence copies, rejection of free prose/unknown IDs/stale digests/omitted blockers, aggregate numeric opt-in, bounded packets, privacy, approval/gate separation, redacted failures, actual CLI replay and preserved explicit Tier 1 diagnostics when Tier 2 is requested. These are controlled-template and mock-adapter tests, not live model verification. The CLI cannot load executable adapters. See python/examples/run_explanation.py for the complete synthetic installed workflow.

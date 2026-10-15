@@ -161,14 +161,14 @@ def calculate(op,p,rows,references):
     except ArithmeticError:return {'outcome':'error','reason':'analysis_execution_error','groups':[]}
 
 
-def analyze(rows,bundle,spec=None,*,evaluation_time=None,references=None,mode='preview',trusted_digests=()):
+def analyze(rows,bundle,spec=None,*,evaluation_time=None,references=None,mode='preview',trusted_digests=(),diagnostic_limit=0):
     """Re-evaluate Tier 1 on these exact inputs; skip only each analysis's own invalid prerequisites.
 
     Every analysis must name one or more Tier 1 prerequisites. Analyses never
     change the Tier 1 gate. Caller selects adequate grain, coverage, type and
     context checks. Preview calculations are descriptive, never production approval.
     """
-    report=evaluate(rows,bundle,evaluation_time=evaluation_time,references=references,mode=mode,trusted_digests=trusted_digests)
+    report=evaluate(rows,bundle,evaluation_time=evaluation_time,references=references,mode=mode,trusted_digests=trusted_digests,diagnostic_limit=diagnostic_limit)
     checks={r['id']:r['outcome'] for r in report['results']}
     if spec is None:spec=bundle.get('analysis')
     validate_analysis(spec,set(checks))

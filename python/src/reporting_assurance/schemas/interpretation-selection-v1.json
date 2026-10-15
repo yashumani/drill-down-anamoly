@@ -1,0 +1,30 @@
+{
+  "type": "object",
+  "properties": {
+    "selection_version": {
+      "const": "1.0"
+    },
+    "evidence_digest": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "fact_ids": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 256,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^f[0-9]{4}$"
+      }
+    }
+  },
+  "required": [
+    "selection_version",
+    "evidence_digest",
+    "fact_ids"
+  ],
+  "additionalProperties": false,
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Reporting Assurance offline interpretation selection v1"
+}

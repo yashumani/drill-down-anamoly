@@ -10,3 +10,6 @@ __all__ = ["ConfigError", "bundle_digest", "load_bundle", "validate_bundle", "ev
 from .analysis import analyze
 from .suggestions import suggest_rules
 __all__ += ["analyze", "suggest_rules"]
+
+from .interpretation import explain, load_selection
+__all__ += ["explain", "load_selection"]

@@ -2,7 +2,7 @@
 
 An installable Python module for existing Python and KNIME reporting workflows. Tier 1 uses deterministic rules on reporting aggregates, grouped data or transaction detail. The package runs without Node, a server, UI, model or KNIME. It has no runtime dependencies.
 
-This is a bounded alpha release. Existing browser-app behavior and its finance contract remain separate; the Python executor is the intended authoritative rule executor for future integration. Optional AI is unimplemented. An optional local Rule Studio provides draft authoring; its browser/visual verification remains blocked in this environment. See the current release evidence in `docs/reporting-assurance-release.md`.
+This is a bounded alpha release. Existing browser-app behavior and its finance contract remain separate; the Python executor is the intended authoritative rule executor for future integration. An optional Tier 3 evidence-selection interface is available; live models and free-form AI interpretation remain unverified and unimplemented by this package. An optional local Rule Studio provides draft authoring; its browser/visual verification remains blocked in this environment. See the current release evidence in `docs/reporting-assurance-release.md`.
 
 ## Install and run
 
@@ -70,7 +70,7 @@ Ratios use declared numerator (one field, optionally minus one cost field) and d
 
 Exact sums/subtractions use bounded Decimal precision sufficient for supported inputs. Ratios, means and standard deviations are descriptive numeric strings rounded to 34 significant digits, with the Decimal rounding mode set to half-even. Numeric Tier 2 evidence is explicit opt-in; group values are omitted and represented by deterministic group indices. Large grouped results are bounded to 1,000 groups. Default Tier 1 reports remain counts-only.
 
-`suggest_rules(rows)` returns observed count metadata separately from a draft rule bundle. It proposes only presence/type review, with nullable=True and optional, nonblocking rules. It never converts observed categories, ranges or uniqueness into valid business boundaries or approved grain. There is no approval UI, authenticated approval service or AI explanation in this release. See `python/examples/run_analysis.py` for synthetic calculations and editable draft JSON export.
+`suggest_rules(rows)` returns observed count metadata separately from a draft rule bundle. It proposes only presence/type review, with nullable=True and optional, nonblocking rules. It never converts observed categories, ranges or uniqueness into valid business boundaries or approved grain. There is no approval UI or authenticated approval service. Tier 3 is the constrained optional interpretation interface described below; no live model is supplied or verified. See `python/examples/run_analysis.py` for synthetic calculations and editable draft JSON export.
 
 The independent four-sector acceptance adapter is `python/tests/fixture_adapter.py`. It maps catalog types and declared selections into the exact v1 JSON contract, preserves the pack's synthetic provenance, and replaces exactly one named file for each fault. The fixture explanatory statuses `unverified` and `skipped` map to `not_evaluated`, with distinct evidence/prerequisite reasons. Internal parent/child identities use `control_scope=internal`; separately supplied company and source-line controls use caller-declared `independent` scope. The engine does not authenticate that declaration.
 
@@ -102,3 +102,29 @@ These declarations are included in the approved bundle digest. Editing them inva
 Studio export captures one immutable editor snapshot before validation. The same text is sent for validation and downloaded after the response, even if editing continues. A changed editor is explicitly called out; the downloaded snapshot is never replaced with later unvalidated text. A delayed-response JavaScript unit test covers this race. It does not substitute for actual browser/visual verification.
 
 The executor applies a conservative 50,000,000-cell-check work limit to the combined primary and reference tables, including currently unused references. It rejects inputs over that bound before running checks. CSV conversion options are validated even when a supplied value is false or empty. Studio edits invalidate any earlier preview, and responses for inputs changed during a request cannot render as current evidence.
+
+## Optional Tier 3 interpretation
+
+`explain(rows, bundle, ...)` re-runs the same deterministic executor and returns separate `deterministic`, `evidence` and `interpretation` objects. `include_analysis=True` also runs the declared Tier 2 specification. The default interpretation uses controlled local templates and requires no model or network. A Tier 3 outcome of pass means the interpretation contract/rendering succeeded; it does not mean data checks passed or production approval exists. Always inspect the deterministic gate and each calculation outcome.
+
+The evidence packet contains counts and fixed statements with opaque fact IDs. It omits rows, field/group/rule names, diagnostic row indices, provenance strings and numeric aggregate details. `include_numeric_evidence=True` explicitly shares bounded aggregate calculation details with the interpretation layer; it requires `include_analysis=True`. At most 256 facts are supplied, and omitted numeric groups are counted and explicitly disclosed. This is reduced data exposure, not anonymization or authorization to send business metadata to a provider.
+
+A caller-owned Python adapter may implement `select_evidence(packet)` and return only this JSON selection contract:
+
+```json
+{"selection_version":"1.0","evidence_digest":"<digest of this exact packet>","fact_ids":["f0000","f0002"]}
+```
+
+Only IDs from that exact packet are accepted. All mandatory gate, blocker/unavailable/error facts and limitations must be included; they lead the rendered narrative. Unknown IDs, stale digests, duplicates, extra prose/numbers/approval fields and omitted mandatory evidence are rejected. The package renders the original facts, never model-supplied prose or an adapter-mutated packet. This deliberately limits the adapter to selecting/ordering verified evidence; free-form explanations, causal diagnosis and new claims are not supported. Evidence digests bind a plan to content; they do not authenticate its author or prove source truth.
+
+Adapter code is invoked only with explicit `allow_adapter=True`. Before that flag, the library does not inspect the adapter. The caller owns its code, provider authorization, credentials, timeouts, costs and external transmission. This package supplies no provider SDK, credential storage, dynamic adapter import or model client. Tests and `python/examples/run_explanation.py` use offline mock adapters only. `model_verification` remains `not_verified`; there is no live-model success claim. An adapter error is redacted and cannot change the deterministic report or its gate.
+
+Complete installed CLI workflow, from the repository root with the synthetic examples:
+
+```sh
+python -m pip install --no-deps python/dist/multi_tier_reporting_assurance-0.1.0a1-py3-none-any.whl
+reporting-assurance --rules python/examples/rules.json --csv python/examples/reporting.csv --reference controls=python/examples/controls.csv --evaluation-time 2026-04-05T12:00:00Z --include-analysis --explain
+python python/examples/run_explanation.py
+```
+
+Add the fictional example's trusted digest and `--mode production` only to exercise that test approval. Real workflows obtain their own trusted digests independently. Add `--include-numeric-evidence` only when the interpretation recipient may receive aggregate values. The CLI never loads Python adapters or contacts a model. `--interpretation-plan LOCAL_JSON` replays a caller-supplied offline selection through the same validation. A stale/malformed plan gives an error sidecar and exit 2 while preserving the deterministic gate. Exit 0 still includes non-gating preview; it is not a production approval. Invalid primary/rule input remains an input error. See the installed API example for the mock adapter and an offline plan to save/replay.
