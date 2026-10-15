@@ -73,7 +73,7 @@ class StudioTests(unittest.TestCase):
         self.assertEqual(load_bundle(editor),draft)
 
     def test_foreign_origin_and_host_are_rejected(self):
-        for kw in [{'origin':'https://foreign.invalid'},{'host':'foreign.invalid'}]:
+        for kw in [{'origin':'https://foreign.invalid'},{'origin':'http://localhost:5173'},{'host':'foreign.invalid'}]:
             with self.assertRaises(HTTPError) as caught:self.request({'operation':'profile','csv':CSV},**kw)
             self.assertEqual(caught.exception.code,403)
 
