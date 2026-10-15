@@ -24,18 +24,18 @@ This is an installable, bounded alpha alongside the existing app. It is not full
 
 | Usable outcome | Acceptance / current status | Next action |
 | --- | --- | --- |
-| Preserve existing Tier 1/2 and app readiness | Verified: 96 Python tests, 103 JavaScript tests, direct HTTP integration, clean wheels, build and unchanged budgets | Complete within tested fixture/runtime scope |
-| Optional Tier 3 grounded interpretation | Verified: controlled templates, 15 independent methods, immutable selection/mandatory blockers, synchronous adapter boundary; offline mocks only | Live provider/free-form explanation is not verified or supplied |
-| Installed Python/CLI end-to-end workflow | Verified from final clean wheels on Windows 3.9.21/3.12.14 and all eight supported CI combinations; API/CLI/example parity and zero runtime dependencies | Use caller-owned approval/trust as documented |
+| Preserve existing Tier 1/2 and app readiness | Verified: 98 Python tests, 103 JavaScript tests, direct HTTP integration, clean wheels, build and unchanged budgets | Complete within tested fixture/runtime scope |
+| Optional Tier 3 grounded interpretation | Verified: controlled templates, 17 independent Tier3/CLI methods, immutable selection/mandatory blockers, synchronous adapter boundary; offline mocks only | Live provider/free-form explanation is not verified or supplied |
+| Installed Python/CLI end-to-end workflow | Verified from clean wheels on Windows 3.9.21/3.12.14: all 98 methods, optional-plan failure isolation and API/CLI/example parity; latest source CI is recorded in PR23 | Use caller-owned approval/trust as documented |
 | Existing app can explicitly use local Python | Verified HTTP/client transport, precision and React structure; actual browser remains blocked | Restore the provided browser runtime for visual/interactive acceptance |
 | Immutable pushed source and relevant CI | Code57cb790 verified: Python38673066821 all8 jobs and app38673066612 including real HTTP integration pass; source identity recorded | Latest documentation-head CI and exact SHA are recorded in draft PR23 |
 | Actual browser, KNIME and live-model evidence | Browser blocked by runtime0x80070003; actual KNIME and live model unverified | Actual environments and provider authorization are needed; no bypass, credentials or external model calls were used |
 
 ## Current local acceptance
 
-- `PYTHONPATH=python/src python -m unittest discover -s python/tests -q`: **96 methods pass**, including the four-sector oracle, 100 generated decimal/permutation cases, 100k rows, malformed/hostile input, privacy/no IO and resource bounds.
+- `PYTHONPATH=python/src python -m unittest discover -s python/tests -q`: **98 methods pass**, including the four-sector oracle, 100 generated decimal/permutation cases, 100k rows, malformed/hostile input, privacy/no IO and resource bounds.
 - `python -m build --no-isolation --outdir python/dist`: wheel and source distribution built.
-- `python scripts/verify_python_wheel.py`: isolated venv, `--no-index --no-deps`, unrelated working directory, all 96 methods, API/module-CLI/installed-entrypoint parity, optional Tier 2 CLI, and zero runtime dependencies pass on Windows **3.9.21 and 3.12.14**.
+- `python scripts/verify_python_wheel.py`: isolated venv, `--no-index --no-deps`, unrelated working directory, all 98 methods, API/module-CLI/installed-entrypoint parity, optional Tier 2 CLI, and zero runtime dependencies pass on Windows **3.9.21 and 3.12.14**.
 - `python scripts/verify_python_schemas.py`: independent jsonschema checks pass for rule bundles, Tier 1 and Tier 2 reports.
 - `npm test`: **33 files / 103 tests pass**. JavaScript Studio tests run actual inline application code in a Node VM with a controlled delayed response; this is not browser verification.
 - `npm run build`: TypeScript and Vite production build pass with no configured Copilot runtime. Large-chunk warning remains. No runtime/model call was made.
@@ -70,8 +70,8 @@ The supported platform/version claim is limited to verified matrix/local combina
 
 Local artifacts are development builds; no registry upload or name reservation is claimed.
 
-- `python/dist/multi_tier_reporting_assurance-0.1.0a1-py3-none-any.whl`: SHA-256 `af5169f4729c276a2322f87871d4d3d97dfff4f338931511634174358b4c6f38`.
-- `python/dist/multi_tier_reporting_assurance-0.1.0a1.tar.gz`: SHA-256 `155de4615484a6ba51e607b5b5ccc51c856dcbd4e5242eb2a2810ab56f9879fb`.
+- `python/dist/multi_tier_reporting_assurance-0.1.0a1-py3-none-any.whl`: SHA-256 `4d5a00a34f6ad6551f6d7a61c76bff57f65b05df398a9758804dfcdfece8e057`.
+- `python/dist/multi_tier_reporting_assurance-0.1.0a1.tar.gz`: SHA-256 `5d9250886707b4c37546b9515556f05e89894b6a825bfbda4f33b635606ed0bb`.
 
 ## Remaining work and boundaries
 
@@ -92,3 +92,9 @@ The synchronous Tier 3 adapter boundary also rejects async functions/awaitables 
 ## Remaining external acceptance
 
 The unblocked software checklist above is verified; this is not full-product or production acceptance. Actual browser rendering/interactions/downloads need the provided Windows runtime restored, actual KNIME needs its runnable node environment, and live-model verification needs a caller-authorized provider adapter/environment. None can be inferred from unit/HTTP/SSR/mock tests. No model credentials or persistent service were created. The optional local workflow is documented in python/README.md; use `python -m reporting_assurance` instead of the executable name when the chosen Python environment's Scripts directory is not on PATH. No automatic monitoring is implied after a run ends.
+
+Independent review follow-up: reproduced 11 failing subcases before the fix. All optional-plan metadata/size/read/decode/JSON failures now yield an error sidecar while retaining the independently computed deterministic report, for passing and failing data gates. Two new regression methods cover real CLI missing/oversized/invalid-UTF8/directory/malformed/empty paths, simulated stat/open permission errors without ACL changes, and bounded reads if a file grows after stat. Final packaging passes both local runtime checks; immutable exact-head push CI is inspected and recorded in draft PR23 before the final handoff.
+
+## CodeQL review context
+
+PR23 discussion_r4278054459 concerns the regex in scripts/studio-export.test.mjs that extracts the known inline script from fixed repository-controlled Studio HTML for a Node VM test. User-supplied HTML is not passed to that helper. The comment does not demonstrate a runtime user-content sanitization vulnerability. Scanning remains enabled; no alert, review thread or scanning result was disabled or dismissed.

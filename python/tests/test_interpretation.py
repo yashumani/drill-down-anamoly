@@ -1,5 +1,7 @@
 """Independent grounding, privacy, opt-in and real CLI checks; adapters here are mocks."""
 import copy
+import io
+from contextlib import redirect_stdout
 from decimal import Decimal, localcontext
 import json
 from pathlib import Path
@@ -13,6 +15,7 @@ import gc
 from unittest.mock import patch
 
 from reporting_assurance import ConfigError, explain, load_selection, evaluate
+from reporting_assurance.cli import main as cli_main
 from test_tier1 import bundle, rule, approve, record
 from test_analysis import spec
 
@@ -35,6 +38,16 @@ def configuration():
 def plan(packet):
     return dict(selection_version='1.0', evidence_digest=packet['evidence_digest'],
                 fact_ids=[fact['id'] for fact in packet['facts']])
+
+
+def example_cli_args(csv=None):
+    root = Path(__file__).resolve().parents[2]
+    return ['-m', 'reporting_assurance', '--rules', str(root / 'python/examples/rules.json'),
+            '--csv', str(csv or root / 'python/examples/reporting.csv'), '--reference',
+            'controls=' + str(root / 'python/examples/controls.csv'),
+            '--evaluation-time', '2026-04-05T12:00:00Z', '--mode', 'production',
+            '--trusted-digest', (root / 'python/examples/trusted-digest.txt').read_text().strip(),
+            '--include-analysis', '--explain']
 
 
 class InterpretationTests(unittest.TestCase):
@@ -231,6 +244,88 @@ class InterpretationTests(unittest.TestCase):
         result = explain([{}], config, include_analysis=True, diagnostic_limit=1)
         self.assertEqual(result['deterministic']['tier1']['results'][0]['diagnostics']['row_indices'], [0])
         self.assertNotIn('row_indices', json.dumps(result['evidence']))
+
+    def test_real_cli_optional_plan_file_failures_preserve_deterministic_results(self):
+        root = Path(__file__).resolve().parents[2]
+        with tempfile.TemporaryDirectory() as directory:
+            base = Path(directory)
+            oversized = base / 'oversized_FICTIONAL_PRIVATE_PLAN.json'
+            oversized.write_bytes(b'x' * 65537)
+            invalid_utf8 = base / 'invalid_utf8_FICTIONAL_PRIVATE_PLAN.json'
+            invalid_utf8.write_bytes(b'\xff\xfeFICTIONAL_PRIVATE_PLAN')
+            malformed = base / 'malformed_FICTIONAL_PRIVATE_PLAN.json'
+            malformed.write_text('{not-json', encoding='utf-8')
+            unreadable = base / 'directory_FICTIONAL_PRIVATE_PLAN'
+            unreadable.mkdir()
+            variants = [str(base / 'missing_FICTIONAL_PRIVATE_PLAN.json'), str(oversized),
+                        str(invalid_utf8), str(unreadable), str(malformed), '']
+            source = (root / 'python/examples/reporting.csv').read_text(encoding='utf-8')
+            failed_source = source.replace(',40\n', ',41\n')
+            self.assertNotEqual(failed_source, source)
+            failing_csv = base / 'failing_reporting.csv'
+            failing_csv.write_bytes(failed_source.encode('utf-8'))
+            for csv, gate, status in [(None, 'pass', 0), (failing_csv, 'fail', 1)]:
+                args = example_cli_args(csv)
+                baseline = subprocess.run([sys.executable, *args], capture_output=True, text=True)
+                self.assertEqual(baseline.returncode, status, baseline.stderr)
+                deterministic = json.loads(baseline.stdout)['deterministic']
+                self.assertEqual(deterministic['tier1']['gate'], gate)
+                for filename in variants:
+                    with self.subTest(gate=gate, plan_case=Path(filename).name if filename else 'empty_path'):
+                        result = subprocess.run([sys.executable, *args, '--interpretation-plan', filename], capture_output=True, text=True)
+                        self.assertEqual(result.returncode, 2, result.stderr)
+                        report = json.loads(result.stdout)
+                        self.assertIn('deterministic', report)
+                        self.assertEqual(report['deterministic'], deterministic)
+                        self.assertEqual(report['interpretation']['outcome'], 'error')
+                        self.assertEqual(report['interpretation']['method'], 'supplied_selection')
+                        self.assertEqual(report['interpretation']['statements'], [])
+                        self.assertNotIn('FICTIONAL_PRIVATE_PLAN', result.stdout)
+
+    def test_optional_plan_permission_errors_are_isolated_without_changing_acl(self):
+        args = example_cli_args()[2:]
+        output = io.StringIO()
+        with redirect_stdout(output):
+            self.assertEqual(cli_main(args), 0)
+        deterministic = json.loads(output.getvalue())['deterministic']
+        with tempfile.TemporaryDirectory() as directory:
+            plan_path = Path(directory) / 'permission_FICTIONAL_PRIVATE_PLAN.json'
+            plan_path.write_text('{}', encoding='utf-8')
+            for operation in ['stat', 'open']:
+                original = getattr(Path, operation)
+                def denied(path, *values, **options):
+                    if path == plan_path:
+                        raise PermissionError('FICTIONAL_PRIVATE_PLAN_ACCESS')
+                    return original(path, *values, **options)
+                output = io.StringIO()
+                with self.subTest(operation=operation), patch.object(Path, operation, denied), redirect_stdout(output):
+                    status = cli_main(args + ['--interpretation-plan', str(plan_path)])
+                self.assertEqual(status, 2)
+                report = json.loads(output.getvalue())
+                self.assertIn('deterministic', report)
+                self.assertEqual(report['deterministic'], deterministic)
+                self.assertEqual(report['interpretation']['outcome'], 'error')
+                self.assertNotIn('FICTIONAL_PRIVATE_PLAN', output.getvalue())
+            # Simulate growth after stat without changing security settings.
+            plan_path.write_bytes(b'x' * 65537)
+            original_stat = Path.stat
+            def small_metadata(path, *values, **options):
+                value = original_stat(path, *values, **options)
+                if path == plan_path:
+                    return type('SmallFileMetadata', (), {'st_mode': value.st_mode, 'st_size': 0})()
+                return value
+            output = io.StringIO()
+            with patch.object(Path, 'stat', small_metadata), redirect_stdout(output):
+                status = cli_main(args + ['--interpretation-plan', str(plan_path)])
+            self.assertEqual(status, 2)
+            report = json.loads(output.getvalue())
+            self.assertEqual(report['deterministic'], deterministic)
+            self.assertEqual(report['interpretation']['outcome'], 'error')
+        output = io.StringIO()
+        with redirect_stdout(output):
+            status = cli_main([value for value in args if value != '--explain'] + ['--interpretation-plan', ''])
+        self.assertEqual(status, 2)
+        self.assertEqual(json.loads(output.getvalue())['reason'], 'explain_required')
 
     def test_real_cli_explain_and_offline_plan_preserve_gate_and_privacy(self):
         root = Path(__file__).resolve().parents[2]
