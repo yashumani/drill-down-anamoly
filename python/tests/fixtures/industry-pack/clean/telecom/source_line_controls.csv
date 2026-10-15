@@ -1,0 +1,5 @@
+transaction_id,metric,expected_value,currency,amount_scale,control_origin
+tel-01-001,service_revenue,40,USD,1,hand_authored_synthetic_source_ledger
+tel-01-002,service_revenue,60,USD,1,hand_authored_synthetic_source_ledger
+tel-01-003,service_revenue,300,USD,1,hand_authored_synthetic_source_ledger
+tel-01-004,service_revenue,600,USD,1,hand_authored_synthetic_source_ledger

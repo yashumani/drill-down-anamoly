@@ -1,0 +1,7 @@
+period_id,scenario,snapshot_id,store_region
+2026-01,Actual,s1,east
+2026-01,Actual,s1,west
+2026-02,Actual,s1,east
+2026-02,Actual,s1,west
+2026-03,Actual,s1,east
+2026-03,Actual,s1,west

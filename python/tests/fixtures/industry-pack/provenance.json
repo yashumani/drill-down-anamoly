@@ -1,0 +1,19 @@
+{
+  "classification": "ENTIRELY_SYNTHETIC",
+  "created": "2026-10-14",
+  "source_of_values": "Human-selected toy values and deterministic month multipliers; no real company or person records",
+  "public_report_inspiration": "Domain labels and reporting concepts only. Official source taxonomy will be supplied separately by the parent research task; no report numbers were copied.",
+  "controls": "Separate hand-authored toy expectations serve as test oracles, not real independent audited evidence. The future validator must not generate its own expected answers.",
+  "representativeness": "Not representative of real operational distributions, accounting policies, disclosure requirements, or company systems. No inferred Verizon operations or customers.",
+  "lifecycle": "Draft test fixture contract; not approved production policy",
+  "data_levels": [
+    "transaction_detail",
+    "grouped_data",
+    "reporting_aggregates"
+  ],
+  "analysis_tiers": [
+    "validation",
+    "deterministic_math_statistics",
+    "optional_AI_explanation"
+  ]
+}

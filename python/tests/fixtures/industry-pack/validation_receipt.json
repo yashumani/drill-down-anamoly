@@ -1,0 +1,3159 @@
+{
+  "audit": "standard_library_fixture_arithmetic_not_product_engine",
+  "run_clock": "2026-04-05T12:00:00Z",
+  "passed": true,
+  "check_count": 630,
+  "checks": [
+    {
+      "check": "telecom_counts",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_transaction_keys",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_date_0",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_date_1",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_date_2",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_date_3",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_date_4",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_date_5",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_date_6",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_date_7",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_date_8",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_date_9",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_date_10",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_date_11",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_detail_context_0",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_detail_freshness_0",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_detail_context_1",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_detail_freshness_1",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_detail_context_2",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_detail_freshness_2",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_detail_context_3",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_detail_freshness_3",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_detail_context_4",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_detail_freshness_4",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_detail_context_5",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_detail_freshness_5",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_detail_context_6",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_detail_freshness_6",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_detail_context_7",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_detail_freshness_7",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_detail_context_8",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_detail_freshness_8",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_detail_context_9",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_detail_freshness_9",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_detail_context_10",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_detail_freshness_10",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_detail_context_11",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_detail_freshness_11",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_groups_context_0",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_groups_freshness_0",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_groups_context_1",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_groups_freshness_1",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_groups_context_2",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_groups_freshness_2",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_groups_context_3",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_groups_freshness_3",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_groups_context_4",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_groups_freshness_4",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_groups_context_5",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_groups_freshness_5",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_reports_context_0",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_reports_freshness_0",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_reports_context_1",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_reports_freshness_1",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_reports_context_2",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_reports_freshness_2",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_reports_context_3",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_reports_freshness_3",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_reports_context_4",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_reports_freshness_4",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_reports_context_5",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_reports_freshness_5",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_reports_context_6",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_reports_freshness_6",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_reports_context_7",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_reports_freshness_7",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_reports_context_8",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_reports_freshness_8",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_detail_group_2026-01_north_service_revenue",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_detail_group_2026-01_north_line_months",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_detail_group_2026-01_north_disconnects",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_group_ratio_2026-01_north",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_detail_group_2026-01_south_service_revenue",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_detail_group_2026-01_south_line_months",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_detail_group_2026-01_south_disconnects",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_group_ratio_2026-01_south",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_detail_group_2026-02_north_service_revenue",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_detail_group_2026-02_north_line_months",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_detail_group_2026-02_north_disconnects",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_group_ratio_2026-02_north",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_detail_group_2026-02_south_service_revenue",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_detail_group_2026-02_south_line_months",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_detail_group_2026-02_south_disconnects",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_group_ratio_2026-02_south",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_detail_group_2026-03_north_service_revenue",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_detail_group_2026-03_north_line_months",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_detail_group_2026-03_north_disconnects",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_group_ratio_2026-03_north",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_detail_group_2026-03_south_service_revenue",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_detail_group_2026-03_south_line_months",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_detail_group_2026-03_south_disconnects",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_group_ratio_2026-03_south",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_report_coverage_2026-01",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_independent_hand_total_2026-01_service_revenue",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_parent_child_2026-01_service_revenue",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_control_2026-01_service_revenue",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_group_report_2026-01_north_service_revenue",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_group_report_2026-01_south_service_revenue",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_independent_hand_total_2026-01_line_months",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_parent_child_2026-01_line_months",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_control_2026-01_line_months",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_group_report_2026-01_north_line_months",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_group_report_2026-01_south_line_months",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_independent_hand_total_2026-01_disconnects",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_parent_child_2026-01_disconnects",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_control_2026-01_disconnects",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_group_report_2026-01_north_disconnects",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_group_report_2026-01_south_disconnects",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_report_ratio_2026-01",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_baseline_2026-01",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_report_coverage_2026-02",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_independent_hand_total_2026-02_service_revenue",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_parent_child_2026-02_service_revenue",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_control_2026-02_service_revenue",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_group_report_2026-02_north_service_revenue",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_group_report_2026-02_south_service_revenue",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_independent_hand_total_2026-02_line_months",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_parent_child_2026-02_line_months",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_control_2026-02_line_months",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_group_report_2026-02_north_line_months",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_group_report_2026-02_south_line_months",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_independent_hand_total_2026-02_disconnects",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_parent_child_2026-02_disconnects",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_control_2026-02_disconnects",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_group_report_2026-02_north_disconnects",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_group_report_2026-02_south_disconnects",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_report_ratio_2026-02",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_baseline_2026-02",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_report_coverage_2026-03",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_independent_hand_total_2026-03_service_revenue",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_parent_child_2026-03_service_revenue",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_control_2026-03_service_revenue",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_group_report_2026-03_north_service_revenue",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_group_report_2026-03_south_service_revenue",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_independent_hand_total_2026-03_line_months",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_parent_child_2026-03_line_months",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_control_2026-03_line_months",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_group_report_2026-03_north_line_months",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_group_report_2026-03_south_line_months",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_independent_hand_total_2026-03_disconnects",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_parent_child_2026-03_disconnects",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_control_2026-03_disconnects",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_group_report_2026-03_north_disconnects",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_group_report_2026-03_south_disconnects",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_report_ratio_2026-03",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_baseline_2026-03",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_line_control_tel-01-001",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_line_control_tel-01-002",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_line_control_tel-01-003",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "telecom_line_control_tel-01-004",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_counts",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_transaction_keys",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_date_0",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_date_1",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_date_2",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_date_3",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_date_4",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_date_5",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_date_6",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_date_7",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_date_8",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_date_9",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_date_10",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_date_11",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_detail_context_0",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_detail_freshness_0",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_detail_context_1",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_detail_freshness_1",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_detail_context_2",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_detail_freshness_2",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_detail_context_3",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_detail_freshness_3",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_detail_context_4",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_detail_freshness_4",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_detail_context_5",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_detail_freshness_5",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_detail_context_6",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_detail_freshness_6",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_detail_context_7",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_detail_freshness_7",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_detail_context_8",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_detail_freshness_8",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_detail_context_9",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_detail_freshness_9",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_detail_context_10",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_detail_freshness_10",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_detail_context_11",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_detail_freshness_11",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_groups_context_0",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_groups_freshness_0",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_groups_context_1",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_groups_freshness_1",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_groups_context_2",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_groups_freshness_2",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_groups_context_3",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_groups_freshness_3",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_groups_context_4",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_groups_freshness_4",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_groups_context_5",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_groups_freshness_5",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_reports_context_0",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_reports_freshness_0",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_reports_context_1",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_reports_freshness_1",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_reports_context_2",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_reports_freshness_2",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_reports_context_3",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_reports_freshness_3",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_reports_context_4",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_reports_freshness_4",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_reports_context_5",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_reports_freshness_5",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_reports_context_6",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_reports_freshness_6",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_reports_context_7",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_reports_freshness_7",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_reports_context_8",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_reports_freshness_8",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_detail_group_2026-01_east_net_sales",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_detail_group_2026-01_east_cost_of_sales",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_detail_group_2026-01_east_units_sold",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_group_ratio_2026-01_east",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_detail_group_2026-01_west_net_sales",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_detail_group_2026-01_west_cost_of_sales",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_detail_group_2026-01_west_units_sold",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_group_ratio_2026-01_west",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_detail_group_2026-02_east_net_sales",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_detail_group_2026-02_east_cost_of_sales",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_detail_group_2026-02_east_units_sold",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_group_ratio_2026-02_east",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_detail_group_2026-02_west_net_sales",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_detail_group_2026-02_west_cost_of_sales",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_detail_group_2026-02_west_units_sold",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_group_ratio_2026-02_west",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_detail_group_2026-03_east_net_sales",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_detail_group_2026-03_east_cost_of_sales",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_detail_group_2026-03_east_units_sold",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_group_ratio_2026-03_east",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_detail_group_2026-03_west_net_sales",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_detail_group_2026-03_west_cost_of_sales",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_detail_group_2026-03_west_units_sold",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_group_ratio_2026-03_west",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_report_coverage_2026-01",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_independent_hand_total_2026-01_net_sales",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_parent_child_2026-01_net_sales",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_control_2026-01_net_sales",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_group_report_2026-01_east_net_sales",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_group_report_2026-01_west_net_sales",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_independent_hand_total_2026-01_cost_of_sales",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_parent_child_2026-01_cost_of_sales",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_control_2026-01_cost_of_sales",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_group_report_2026-01_east_cost_of_sales",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_group_report_2026-01_west_cost_of_sales",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_independent_hand_total_2026-01_units_sold",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_parent_child_2026-01_units_sold",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_control_2026-01_units_sold",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_group_report_2026-01_east_units_sold",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_group_report_2026-01_west_units_sold",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_report_ratio_2026-01",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_baseline_2026-01",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_report_coverage_2026-02",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_independent_hand_total_2026-02_net_sales",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_parent_child_2026-02_net_sales",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_control_2026-02_net_sales",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_group_report_2026-02_east_net_sales",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_group_report_2026-02_west_net_sales",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_independent_hand_total_2026-02_cost_of_sales",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_parent_child_2026-02_cost_of_sales",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_control_2026-02_cost_of_sales",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_group_report_2026-02_east_cost_of_sales",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_group_report_2026-02_west_cost_of_sales",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_independent_hand_total_2026-02_units_sold",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_parent_child_2026-02_units_sold",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_control_2026-02_units_sold",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_group_report_2026-02_east_units_sold",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_group_report_2026-02_west_units_sold",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_report_ratio_2026-02",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_baseline_2026-02",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_report_coverage_2026-03",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_independent_hand_total_2026-03_net_sales",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_parent_child_2026-03_net_sales",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_control_2026-03_net_sales",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_group_report_2026-03_east_net_sales",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_group_report_2026-03_west_net_sales",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_independent_hand_total_2026-03_cost_of_sales",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_parent_child_2026-03_cost_of_sales",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_control_2026-03_cost_of_sales",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_group_report_2026-03_east_cost_of_sales",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_group_report_2026-03_west_cost_of_sales",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_independent_hand_total_2026-03_units_sold",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_parent_child_2026-03_units_sold",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_control_2026-03_units_sold",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_group_report_2026-03_east_units_sold",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_group_report_2026-03_west_units_sold",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_report_ratio_2026-03",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_baseline_2026-03",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_line_control_ret-01-001",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_line_control_ret-01-002",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_line_control_ret-01-003",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "retail_line_control_ret-01-004",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_counts",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_transaction_keys",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_date_0",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_date_1",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_date_2",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_date_3",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_date_4",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_date_5",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_date_6",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_date_7",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_date_8",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_date_9",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_date_10",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_date_11",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_detail_context_0",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_detail_freshness_0",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_detail_context_1",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_detail_freshness_1",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_detail_context_2",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_detail_freshness_2",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_detail_context_3",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_detail_freshness_3",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_detail_context_4",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_detail_freshness_4",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_detail_context_5",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_detail_freshness_5",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_detail_context_6",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_detail_freshness_6",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_detail_context_7",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_detail_freshness_7",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_detail_context_8",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_detail_freshness_8",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_detail_context_9",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_detail_freshness_9",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_detail_context_10",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_detail_freshness_10",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_detail_context_11",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_detail_freshness_11",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_groups_context_0",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_groups_freshness_0",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_groups_context_1",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_groups_freshness_1",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_groups_context_2",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_groups_freshness_2",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_groups_context_3",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_groups_freshness_3",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_groups_context_4",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_groups_freshness_4",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_groups_context_5",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_groups_freshness_5",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_reports_context_0",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_reports_freshness_0",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_reports_context_1",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_reports_freshness_1",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_reports_context_2",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_reports_freshness_2",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_reports_context_3",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_reports_freshness_3",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_reports_context_4",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_reports_freshness_4",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_reports_context_5",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_reports_freshness_5",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_reports_context_6",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_reports_freshness_6",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_reports_context_7",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_reports_freshness_7",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_reports_context_8",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_reports_freshness_8",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_detail_group_2026-01_plant_a_production_cost",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_detail_group_2026-01_plant_a_units_started",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_detail_group_2026-01_plant_a_good_units",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_group_ratio_2026-01_plant_a",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_detail_group_2026-01_plant_b_production_cost",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_detail_group_2026-01_plant_b_units_started",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_detail_group_2026-01_plant_b_good_units",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_group_ratio_2026-01_plant_b",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_detail_group_2026-02_plant_a_production_cost",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_detail_group_2026-02_plant_a_units_started",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_detail_group_2026-02_plant_a_good_units",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_group_ratio_2026-02_plant_a",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_detail_group_2026-02_plant_b_production_cost",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_detail_group_2026-02_plant_b_units_started",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_detail_group_2026-02_plant_b_good_units",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_group_ratio_2026-02_plant_b",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_detail_group_2026-03_plant_a_production_cost",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_detail_group_2026-03_plant_a_units_started",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_detail_group_2026-03_plant_a_good_units",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_group_ratio_2026-03_plant_a",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_detail_group_2026-03_plant_b_production_cost",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_detail_group_2026-03_plant_b_units_started",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_detail_group_2026-03_plant_b_good_units",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_group_ratio_2026-03_plant_b",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_report_coverage_2026-01",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_independent_hand_total_2026-01_production_cost",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_parent_child_2026-01_production_cost",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_control_2026-01_production_cost",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_group_report_2026-01_plant_a_production_cost",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_group_report_2026-01_plant_b_production_cost",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_independent_hand_total_2026-01_units_started",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_parent_child_2026-01_units_started",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_control_2026-01_units_started",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_group_report_2026-01_plant_a_units_started",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_group_report_2026-01_plant_b_units_started",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_independent_hand_total_2026-01_good_units",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_parent_child_2026-01_good_units",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_control_2026-01_good_units",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_group_report_2026-01_plant_a_good_units",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_group_report_2026-01_plant_b_good_units",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_report_ratio_2026-01",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_baseline_2026-01",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_report_coverage_2026-02",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_independent_hand_total_2026-02_production_cost",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_parent_child_2026-02_production_cost",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_control_2026-02_production_cost",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_group_report_2026-02_plant_a_production_cost",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_group_report_2026-02_plant_b_production_cost",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_independent_hand_total_2026-02_units_started",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_parent_child_2026-02_units_started",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_control_2026-02_units_started",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_group_report_2026-02_plant_a_units_started",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_group_report_2026-02_plant_b_units_started",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_independent_hand_total_2026-02_good_units",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_parent_child_2026-02_good_units",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_control_2026-02_good_units",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_group_report_2026-02_plant_a_good_units",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_group_report_2026-02_plant_b_good_units",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_report_ratio_2026-02",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_baseline_2026-02",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_report_coverage_2026-03",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_independent_hand_total_2026-03_production_cost",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_parent_child_2026-03_production_cost",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_control_2026-03_production_cost",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_group_report_2026-03_plant_a_production_cost",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_group_report_2026-03_plant_b_production_cost",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_independent_hand_total_2026-03_units_started",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_parent_child_2026-03_units_started",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_control_2026-03_units_started",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_group_report_2026-03_plant_a_units_started",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_group_report_2026-03_plant_b_units_started",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_independent_hand_total_2026-03_good_units",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_parent_child_2026-03_good_units",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_control_2026-03_good_units",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_group_report_2026-03_plant_a_good_units",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_group_report_2026-03_plant_b_good_units",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_report_ratio_2026-03",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_baseline_2026-03",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_line_control_man-01-001",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_line_control_man-01-002",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_line_control_man-01-003",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "manufacturing_line_control_man-01-004",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_counts",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_transaction_keys",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_date_0",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_date_1",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_date_2",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_date_3",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_date_4",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_date_5",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_date_6",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_date_7",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_date_8",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_date_9",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_date_10",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_date_11",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_detail_context_0",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_detail_freshness_0",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_detail_context_1",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_detail_freshness_1",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_detail_context_2",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_detail_freshness_2",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_detail_context_3",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_detail_freshness_3",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_detail_context_4",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_detail_freshness_4",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_detail_context_5",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_detail_freshness_5",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_detail_context_6",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_detail_freshness_6",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_detail_context_7",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_detail_freshness_7",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_detail_context_8",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_detail_freshness_8",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_detail_context_9",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_detail_freshness_9",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_detail_context_10",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_detail_freshness_10",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_detail_context_11",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_detail_freshness_11",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_groups_context_0",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_groups_freshness_0",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_groups_context_1",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_groups_freshness_1",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_groups_context_2",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_groups_freshness_2",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_groups_context_3",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_groups_freshness_3",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_groups_context_4",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_groups_freshness_4",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_groups_context_5",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_groups_freshness_5",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_reports_context_0",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_reports_freshness_0",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_reports_context_1",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_reports_freshness_1",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_reports_context_2",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_reports_freshness_2",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_reports_context_3",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_reports_freshness_3",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_reports_context_4",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_reports_freshness_4",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_reports_context_5",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_reports_freshness_5",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_reports_context_6",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_reports_freshness_6",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_reports_context_7",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_reports_freshness_7",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_reports_context_8",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_reports_freshness_8",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_detail_group_2026-01_small_recognized_revenue",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_detail_group_2026-01_small_paid_seat_months",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_detail_group_2026-01_small_support_tickets",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_group_ratio_2026-01_small",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_detail_group_2026-01_large_recognized_revenue",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_detail_group_2026-01_large_paid_seat_months",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_detail_group_2026-01_large_support_tickets",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_group_ratio_2026-01_large",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_detail_group_2026-02_small_recognized_revenue",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_detail_group_2026-02_small_paid_seat_months",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_detail_group_2026-02_small_support_tickets",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_group_ratio_2026-02_small",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_detail_group_2026-02_large_recognized_revenue",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_detail_group_2026-02_large_paid_seat_months",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_detail_group_2026-02_large_support_tickets",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_group_ratio_2026-02_large",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_detail_group_2026-03_small_recognized_revenue",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_detail_group_2026-03_small_paid_seat_months",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_detail_group_2026-03_small_support_tickets",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_group_ratio_2026-03_small",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_detail_group_2026-03_large_recognized_revenue",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_detail_group_2026-03_large_paid_seat_months",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_detail_group_2026-03_large_support_tickets",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_group_ratio_2026-03_large",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_report_coverage_2026-01",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_independent_hand_total_2026-01_recognized_revenue",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_parent_child_2026-01_recognized_revenue",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_control_2026-01_recognized_revenue",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_group_report_2026-01_small_recognized_revenue",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_group_report_2026-01_large_recognized_revenue",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_independent_hand_total_2026-01_paid_seat_months",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_parent_child_2026-01_paid_seat_months",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_control_2026-01_paid_seat_months",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_group_report_2026-01_small_paid_seat_months",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_group_report_2026-01_large_paid_seat_months",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_independent_hand_total_2026-01_support_tickets",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_parent_child_2026-01_support_tickets",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_control_2026-01_support_tickets",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_group_report_2026-01_small_support_tickets",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_group_report_2026-01_large_support_tickets",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_report_ratio_2026-01",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_baseline_2026-01",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_report_coverage_2026-02",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_independent_hand_total_2026-02_recognized_revenue",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_parent_child_2026-02_recognized_revenue",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_control_2026-02_recognized_revenue",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_group_report_2026-02_small_recognized_revenue",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_group_report_2026-02_large_recognized_revenue",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_independent_hand_total_2026-02_paid_seat_months",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_parent_child_2026-02_paid_seat_months",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_control_2026-02_paid_seat_months",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_group_report_2026-02_small_paid_seat_months",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_group_report_2026-02_large_paid_seat_months",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_independent_hand_total_2026-02_support_tickets",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_parent_child_2026-02_support_tickets",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_control_2026-02_support_tickets",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_group_report_2026-02_small_support_tickets",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_group_report_2026-02_large_support_tickets",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_report_ratio_2026-02",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_baseline_2026-02",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_report_coverage_2026-03",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_independent_hand_total_2026-03_recognized_revenue",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_parent_child_2026-03_recognized_revenue",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_control_2026-03_recognized_revenue",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_group_report_2026-03_small_recognized_revenue",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_group_report_2026-03_large_recognized_revenue",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_independent_hand_total_2026-03_paid_seat_months",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_parent_child_2026-03_paid_seat_months",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_control_2026-03_paid_seat_months",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_group_report_2026-03_small_paid_seat_months",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_group_report_2026-03_large_paid_seat_months",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_independent_hand_total_2026-03_support_tickets",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_parent_child_2026-03_support_tickets",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_control_2026-03_support_tickets",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_group_report_2026-03_small_support_tickets",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_group_report_2026-03_large_support_tickets",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_report_ratio_2026-03",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_baseline_2026-03",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_line_control_saa-01-001",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_line_control_saa-01-002",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_line_control_saa-01-003",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "saas_line_control_saa-01-004",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "V01_double_count",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "V02_offset_duplicate",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "V03_ratio",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "V04_currency",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "V05_scale",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "V06_coverage",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "V07_date",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "V08_stale",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "V09_future",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "V10_baseline",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "V11_snapshot",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "V12_open",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "V13_balance",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "V14_offset",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "V15_missing_weight",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "V01_mixed_subtotal_double_count_replacement_header",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "V02_missing_group_offset_duplicate_replacement_header",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "V03_unweighted_margin_replacement_header",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "V04_mixed_currency_replacement_header",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "V05_mixed_amount_scale_replacement_header",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "V06_missing_reporting_group_replacement_header",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "V07_impossible_date_replacement_header",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "V08_stale_partition_replacement_header",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "V09_future_timestamp_replacement_header",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "V10_missing_plan_baseline_replacement_header",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "V11_unselected_snapshot_replacement_header",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "V12_incomplete_period_replacement_header",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "V13_summed_balance_replacement_header",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "V14_offset_detail_errors_replacement_header",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "V15_missing_denominator_replacement_header",
+      "passed": true,
+      "detail": ""
+    }
+  ],
+  "limitations": "Toy-fixture consistency only. Not a run of reporting-assurance; expected statuses are authored scenarios, not implemented rule-engine output."
+}

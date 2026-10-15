@@ -1,0 +1,174 @@
+{
+  "telecom": {
+    "group": "service_region",
+    "groups": [
+      "north",
+      "south"
+    ],
+    "measures": [
+      "service_revenue",
+      "line_months",
+      "disconnects"
+    ],
+    "values": [
+      [
+        40,
+        1,
+        0
+      ],
+      [
+        60,
+        1,
+        0
+      ],
+      [
+        300,
+        3,
+        1
+      ],
+      [
+        600,
+        5,
+        0
+      ]
+    ],
+    "ratio": "disconnect_rate",
+    "num": "disconnects",
+    "den": "line_months",
+    "totals": [
+      1000,
+      10,
+      1
+    ],
+    "desc": "Fictional service charges, line exposure and disconnect activity; exposures are disjoint service-line months"
+  },
+  "retail": {
+    "group": "store_region",
+    "groups": [
+      "east",
+      "west"
+    ],
+    "measures": [
+      "net_sales",
+      "cost_of_sales",
+      "units_sold"
+    ],
+    "values": [
+      [
+        40,
+        32,
+        1
+      ],
+      [
+        60,
+        48,
+        1
+      ],
+      [
+        300,
+        150,
+        3
+      ],
+      [
+        600,
+        300,
+        6
+      ]
+    ],
+    "ratio": "gross_margin_rate",
+    "num": "gross_profit",
+    "den": "net_sales",
+    "totals": [
+      1000,
+      530,
+      11
+    ],
+    "desc": "Fictional net sales lines with allocated cost; net sales already excludes returns; no tax or receivable model"
+  },
+  "manufacturing": {
+    "group": "plant",
+    "groups": [
+      "plant_a",
+      "plant_b"
+    ],
+    "measures": [
+      "production_cost",
+      "units_started",
+      "good_units"
+    ],
+    "values": [
+      [
+        40,
+        50,
+        45
+      ],
+      [
+        60,
+        50,
+        45
+      ],
+      [
+        300,
+        400,
+        360
+      ],
+      [
+        600,
+        500,
+        450
+      ]
+    ],
+    "ratio": "first_pass_yield",
+    "num": "good_units",
+    "den": "units_started",
+    "totals": [
+      1000,
+      1000,
+      900
+    ],
+    "desc": "Fictional closed production batches; started units all have final good/reject disposition; cost is incurred production cost, not revenue"
+  },
+  "saas": {
+    "group": "customer_segment",
+    "groups": [
+      "small",
+      "large"
+    ],
+    "measures": [
+      "recognized_revenue",
+      "paid_seat_months",
+      "support_tickets"
+    ],
+    "values": [
+      [
+        40,
+        1,
+        2
+      ],
+      [
+        60,
+        1,
+        1
+      ],
+      [
+        300,
+        3,
+        2
+      ],
+      [
+        600,
+        5,
+        3
+      ]
+    ],
+    "ratio": "revenue_per_seat_month",
+    "num": "recognized_revenue",
+    "den": "paid_seat_months",
+    "totals": [
+      1000,
+      10,
+      8
+    ],
+    "desc": "Fictional monthly recognition lines; seats are disjoint seat-month exposure; recognized revenue is not cash receipts or ARR"
+  }
+}

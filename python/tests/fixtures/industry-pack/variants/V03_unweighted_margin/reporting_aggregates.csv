@@ -1,0 +1,10 @@
+period_id,scenario,currency,amount_scale,snapshot_id,loaded_at,store_region,net_sales,cost_of_sales,units_sold,gross_margin_rate,row_level,parent_id
+2026-01,Actual,USD,1,s1,2026-04-04T12:00:00Z,east,100,80,2,0.200000,group,ALL
+2026-01,Actual,USD,1,s1,2026-04-04T12:00:00Z,west,900,450,9,0.500000,group,ALL
+2026-01,Actual,USD,1,s1,2026-04-04T12:00:00Z,ALL,1000,530,11,0.350000,company,
+2026-02,Actual,USD,1,s1,2026-04-04T12:00:00Z,east,200,160,2,0.200000,group,ALL
+2026-02,Actual,USD,1,s1,2026-04-04T12:00:00Z,west,1800,900,9,0.500000,group,ALL
+2026-02,Actual,USD,1,s1,2026-04-04T12:00:00Z,ALL,2000,1060,11,0.470000,company,
+2026-03,Actual,USD,1,s1,2026-04-04T12:00:00Z,east,300,240,2,0.200000,group,ALL
+2026-03,Actual,USD,1,s1,2026-04-04T12:00:00Z,west,2700,1350,9,0.500000,group,ALL
+2026-03,Actual,USD,1,s1,2026-04-04T12:00:00Z,ALL,3000,1590,11,0.470000,company,

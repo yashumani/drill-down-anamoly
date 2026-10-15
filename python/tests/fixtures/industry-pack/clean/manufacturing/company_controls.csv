@@ -1,0 +1,10 @@
+period_id,scenario,snapshot_id,currency,unit,amount_scale,metric,expected_value,control_origin
+2026-01,Actual,s1,USD,currency,1,production_cost,1000,hand_authored_synthetic_company_control
+2026-01,Actual,s1,,unit,1,units_started,1000,hand_authored_synthetic_company_control
+2026-01,Actual,s1,,unit,1,good_units,900,hand_authored_synthetic_company_control
+2026-02,Actual,s1,USD,currency,1,production_cost,2000,hand_authored_synthetic_company_control
+2026-02,Actual,s1,,unit,1,units_started,1000,hand_authored_synthetic_company_control
+2026-02,Actual,s1,,unit,1,good_units,900,hand_authored_synthetic_company_control
+2026-03,Actual,s1,USD,currency,1,production_cost,3000,hand_authored_synthetic_company_control
+2026-03,Actual,s1,,unit,1,units_started,1000,hand_authored_synthetic_company_control
+2026-03,Actual,s1,,unit,1,good_units,900,hand_authored_synthetic_company_control

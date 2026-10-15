@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=77", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "multi-tier-reporting-assurance"
+version = "0.1.0a1"
+description = "Deterministic assurance for reporting aggregates in existing Python workflows"
+readme = "python/README.md"
+requires-python = ">=3.9"
+dependencies = []
+classifiers = ["Development Status :: 3 - Alpha", "Programming Language :: Python :: 3 :: Only"]
+
+[project.scripts]
+reporting-assurance = "reporting_assurance.cli:main"
+
+[project.urls]
+Repository = "https://github.com/yashumani/drill-down-anamoly"
+
+[tool.setuptools.packages.find]
+where = ["python/src"]
+
+[tool.setuptools.package-data]
+reporting_assurance = ["schemas/*.json", "py.typed"]
