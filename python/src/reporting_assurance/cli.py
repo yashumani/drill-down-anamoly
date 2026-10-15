@@ -9,6 +9,10 @@ from .engine import evaluate
 
 
 def main(argv=None):
+    argv = list(sys.argv[1:] if argv is None else argv)
+    if argv and argv[0] == "studio":
+        from .studio import main as studio_main
+        return studio_main(argv[1:])
     parser = argparse.ArgumentParser(prog="reporting-assurance")
     parser.add_argument("--rules", required=True)
     parser.add_argument("--csv")

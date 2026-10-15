@@ -21,4 +21,4 @@ Repository = "https://github.com/yashumani/drill-down-anamoly"
 where = ["python/src"]
 
 [tool.setuptools.package-data]
-reporting_assurance = ["schemas/*.json", "py.typed"]
+reporting_assurance = ["schemas/*.json", "py.typed", "studio.html"]

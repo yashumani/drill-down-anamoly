@@ -197,4 +197,4 @@ See `docs/architecture-remediation-status.md`.
 
 ## Multi-Tier Reporting Assurance Python module
 
-The independent Python alpha package runs deterministic reporting rules in existing workflows without the browser app, Node, KNIME or a model. Start with [installation, API/CLI examples and boundaries](python/README.md). See [current verification and limitations](docs/reporting-assurance-release.md). The browser UI has not yet been integrated with the Python executor.
+The independent Python alpha package runs deterministic reporting rules in existing workflows without the browser app, Node, KNIME or a model. Start with [installation, API/CLI examples and boundaries](python/README.md). See [current verification and limitations](docs/reporting-assurance-release.md). An optional local Rule Studio supports draft JSON authoring through the Python executor. The existing browser application has not yet been integrated with that executor.

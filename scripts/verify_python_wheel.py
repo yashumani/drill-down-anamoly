@@ -15,6 +15,7 @@ with zipfile.ZipFile(wheel) as archive:
     names = archive.namelist()
     assert 'reporting_assurance/schemas/rule-bundle-v1.json' in names
     assert 'reporting_assurance/schemas/report-v1.json' in names
+    assert 'reporting_assurance/studio.html' in names
     assert not any('/tests/' in n or 'node_modules' in n for n in names)
 env = dict(os.environ)
 env.pop('PYTHONPATH', None)
