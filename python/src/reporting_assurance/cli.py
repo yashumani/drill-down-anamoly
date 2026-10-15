@@ -1,6 +1,7 @@
 """Local-only API/CLI parity. Errors are fixed codes and never include source values."""
 import argparse
 import json
+import stat
 import sys
 from pathlib import Path
 from .contracts import ConfigError, load_bundle, bundle_digest, MAX_CONFIG_BYTES
@@ -28,7 +29,7 @@ def main(argv=None):
     parser.add_argument("--interpretation-plan", metavar="LOCAL_JSON", help="Replay a bounded offline evidence selection; never loads executable adapters")
     args = parser.parse_args(argv)
     try:
-        if (args.interpretation_plan or args.include_numeric_evidence) and not args.explain:
+        if (args.interpretation_plan is not None or args.include_numeric_evidence) and not args.explain:
             raise ConfigError("explain_required")
         if args.digest_only and args.explain:
             raise ConfigError("incompatible_cli_options")
@@ -63,14 +64,21 @@ def main(argv=None):
         if args.explain:
             from .interpretation import explain, load_selection, MAX_SELECTION_BYTES
             selection = None
-            if args.interpretation_plan:
-                plan_path = Path(args.interpretation_plan)
-                if plan_path.stat().st_size > MAX_SELECTION_BYTES:
-                    raise ConfigError("selection_resource_limit")
+            if args.interpretation_plan is not None:
                 try:
-                    selection = load_selection(plan_path.read_text(encoding="utf-8"))
-                except ConfigError:
-                    # A bad optional plan cannot erase the independently evaluated report.
+                    plan_path = Path(args.interpretation_plan)
+                    info = plan_path.stat()
+                    if not stat.S_ISREG(info.st_mode) or info.st_size > MAX_SELECTION_BYTES:
+                        raise ConfigError("selection_resource_limit_or_shape")
+                    # Bound the read as well as stat: a file may grow between the two.
+                    with plan_path.open("rb") as handle:
+                        encoded = handle.read(MAX_SELECTION_BYTES + 1)
+                    if len(encoded) > MAX_SELECTION_BYTES:
+                        raise ConfigError("selection_resource_limit")
+                    selection = load_selection(encoded.decode("utf-8"))
+                except (ConfigError, OSError, UnicodeError, ValueError, OverflowError):
+                    # Every optional-plan loading failure gets an error sidecar.
+                    # Primary/rule/reference failures still remain input errors.
                     selection = {}
             report = explain(rows, config, include_analysis=args.include_analysis,
                 include_numeric_evidence=args.include_numeric_evidence, selection=selection, **options)
