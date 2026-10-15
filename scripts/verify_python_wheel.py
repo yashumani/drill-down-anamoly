@@ -6,6 +6,7 @@ from pathlib import Path
 import subprocess
 import sys
 import tempfile
+import tarfile
 import venv
 import zipfile
 
@@ -16,9 +17,14 @@ with zipfile.ZipFile(wheel) as archive:
     assert 'reporting_assurance/schemas/rule-bundle-v1.json' in names
     assert 'reporting_assurance/schemas/report-v1.json' in names
     assert 'reporting_assurance/studio.html' in names
+    assert 'reporting_assurance/schemas/record-tables-v1.json' in names
     assert 'reporting_assurance/schemas/explanation-report-v1.json' in names
     assert 'reporting_assurance/schemas/interpretation-selection-v1.json' in names
     assert not any('/tests/' in n or 'node_modules' in n for n in names)
+with tarfile.open(next((root / 'python/dist').glob('*.tar.gz')), 'r:gz') as archive:
+    source_names = archive.getnames()
+    assert any(name.endswith('/docs/record-tables-v1.md') for name in source_names)
+    assert any(name.endswith('/python/examples/run_tables.py') for name in source_names)
 env = dict(os.environ)
 env.pop('PYTHONPATH', None)
 with tempfile.TemporaryDirectory(prefix='reporting-assurance-wheel-') as directory:
@@ -53,7 +59,12 @@ with tempfile.TemporaryDirectory(prefix='reporting-assurance-wheel-') as directo
     assert example['local']==explained
     assert example['offline_mock']['deterministic']==nested
     assert example['offline_mock']['interpretation']['model_verification']=='not_verified'
-    # No Node/model/KNIME runtime dependencies were installed or needed.
+    flat = json.loads(run('-I', root/'python/examples/run_tables.py').stdout)
+    assert flat['summary'][0]['pass_count'] == 10 and flat['summary'][0]['gate'] == 'non_gating'
+    assert flat['analysis_groups'][0]['total'] == '100.00'
+    assert flat['check_diagnostics'] == []
+    assert all(cell is None or type(cell) in (str, int, bool) for records in flat.values() for row in records for cell in row.values())
+    # No Node/model/KNIME/dataframe runtime dependencies were installed or needed.
     print(json.dumps({'wheel':wheel.name, 'sha256':hashlib.sha256(wheel.read_bytes()).hexdigest(),
                       'python':sys.version.split()[0], 'clean_install':True, 'api_cli_entrypoint_parity':True,
                       'runtime_dependencies':metadata['requires'] or []}, sort_keys=True))

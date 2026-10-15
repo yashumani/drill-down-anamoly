@@ -13,3 +13,6 @@ __all__ += ["analyze", "suggest_rules"]
 
 from .interpretation import explain, load_selection
 __all__ += ["explain", "load_selection"]
+
+from .record_tables import normalize_records, report_to_record_tables, RECORD_TABLE_COLUMNS, RECORD_TABLE_VERSION
+__all__ += ['normalize_records', 'report_to_record_tables', 'RECORD_TABLE_COLUMNS', 'RECORD_TABLE_VERSION']

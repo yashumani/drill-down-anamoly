@@ -1,6 +1,6 @@
 # Multi-Tier Reporting Assurance — 0.1.0a1
 
-An installable Python module for existing Python and KNIME reporting workflows. Tier 1 uses deterministic rules on reporting aggregates, grouped data or transaction detail. The package runs without Node, a server, UI, model or KNIME. It has no runtime dependencies.
+An installable Python module for existing Python reporting workflows with native record-table input and flat result-table output. Dedicated KNIME integration is deferred, not a release blocker. Tier 1 uses deterministic rules on reporting aggregates, grouped data or transaction detail. The package runs without Node, a server, UI, model or KNIME. It has no runtime dependencies.
 
 This is a bounded alpha release. Existing browser-app behavior and its finance contract remain separate; the Python executor remains authoritative for its declarative rules. An additive local preview bridge is described below; existing browser exploration remains separate. An optional Tier 3 evidence-selection interface is available; live models and free-form AI interpretation remain unverified and unimplemented by this package. An optional local Rule Studio provides draft authoring; its bounded Windows headless Chromium verification is recorded in the release evidence. See the current release evidence in `docs/reporting-assurance-release.md`.
 
@@ -32,7 +32,15 @@ report = evaluate(rows, config, references={'controls': controls},
 assert report['gate'] == 'non_gating'
 ```
 
-Run `python python/examples/run_api.py` for the complete approved synthetic API example. A thin KNIME Python Script example is in `python/examples/knime_script.py`; actual KNIME compatibility is unverified unless stated in release evidence.
+Run `python python/examples/run_api.py` for the complete approved synthetic API example. Run `python python/examples/run_tables.py` for in-memory input records and scalar result tables, without a dataframe dependency. Dedicated KNIME node integration/execution is deferred by scope, not a release acceptance requirement.
+
+## Record tables in and out
+
+`normalize_records(records, types=...)` copies bounded native dictionaries and converts only explicitly declared exact decimal/integer/boolean text. Null and zero remain distinct; invalid typed text remains checkable by the existing `types` rule. Floats, nested cells and framework-specific scalars are rejected rather than rounded or stringified. Owners explicitly normalize dataframe missing sentinels and preserve IDs/decimal/timestamp semantics upstream.
+
+`report_to_record_tables(report, report_id=...)` converts existing `evaluate()` or `analyze()` results into seven scalar tables: `summary`, `checks`, `check_counts`, `check_diagnostics`, `analyses`, `analysis_groups`, and `limitations`. The original gate/outcomes remain unchanged. Decimal aggregates stay strings, unavailable fields stay `None`, and skipped analyses remain present without fabricated groups. Diagnostic row indices need explicit `include_diagnostics=True`; no raw input rows or group labels are added. `RECORD_TABLE_COLUMNS` defines stable columns even for empty tables; the packaged `record-tables-v1.json` describes contract v1.0.
+
+See [the complete table contract](../docs/record-tables-v1.md) for joins, logical types, bounds, trust limits, exact numeric handling, and optional caller-side pandas/Polars conversion. No pandas, Polars or KNIME runtime dependency is added. Existing nested API/CLI reports are preserved; the new helper is additive.
 
 ## Inputs, semantics and limits
 
@@ -84,7 +92,7 @@ reporting-assurance studio --port 0
 
 Open the printed loopback URL. The Studio profiles counts, proposes editable nonblocking draft rules, previews through the same Python executor, and exports the exact validated JSON in the editor. It never approves a bundle or executes a production gate. Its server binds only 127.0.0.1, rejects foreign Host/Origin requests by default, uses no remote assets/models, and retains no saved table between requests. Temporary CSV adapter files are removed. The Studio caps CSV at 1 MiB and requests at 2 MiB; use the API/CLI for larger documented inputs. Core import and evaluation do not start or require the server.
 
-HTTP, JavaScript and actual isolated Chromium checks cover draft authoring, imports, preview, exact downloads and edit/response races. Counts and obsolete success status clear on edits, and hidden profile cards remain invisible. Viewport widths 390/820/1440 were exercised. This is bounded headless Chromium evidence, not a complete keyboard/accessibility audit or a universal browser claim. The native Windows computer-use launcher still fails independently; KNIME remains unverified because the known folder contains only a quickstart PDF.
+HTTP, JavaScript and actual isolated Chromium checks cover draft authoring, imports, preview, exact downloads and edit/response races. Counts and obsolete success status clear on edits, and hidden profile cards remain invisible. Viewport widths 390/820/1440 were exercised. This is bounded headless Chromium evidence, not a complete keyboard/accessibility audit or a universal browser claim. The native Windows computer-use launcher still fails independently; dedicated KNIME execution is deferred by scope and is not required for this Python table contract.
 
 ## Reference CSV types
 
@@ -155,4 +163,4 @@ npm run build
 python scripts/verify_browser_assurance.py --evidence-dir python/validation/browser-local
 ```
 
-Run this test while port 8765 is free; it owns and closes only the servers it starts. Evidence includes Git identity, counts, request metadata, expected rejection console messages and screenshots using fictional inputs. It never enables `--no-sandbox`, wildcard origins or browser security bypasses. Actual KNIME, live providers, other browser engines and a full accessibility audit remain outside this verification.
+Run this test while port 8765 is free; it owns and closes only the servers it starts. Evidence includes Git identity, counts, request metadata, expected rejection console messages and screenshots using fictional inputs. It never enables `--no-sandbox`, wildcard origins or browser security bypasses. Dedicated KNIME integration is deferred and not a release blocker. Live providers, other browser engines and a full accessibility audit remain outside this verification.

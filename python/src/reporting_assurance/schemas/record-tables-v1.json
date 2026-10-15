@@ -1,0 +1,580 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Reporting Assurance scalar record tables v1.0",
+  "type": "object",
+  "properties": {
+    "summary": {
+      "type": "array",
+      "maxItems": 1,
+      "items": {
+        "type": "object",
+        "properties": {
+          "report_id": {
+            "type": "string",
+            "maxLength": 128,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$"
+          },
+          "table_version": {
+            "const": "1.0"
+          },
+          "report_version": {
+            "const": "1.0"
+          },
+          "engine_version": {
+            "type": "string",
+            "maxLength": 128
+          },
+          "mode": {
+            "enum": [
+              "preview",
+              "production"
+            ]
+          },
+          "bundle_digest": {
+            "type": "string",
+            "maxLength": 64,
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "approval_valid_in_caller_trust": {
+            "type": "boolean"
+          },
+          "gate": {
+            "enum": [
+              "pass",
+              "fail",
+              "blocked",
+              "non_gating"
+            ]
+          },
+          "gate_reason": {
+            "type": "string",
+            "maxLength": 128,
+            "pattern": "^[a-z0-9_]{1,128}$"
+          },
+          "evaluation_time": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 64,
+            "format": "date-time"
+          },
+          "row_count": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100000
+          },
+          "rule_count": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 128
+          },
+          "pass_count": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 128
+          },
+          "fail_count": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 128
+          },
+          "not_evaluated_count": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 128
+          },
+          "error_count": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 128
+          },
+          "analysis_count": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 32
+          }
+        },
+        "required": [
+          "report_id",
+          "table_version",
+          "report_version",
+          "engine_version",
+          "mode",
+          "bundle_digest",
+          "approval_valid_in_caller_trust",
+          "gate",
+          "gate_reason",
+          "evaluation_time",
+          "row_count",
+          "rule_count",
+          "pass_count",
+          "fail_count",
+          "not_evaluated_count",
+          "error_count",
+          "analysis_count"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 1
+    },
+    "checks": {
+      "type": "array",
+      "maxItems": 128,
+      "items": {
+        "type": "object",
+        "properties": {
+          "report_id": {
+            "type": "string",
+            "maxLength": 128,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$"
+          },
+          "check_id": {
+            "type": "string",
+            "maxLength": 64,
+            "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,63}$"
+          },
+          "operator": {
+            "enum": [
+              "required_fields",
+              "types",
+              "unique",
+              "allowed_values",
+              "range",
+              "coverage",
+              "freshness",
+              "consistency",
+              "row_level",
+              "reconcile"
+            ]
+          },
+          "outcome": {
+            "enum": [
+              "pass",
+              "fail",
+              "not_evaluated",
+              "error"
+            ]
+          },
+          "reason": {
+            "type": "string",
+            "maxLength": 128,
+            "pattern": "^[a-z0-9_]{1,128}$"
+          },
+          "severity": {
+            "enum": [
+              "info",
+              "warning",
+              "critical"
+            ]
+          },
+          "required": {
+            "type": "boolean"
+          },
+          "blocking": {
+            "type": "boolean"
+          },
+          "diagnostics_available": {
+            "type": "boolean"
+          },
+          "diagnostics_included": {
+            "type": "boolean"
+          },
+          "diagnostic_row_count": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0,
+            "maximum": 20
+          },
+          "diagnostics_truncated": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "report_id",
+          "check_id",
+          "operator",
+          "outcome",
+          "reason",
+          "severity",
+          "required",
+          "blocking",
+          "diagnostics_available",
+          "diagnostics_included",
+          "diagnostic_row_count",
+          "diagnostics_truncated"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "check_counts": {
+      "type": "array",
+      "maxItems": 2048,
+      "items": {
+        "type": "object",
+        "properties": {
+          "report_id": {
+            "type": "string",
+            "maxLength": 128,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$"
+          },
+          "check_id": {
+            "type": "string",
+            "maxLength": 64,
+            "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,63}$"
+          },
+          "count_name": {
+            "type": "string",
+            "maxLength": 128,
+            "pattern": "^[a-z0-9_]{1,128}$"
+          },
+          "count": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 200000
+          }
+        },
+        "required": [
+          "report_id",
+          "check_id",
+          "count_name",
+          "count"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "check_diagnostics": {
+      "type": "array",
+      "maxItems": 2560,
+      "items": {
+        "type": "object",
+        "properties": {
+          "report_id": {
+            "type": "string",
+            "maxLength": 128,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$"
+          },
+          "check_id": {
+            "type": "string",
+            "maxLength": 64,
+            "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,63}$"
+          },
+          "diagnostic_index": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 19
+          },
+          "row_index": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 99999
+          }
+        },
+        "required": [
+          "report_id",
+          "check_id",
+          "diagnostic_index",
+          "row_index"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "analyses": {
+      "type": "array",
+      "maxItems": 32,
+      "items": {
+        "type": "object",
+        "properties": {
+          "report_id": {
+            "type": "string",
+            "maxLength": 128,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$"
+          },
+          "analysis_id": {
+            "type": "string",
+            "maxLength": 64,
+            "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,63}$"
+          },
+          "operator": {
+            "enum": [
+              "summary",
+              "ratio_of_sums",
+              "variance",
+              "period_end"
+            ]
+          },
+          "outcome": {
+            "enum": [
+              "pass",
+              "fail",
+              "not_evaluated",
+              "error"
+            ]
+          },
+          "reason": {
+            "type": "string",
+            "maxLength": 128,
+            "pattern": "^[a-z0-9_]{1,128}$"
+          },
+          "group_count": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1000
+          },
+          "mismatched_groups": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0,
+            "maximum": 1000
+          }
+        },
+        "required": [
+          "report_id",
+          "analysis_id",
+          "operator",
+          "outcome",
+          "reason",
+          "group_count",
+          "mismatched_groups"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "analysis_groups": {
+      "type": "array",
+      "maxItems": 32000,
+      "items": {
+        "type": "object",
+        "properties": {
+          "report_id": {
+            "type": "string",
+            "maxLength": 128,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$"
+          },
+          "analysis_id": {
+            "type": "string",
+            "maxLength": 64,
+            "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,63}$"
+          },
+          "group_index": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 999
+          },
+          "count": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0,
+            "maximum": 100000
+          },
+          "total": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 1024,
+            "pattern": "^-?(?:[0-9]+(?:\\.[0-9]*)?|\\.[0-9]+)(?:[Ee][+-]?[0-9]+)?$"
+          },
+          "mean": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 1024,
+            "pattern": "^-?(?:[0-9]+(?:\\.[0-9]*)?|\\.[0-9]+)(?:[Ee][+-]?[0-9]+)?$"
+          },
+          "minimum": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 1024,
+            "pattern": "^-?(?:[0-9]+(?:\\.[0-9]*)?|\\.[0-9]+)(?:[Ee][+-]?[0-9]+)?$"
+          },
+          "maximum": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 1024,
+            "pattern": "^-?(?:[0-9]+(?:\\.[0-9]*)?|\\.[0-9]+)(?:[Ee][+-]?[0-9]+)?$"
+          },
+          "population_stddev": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 1024,
+            "pattern": "^-?(?:[0-9]+(?:\\.[0-9]*)?|\\.[0-9]+)(?:[Ee][+-]?[0-9]+)?$"
+          },
+          "numerator": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 1024,
+            "pattern": "^-?(?:[0-9]+(?:\\.[0-9]*)?|\\.[0-9]+)(?:[Ee][+-]?[0-9]+)?$"
+          },
+          "denominator": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 1024,
+            "pattern": "^-?(?:[0-9]+(?:\\.[0-9]*)?|\\.[0-9]+)(?:[Ee][+-]?[0-9]+)?$"
+          },
+          "ratio": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 1024,
+            "pattern": "^-?(?:[0-9]+(?:\\.[0-9]*)?|\\.[0-9]+)(?:[Ee][+-]?[0-9]+)?$"
+          },
+          "actual": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 1024,
+            "pattern": "^-?(?:[0-9]+(?:\\.[0-9]*)?|\\.[0-9]+)(?:[Ee][+-]?[0-9]+)?$"
+          },
+          "baseline": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 1024,
+            "pattern": "^-?(?:[0-9]+(?:\\.[0-9]*)?|\\.[0-9]+)(?:[Ee][+-]?[0-9]+)?$"
+          },
+          "delta": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 1024,
+            "pattern": "^-?(?:[0-9]+(?:\\.[0-9]*)?|\\.[0-9]+)(?:[Ee][+-]?[0-9]+)?$"
+          },
+          "relative_delta": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 1024,
+            "pattern": "^-?(?:[0-9]+(?:\\.[0-9]*)?|\\.[0-9]+)(?:[Ee][+-]?[0-9]+)?$"
+          },
+          "relative_outcome": {
+            "enum": [
+              "pass",
+              "not_evaluated",
+              null
+            ]
+          },
+          "relative_reason": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 128,
+            "pattern": "^[a-z0-9_]{1,128}$"
+          },
+          "value": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 1024,
+            "pattern": "^-?(?:[0-9]+(?:\\.[0-9]*)?|\\.[0-9]+)(?:[Ee][+-]?[0-9]+)?$"
+          },
+          "selected_period": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 10,
+            "format": "date"
+          }
+        },
+        "required": [
+          "report_id",
+          "analysis_id",
+          "group_index",
+          "count",
+          "total",
+          "mean",
+          "minimum",
+          "maximum",
+          "population_stddev",
+          "numerator",
+          "denominator",
+          "ratio",
+          "actual",
+          "baseline",
+          "delta",
+          "relative_delta",
+          "relative_outcome",
+          "relative_reason",
+          "value",
+          "selected_period"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "limitations": {
+      "type": "array",
+      "maxItems": 32,
+      "items": {
+        "type": "object",
+        "properties": {
+          "report_id": {
+            "type": "string",
+            "maxLength": 128,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$"
+          },
+          "scope": {
+            "enum": [
+              "tier1",
+              "tier2"
+            ]
+          },
+          "limitation_index": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 15
+          },
+          "code": {
+            "type": "string",
+            "maxLength": 128,
+            "pattern": "^[a-z0-9_]{1,128}$"
+          }
+        },
+        "required": [
+          "report_id",
+          "scope",
+          "limitation_index",
+          "code"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "summary",
+    "checks",
+    "check_counts",
+    "check_diagnostics",
+    "analyses",
+    "analysis_groups",
+    "limitations"
+  ],
+  "additionalProperties": false
+}
