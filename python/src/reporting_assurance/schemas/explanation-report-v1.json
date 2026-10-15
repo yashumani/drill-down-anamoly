@@ -1,0 +1,684 @@
+{
+  "type": "object",
+  "properties": {
+    "explanation_version": {
+      "const": "1.0"
+    },
+    "deterministic": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "report_version": {
+              "const": "1.0"
+            },
+            "engine_version": {
+              "type": "string"
+            },
+            "mode": {
+              "enum": [
+                "preview",
+                "production"
+              ]
+            },
+            "bundle_digest": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "approval_valid_in_caller_trust": {
+              "type": "boolean"
+            },
+            "gate": {
+              "enum": [
+                "pass",
+                "fail",
+                "blocked",
+                "non_gating"
+              ]
+            },
+            "gate_reason": {
+              "type": "string"
+            },
+            "evaluation_time": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "row_count": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 100000
+            },
+            "rule_count": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 128
+            },
+            "outcome_counts": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "integer",
+                "minimum": 0
+              }
+            },
+            "results": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "outcome": {
+                    "enum": [
+                      "pass",
+                      "fail",
+                      "not_evaluated",
+                      "error"
+                    ]
+                  },
+                  "reason": {
+                    "type": "string",
+                    "pattern": "^[a-z0-9_]+$"
+                  },
+                  "counts": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "integer",
+                      "minimum": 0
+                    }
+                  },
+                  "id": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,63}$"
+                  },
+                  "operator": {
+                    "enum": [
+                      "required_fields",
+                      "types",
+                      "unique",
+                      "allowed_values",
+                      "range",
+                      "coverage",
+                      "freshness",
+                      "consistency",
+                      "row_level",
+                      "reconcile"
+                    ]
+                  },
+                  "severity": {
+                    "enum": [
+                      "info",
+                      "warning",
+                      "critical"
+                    ]
+                  },
+                  "required": {
+                    "type": "boolean"
+                  },
+                  "blocking": {
+                    "type": "boolean"
+                  },
+                  "diagnostics": {
+                    "type": "object",
+                    "properties": {
+                      "row_indices": {
+                        "type": "array",
+                        "maxItems": 20,
+                        "items": {
+                          "type": "integer",
+                          "minimum": 0
+                        }
+                      },
+                      "truncated": {
+                        "type": "boolean"
+                      }
+                    },
+                    "required": [
+                      "row_indices",
+                      "truncated"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "outcome",
+                  "reason",
+                  "counts",
+                  "id",
+                  "operator",
+                  "severity",
+                  "required",
+                  "blocking"
+                ],
+                "additionalProperties": false
+              },
+              "maxItems": 128
+            },
+            "limitations": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "report_version",
+            "engine_version",
+            "mode",
+            "bundle_digest",
+            "approval_valid_in_caller_trust",
+            "gate",
+            "gate_reason",
+            "evaluation_time",
+            "row_count",
+            "rule_count",
+            "outcome_counts",
+            "results",
+            "limitations"
+          ],
+          "additionalProperties": false,
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "title": "Reporting Assurance safe report v1"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "analysis_version": {
+              "const": "1.0"
+            },
+            "tier1": {
+              "type": "object",
+              "properties": {
+                "report_version": {
+                  "const": "1.0"
+                },
+                "engine_version": {
+                  "type": "string"
+                },
+                "mode": {
+                  "enum": [
+                    "preview",
+                    "production"
+                  ]
+                },
+                "bundle_digest": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "approval_valid_in_caller_trust": {
+                  "type": "boolean"
+                },
+                "gate": {
+                  "enum": [
+                    "pass",
+                    "fail",
+                    "blocked",
+                    "non_gating"
+                  ]
+                },
+                "gate_reason": {
+                  "type": "string"
+                },
+                "evaluation_time": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "row_count": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 100000
+                },
+                "rule_count": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 128
+                },
+                "outcome_counts": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                },
+                "results": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "outcome": {
+                        "enum": [
+                          "pass",
+                          "fail",
+                          "not_evaluated",
+                          "error"
+                        ]
+                      },
+                      "reason": {
+                        "type": "string",
+                        "pattern": "^[a-z0-9_]+$"
+                      },
+                      "counts": {
+                        "type": "object",
+                        "additionalProperties": {
+                          "type": "integer",
+                          "minimum": 0
+                        }
+                      },
+                      "id": {
+                        "type": "string",
+                        "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,63}$"
+                      },
+                      "operator": {
+                        "enum": [
+                          "required_fields",
+                          "types",
+                          "unique",
+                          "allowed_values",
+                          "range",
+                          "coverage",
+                          "freshness",
+                          "consistency",
+                          "row_level",
+                          "reconcile"
+                        ]
+                      },
+                      "severity": {
+                        "enum": [
+                          "info",
+                          "warning",
+                          "critical"
+                        ]
+                      },
+                      "required": {
+                        "type": "boolean"
+                      },
+                      "blocking": {
+                        "type": "boolean"
+                      },
+                      "diagnostics": {
+                        "type": "object",
+                        "properties": {
+                          "row_indices": {
+                            "type": "array",
+                            "maxItems": 20,
+                            "items": {
+                              "type": "integer",
+                              "minimum": 0
+                            }
+                          },
+                          "truncated": {
+                            "type": "boolean"
+                          }
+                        },
+                        "required": [
+                          "row_indices",
+                          "truncated"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "required": [
+                      "outcome",
+                      "reason",
+                      "counts",
+                      "id",
+                      "operator",
+                      "severity",
+                      "required",
+                      "blocking"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "maxItems": 128
+                },
+                "limitations": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "report_version",
+                "engine_version",
+                "mode",
+                "bundle_digest",
+                "approval_valid_in_caller_trust",
+                "gate",
+                "gate_reason",
+                "evaluation_time",
+                "row_count",
+                "rule_count",
+                "outcome_counts",
+                "results",
+                "limitations"
+              ],
+              "additionalProperties": false,
+              "$schema": "https://json-schema.org/draft/2020-12/schema",
+              "title": "Reporting Assurance safe report v1"
+            },
+            "analyses": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 32,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,63}$"
+                  },
+                  "operator": {
+                    "enum": [
+                      "ratio_of_sums",
+                      "variance",
+                      "summary",
+                      "period_end"
+                    ]
+                  },
+                  "outcome": {
+                    "enum": [
+                      "pass",
+                      "fail",
+                      "not_evaluated",
+                      "error"
+                    ]
+                  },
+                  "reason": {
+                    "type": "string",
+                    "pattern": "^[a-z0-9_]+$"
+                  },
+                  "groups": {
+                    "type": "array",
+                    "maxItems": 1000,
+                    "items": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "properties": {
+                        "group_index": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 999
+                        },
+                        "count": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "selected_period": {
+                          "type": "string",
+                          "format": "date"
+                        },
+                        "relative_outcome": {
+                          "enum": [
+                            "pass",
+                            "not_evaluated"
+                          ]
+                        },
+                        "relative_reason": {
+                          "type": "string"
+                        },
+                        "relative_delta": {
+                          "oneOf": [
+                            {
+                              "type": "string",
+                              "pattern": "^-?(?:[0-9]+(?:\\.[0-9]*)?|\\.[0-9]+)(?:[Ee][+-]?[0-9]+)?$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "actual": {
+                          "type": "string",
+                          "pattern": "^-?(?:[0-9]+(?:\\.[0-9]*)?|\\.[0-9]+)(?:[Ee][+-]?[0-9]+)?$"
+                        },
+                        "baseline": {
+                          "type": "string",
+                          "pattern": "^-?(?:[0-9]+(?:\\.[0-9]*)?|\\.[0-9]+)(?:[Ee][+-]?[0-9]+)?$"
+                        },
+                        "delta": {
+                          "type": "string",
+                          "pattern": "^-?(?:[0-9]+(?:\\.[0-9]*)?|\\.[0-9]+)(?:[Ee][+-]?[0-9]+)?$"
+                        },
+                        "numerator": {
+                          "type": "string",
+                          "pattern": "^-?(?:[0-9]+(?:\\.[0-9]*)?|\\.[0-9]+)(?:[Ee][+-]?[0-9]+)?$"
+                        },
+                        "denominator": {
+                          "type": "string",
+                          "pattern": "^-?(?:[0-9]+(?:\\.[0-9]*)?|\\.[0-9]+)(?:[Ee][+-]?[0-9]+)?$"
+                        },
+                        "ratio": {
+                          "type": "string",
+                          "pattern": "^-?(?:[0-9]+(?:\\.[0-9]*)?|\\.[0-9]+)(?:[Ee][+-]?[0-9]+)?$"
+                        },
+                        "value": {
+                          "type": "string",
+                          "pattern": "^-?(?:[0-9]+(?:\\.[0-9]*)?|\\.[0-9]+)(?:[Ee][+-]?[0-9]+)?$"
+                        },
+                        "total": {
+                          "type": "string",
+                          "pattern": "^-?(?:[0-9]+(?:\\.[0-9]*)?|\\.[0-9]+)(?:[Ee][+-]?[0-9]+)?$"
+                        },
+                        "mean": {
+                          "type": "string",
+                          "pattern": "^-?(?:[0-9]+(?:\\.[0-9]*)?|\\.[0-9]+)(?:[Ee][+-]?[0-9]+)?$"
+                        },
+                        "minimum": {
+                          "type": "string",
+                          "pattern": "^-?(?:[0-9]+(?:\\.[0-9]*)?|\\.[0-9]+)(?:[Ee][+-]?[0-9]+)?$"
+                        },
+                        "maximum": {
+                          "type": "string",
+                          "pattern": "^-?(?:[0-9]+(?:\\.[0-9]*)?|\\.[0-9]+)(?:[Ee][+-]?[0-9]+)?$"
+                        },
+                        "population_stddev": {
+                          "type": "string",
+                          "pattern": "^-?(?:[0-9]+(?:\\.[0-9]*)?|\\.[0-9]+)(?:[Ee][+-]?[0-9]+)?$"
+                        }
+                      },
+                      "required": [
+                        "group_index"
+                      ]
+                    }
+                  },
+                  "mismatched_groups": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                },
+                "required": [
+                  "id",
+                  "operator",
+                  "outcome",
+                  "reason",
+                  "groups"
+                ]
+              }
+            },
+            "limitations": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "analysis_version",
+            "tier1",
+            "analyses",
+            "limitations"
+          ],
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "title": "Bounded Tier 2 result v1"
+        }
+      ]
+    },
+    "evidence": {
+      "type": "object",
+      "properties": {
+        "evidence_version": {
+          "const": "1.0"
+        },
+        "source_report_digest": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "bundle_digest": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "numeric_evidence_included": {
+          "type": "boolean"
+        },
+        "omitted_numeric_groups": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 32000
+        },
+        "facts": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 256,
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^f[0-9]{4}$"
+              },
+              "kind": {
+                "enum": [
+                  "status",
+                  "check",
+                  "analysis",
+                  "analysis_value",
+                  "limitation"
+                ]
+              },
+              "text": {
+                "type": "string",
+                "maxLength": 4096
+              }
+            },
+            "required": [
+              "id",
+              "kind",
+              "text"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "mandatory_fact_ids": {
+          "type": "array",
+          "maxItems": 256,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^f[0-9]{4}$"
+          }
+        },
+        "evidence_digest": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      },
+      "required": [
+        "evidence_version",
+        "source_report_digest",
+        "bundle_digest",
+        "numeric_evidence_included",
+        "omitted_numeric_groups",
+        "facts",
+        "mandatory_fact_ids",
+        "evidence_digest"
+      ],
+      "additionalProperties": false
+    },
+    "interpretation": {
+      "type": "object",
+      "properties": {
+        "interpretation_version": {
+          "const": "1.0"
+        },
+        "outcome": {
+          "enum": [
+            "pass",
+            "not_evaluated",
+            "error"
+          ]
+        },
+        "reason": {
+          "type": "string",
+          "pattern": "^[a-z0-9_]+$"
+        },
+        "method": {
+          "enum": [
+            "controlled_templates",
+            "caller_adapter",
+            "supplied_selection"
+          ]
+        },
+        "adapter_called": {
+          "type": "boolean"
+        },
+        "model_verification": {
+          "const": "not_verified"
+        },
+        "changes_deterministic_gate": {
+          "const": false
+        },
+        "evidence_digest": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "statements": {
+          "type": "array",
+          "maxItems": 256,
+          "items": {
+            "type": "object",
+            "properties": {
+              "fact_id": {
+                "type": "string",
+                "pattern": "^f[0-9]{4}$"
+              },
+              "text": {
+                "type": "string",
+                "maxLength": 4096
+              }
+            },
+            "required": [
+              "fact_id",
+              "text"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "interpretation_version",
+        "outcome",
+        "reason",
+        "method",
+        "adapter_called",
+        "model_verification",
+        "changes_deterministic_gate",
+        "evidence_digest",
+        "statements"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "explanation_version",
+    "deterministic",
+    "evidence",
+    "interpretation"
+  ],
+  "additionalProperties": false,
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Reporting Assurance optional explanation sidecar v1"
+}

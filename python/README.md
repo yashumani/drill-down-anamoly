@@ -1,0 +1,166 @@
+# Multi-Tier Reporting Assurance — 0.1.0a1
+
+An installable Python module for existing Python reporting workflows with native record-table input and flat result-table output. Dedicated KNIME integration is deferred, not a release blocker. Tier 1 uses deterministic rules on reporting aggregates, grouped data or transaction detail. The package runs without Node, a server, UI, model or KNIME. It has no runtime dependencies.
+
+This is a bounded alpha release. Existing browser-app behavior and its finance contract remain separate; the Python executor remains authoritative for its declarative rules. An additive local preview bridge is described below; existing browser exploration remains separate. An optional Tier 3 evidence-selection interface is available; live models and free-form AI interpretation remain unverified and unimplemented by this package. An optional local Rule Studio provides draft authoring; its bounded Windows headless Chromium verification is recorded in the release evidence. See the current release evidence in `docs/reporting-assurance-release.md`.
+
+## Install and run
+
+From the repository root, with Python 3.9 or newer:
+
+```sh
+python -m pip install .
+python -m reporting_assurance --rules python/examples/rules.json --csv python/examples/reporting.csv --reference controls=python/examples/controls.csv --evaluation-time 2026-04-05T12:00:00Z
+```
+
+Preview is always non-gating. To exercise the fictional approved example, supply its digest from `python/examples/trusted-digest.txt` as `--trusted-digest DIGEST --mode production`. Approval is valid only when its revision and content digest match AND the caller independently trusts that digest. A JSON flag is not authentication. The example approval has no authority over real reports. Never blindly trust a digest read from an untrusted bundle.
+
+CLI output is JSON on stdout; exit codes are 0 for pass or preview, 1 for a failed gate, 2 for a blocked gate or invalid input. `--digest-only --rules PATH` prints the candidate content digest for the caller's approval process. Production does not sign, authenticate, or approve a bundle for you.
+
+```python
+from pathlib import Path
+from reporting_assurance import load_bundle, read_csv, evaluate
+
+config = load_bundle(Path('python/examples/rules.json').read_text(encoding='utf-8'))
+types = {f: s['type'] for f, s in config['rules'][1]['params']['fields'].items()}
+rows = read_csv('python/examples/reporting.csv', types=types)
+controls = read_csv('python/examples/controls.csv', types={
+    'period': 'date', 'scenario': 'string', 'currency': 'string', 'unit': 'string',
+    'scale': 'string', 'snapshot': 'string', 'amount': 'decimal'})
+report = evaluate(rows, config, references={'controls': controls},
+                  evaluation_time='2026-04-05T12:00:00Z')
+assert report['gate'] == 'non_gating'
+```
+
+Run `python python/examples/run_api.py` for the complete approved synthetic API example. Run `python python/examples/run_tables.py` for in-memory input records and scalar result tables, without a dataframe dependency. Dedicated KNIME node integration/execution is deferred by scope, not a release acceptance requirement.
+
+## Record tables in and out
+
+`normalize_records(records, types=...)` copies bounded native dictionaries and converts only explicitly declared exact decimal/integer/boolean text. Null and zero remain distinct; invalid typed text remains checkable by the existing `types` rule. Floats, nested cells and framework-specific scalars are rejected rather than rounded or stringified. Owners explicitly normalize dataframe missing sentinels and preserve IDs/decimal/timestamp semantics upstream.
+
+`report_to_record_tables(report, report_id=...)` converts existing `evaluate()` or `analyze()` results into seven scalar tables: `summary`, `checks`, `check_counts`, `check_diagnostics`, `analyses`, `analysis_groups`, and `limitations`. The original gate/outcomes remain unchanged. Decimal aggregates stay strings, unavailable fields stay `None`, and skipped analyses remain present without fabricated groups. Diagnostic row indices need explicit `include_diagnostics=True`; no raw input rows or group labels are added. `RECORD_TABLE_COLUMNS` defines stable columns even for empty tables; the packaged `record-tables-v1.json` describes contract v1.0.
+
+See [the complete table contract](../docs/record-tables-v1.md) for joins, logical types, bounds, trust limits, exact numeric handling, and optional caller-side pandas/Polars conversion. No pandas, Polars or KNIME runtime dependency is added. Existing nested API/CLI reports are preserved; the new helper is additive.
+
+## Inputs, semantics and limits
+
+The in-memory table is a list or tuple of plain dicts with string column names. Supported cells are None, str, int, bool, finite Decimal, date and aware datetime. Binary floats are rejected to prevent hidden precision loss. Decimal rules and tolerances use strings or integers in JSON; JSON fractional numbers are rejected. The API performs no numeric coercion. Dates are strict Gregorian `YYYY-MM-DD`; timestamps require `T`, seconds and an explicit UTC offset. No locale guessing or hidden clock reads occur. Use consistent key representations in primary and reference tables; a date object and a date string are distinct keys.
+
+CSV preserves identifiers and leading zeros by default, converts only explicitly typed columns, leaves invalid typed cells as strings for validation, and preserves blank strings. Its default null token is literal `\N`. Set `null_token` explicitly for another source convention, including `null_token=""` for empty-string null. A column cannot represent the literal null token without a separate escaping convention; choose a token outside your data domain. Input files are local caller-selected paths. No URL or reference fetching occurs. Reference tables are provided by the caller; their independence and authority are caller responsibilities.
+
+Hard limits: 1 MiB config, 128 rules, nesting 16, 100,000 config nodes, 100,000 primary rows, 256 columns, 2,000,000 present cells per table, 4,096 characters per scalar string, 100 decimal digits and exponent magnitude 100, 32 reference tables with 100,000 rows total, 50,000,000 present-cell/rule evaluations, 10,000 expected keys per rule, 64 MiB CSV. Diagnostics opt-in is limited to 20 zero-based row indices and never outputs cell values. Checks do not mutate inputs. These are local memory bounds, not streaming or distributed processing.
+
+The structural JSON Schemas ship in `reporting_assurance/schemas/`. `validate_bundle` additionally enforces semantic constraints, literal numeric bounds, unique IDs, dependencies and cycle/resource limits. No executable expressions, SQL, imports, shell commands, URL fetching, or callbacks can be selected by the contract.
+
+## Gate meaning
+
+Every check has pass/fail/not_evaluated/error, independently of info/warning/critical severity. A blocking failure fails the gate. A required check that is unavailable or errors blocks a passing gate. An unavailable optional check does not block other required checks. At least one required check is necessary. Preview is non-gating; production also needs a valid caller-trusted approval. No average score overrides a blocker.
+
+Reconciliation requires a selected nonoverlapping row level, all six declared semantic roles (period, scenario, currency, unit, scale, snapshot), compatible contexts and caller-supplied independent controls. Declare an explicit neutral value for a truly inapplicable role. A missing role produces not_evaluated. Flow sums and period-end balances are distinct; unsupported ratio sums and balance sums are rejected. Period-end reconciliation selects one latest record per declared group and compares its date to the control date; declare sufficiently fine groups for separate balance series and require coverage/uniqueness rules. No automatic FX or scale conversion is performed.
+
+Matching internal or independent synthetic totals proves only the configured identity. It never proves source completeness or transaction accuracy from aggregates. Required scope, business limits, references and dependencies remain owner-declared. Observed values are facts about the supplied data, not valid business boundaries.
+
+## Verify locally
+
+```sh
+PYTHONPATH=python/src python -m unittest discover -s python/tests -v
+python -m build --outdir python/dist
+python scripts/verify_python_wheel.py
+```
+
+PowerShell: set `$env:PYTHONPATH="$PWD/python/src"` before running tests from source. CI runs an isolated wheel install plus tests. Runtime compatibility is claimed only for the versions/platforms actually verified in release evidence, despite the package's minimum-version metadata. No registry publication is part of this release.
+
+## Bounded Tier 2 and draft suggestions
+
+`analyze(rows, bundle, spec, ...)` re-runs Tier 1 on those exact inputs. Version `1.0` analysis specs choose only `ratio_of_sums`, `variance`, `summary` or `period_end`, name Tier 1 prerequisites, and declare row level, six semantic fields, expected periods and grouping. Each analysis skips only when its own prerequisites or required evidence are unavailable. Tier 2 never overrides the Tier 1 gate. In production, the spec must also be embedded as the bundle's `analysis` field before approval; edits invalidate the same digest. The CLI runs it only with `--include-analysis`; exit status still represents the Tier 1 gate, and callers must inspect each Tier 2 outcome.
+
+Ratios use declared numerator (one field, optionally minus one cost field) and denominator components, never an unweighted average of rates. Verification of a reported ratio requires one explicitly selected record per output group. Zero/missing denominators return not_evaluated; negative denominators need a future explicit domain policy. Variance uses declared Actual/Plan scenario and snapshot selections, a separate baseline measure, matching units and a caller-provided closed/complete calendar. A zero baseline preserves absolute delta while explicitly marking its relative delta unavailable. Grouped variance gives descriptive drill-down contributions; it does not establish causation. Period-end selects a unique latest record per group. Summary exposes population statistics, with no inferred anomaly thresholds.
+
+Exact sums/subtractions use bounded Decimal precision sufficient for supported inputs. Ratios, means and standard deviations are descriptive numeric strings rounded to 34 significant digits, with the Decimal rounding mode set to half-even. Numeric Tier 2 evidence is explicit opt-in; group values are omitted and represented by deterministic group indices. Large grouped results are bounded to 1,000 groups. Default Tier 1 reports remain counts-only.
+
+`suggest_rules(rows)` returns observed count metadata separately from a draft rule bundle. It proposes only presence/type review, with nullable=True and optional, nonblocking rules. It never converts observed categories, ranges or uniqueness into valid business boundaries or approved grain. There is no approval UI or authenticated approval service. Tier 3 is the constrained optional interpretation interface described below; no live model is supplied or verified. See `python/examples/run_analysis.py` for synthetic calculations and editable draft JSON export.
+
+The independent four-sector acceptance adapter is `python/tests/fixture_adapter.py`. It maps catalog types and declared selections into the exact v1 JSON contract, preserves the pack's synthetic provenance, and replaces exactly one named file for each fault. The fixture explanatory statuses `unverified` and `skipped` map to `not_evaluated`, with distinct evidence/prerequisite reasons. Internal parent/child identities use `control_scope=internal`; separately supplied company and source-line controls use caller-declared `independent` scope. The engine does not authenticate that declaration.
+
+The package layout and script entry point follow the [Python Packaging User Guide](https://packaging.python.org/en/latest/guides/writing-pyproject-toml/). The distribution name is provisional and no name reservation or registry publication is claimed.
+
+## Optional local Rule Studio
+
+```sh
+reporting-assurance studio --port 0
+```
+
+Open the printed loopback URL. The Studio profiles counts, proposes editable nonblocking draft rules, previews through the same Python executor, and exports the exact validated JSON in the editor. It never approves a bundle or executes a production gate. Its server binds only 127.0.0.1, rejects foreign Host/Origin requests by default, uses no remote assets/models, and retains no saved table between requests. Temporary CSV adapter files are removed. The Studio caps CSV at 1 MiB and requests at 2 MiB; use the API/CLI for larger documented inputs. Core import and evaluation do not start or require the server.
+
+HTTP, JavaScript and actual isolated Chromium checks cover draft authoring, imports, preview, exact downloads and edit/response races. Counts and obsolete success status clear on edits, and hidden profile cards remain invisible. Viewport widths 390/820/1440 were exercised. This is bounded headless Chromium evidence, not a complete keyboard/accessibility audit or a universal browser claim. The native Windows computer-use launcher still fails independently; dedicated KNIME execution is deferred by scope and is not required for this Python table contract.
+
+## Reference CSV types
+
+Reference schemas are independent of the primary table. Optional `reference_types` in the v1 bundle declares column types by reference name:
+
+```json
+"reference_types": {
+  "plan": {"budget": "decimal", "period": "string"},
+  "calendar": {"complete": "boolean", "period_state": "string", "period": "string"}
+}
+```
+
+These declarations are included in the approved bundle digest. Editing them invalidates approval. Registered operations also require their native reference types: reconciliation control measures and variance baseline measures are decimals; calendar `complete` is boolean and `period_state` is string. Conflicting declarations are rejected. This is conversion prescribed by the contract's typed roles, not inference from observed data. Only literal CSV `true`/`false` convert to booleans; invalid or missing calendar/baseline values remain unavailable evidence. CLI and Studio share this adapter. In-memory API callers still supply native typed scalars.
+
+Studio export captures one immutable editor snapshot before validation. The same text is sent for validation and downloaded after the response, even if editing continues. A changed editor is explicitly called out; the downloaded snapshot is never replaced with later unvalidated text. A delayed-response JavaScript unit test covers this race. It does not substitute for actual browser/visual verification.
+
+The executor applies a conservative 50,000,000-cell-check work limit to the combined primary and reference tables, including currently unused references. It rejects inputs over that bound before running checks. CSV conversion options are validated even when a supplied value is false or empty. Studio edits invalidate any earlier preview, and responses for inputs changed during a request cannot render as current evidence.
+
+## Optional Tier 3 interpretation
+
+`explain(rows, bundle, ...)` re-runs the same deterministic executor and returns separate `deterministic`, `evidence` and `interpretation` objects. `include_analysis=True` also runs the declared Tier 2 specification. The default interpretation uses controlled local templates and requires no model or network. A Tier 3 outcome of pass means the interpretation contract/rendering succeeded; it does not mean data checks passed or production approval exists. Always inspect the deterministic gate and each calculation outcome.
+
+The evidence packet contains counts and fixed statements with opaque fact IDs. It omits rows, field/group/rule names, diagnostic row indices, provenance strings and numeric aggregate details. `include_numeric_evidence=True` explicitly shares bounded aggregate calculation details with the interpretation layer; it requires `include_analysis=True`. At most 256 facts are supplied, and omitted numeric groups are counted and explicitly disclosed. This is reduced data exposure, not anonymization or authorization to send business metadata to a provider.
+
+A caller-owned Python adapter may implement `select_evidence(packet)` and return only this JSON selection contract:
+
+```json
+{"selection_version":"1.0","evidence_digest":"<digest of this exact packet>","fact_ids":["f0000","f0002"]}
+```
+
+Only IDs from that exact packet are accepted. All mandatory gate, blocker/unavailable/error facts and limitations must be included; they lead the rendered narrative. Unknown IDs, stale digests, duplicates, extra prose/numbers/approval fields and omitted mandatory evidence are rejected. The package renders the original facts, never model-supplied prose or an adapter-mutated packet. This deliberately limits the adapter to selecting/ordering verified evidence; free-form explanations, causal diagnosis and new claims are not supported. Evidence digests bind a plan to content; they do not authenticate its author or prove source truth.
+
+The adapter contract is synchronous: return the JSON selection directly. Async functions, async generators and awaitable results are rejected; the engine never creates an event loop or awaits model code. Native coroutine results are closed without running them. Process async providers outside this call and replay their bounded selection. Adapter code is invoked only with explicit `allow_adapter=True`. Before that flag, the library does not inspect the adapter. The caller owns its code, provider authorization, credentials, timeouts, costs and external transmission. This package supplies no provider SDK, credential storage, dynamic adapter import or model client. Tests and `python/examples/run_explanation.py` use offline mock adapters only. `model_verification` remains `not_verified`; there is no live-model success claim. An adapter error is redacted and cannot change the deterministic report or its gate.
+
+Complete installed CLI workflow, from the repository root with the synthetic examples:
+
+```sh
+python -m pip install --no-deps python/dist/multi_tier_reporting_assurance-0.1.0a1-py3-none-any.whl
+reporting-assurance --rules python/examples/rules.json --csv python/examples/reporting.csv --reference controls=python/examples/controls.csv --evaluation-time 2026-04-05T12:00:00Z --include-analysis --explain
+python python/examples/run_explanation.py
+```
+
+Add the fictional example's trusted digest and `--mode production` only to exercise that test approval. Real workflows obtain their own trusted digests independently. Add `--include-numeric-evidence` only when the interpretation recipient may receive aggregate values. The CLI never loads Python adapters or contacts a model. `--interpretation-plan LOCAL_JSON` replays a caller-supplied offline selection through the same validation. A missing, unreadable, non-file, oversized (over 64 KiB), invalid UTF-8, malformed or stale optional plan gives an error sidecar and exit 2 while preserving the full deterministic report and its gate. The file read is bounded as well as its metadata check; loading/decoding failures never become a fallback success. An explicit empty plan path is an error. Primary, rule and reference input failures remain input errors. Exit 0 still includes non-gating preview; it is not a production approval. Invalid primary/rule input remains an input error. See the installed API example for the mock adapter and an offline plan to save/replay.
+
+## Optional existing-app local preview bridge
+
+The existing app's Data Quality Explorer now has a collapsed **Optional Python rule preview** panel. It submits explicitly chosen original UTF-8 CSV and exact rule JSON to the same Python executor. It preserves identifiers, decimal text and null tokens by avoiding JavaScript numeric conversion; invalid UTF-8 is rejected. The exploration profile and its score remain separate from the Python rule report. Nothing is sent automatically or stored in browser storage by this panel.
+
+For this optional local app path only, start two terminals from the repository root:
+
+```sh
+# Installed Python module; this command explicitly allows exactly this local browser origin.
+reporting-assurance studio --port 8765 --allow-origin http://127.0.0.1:5173
+# Existing browser app requires its existing Node dependencies; core Python does not.
+npm run dev -- --host 127.0.0.1 --port 5173 --strictPort
+```
+
+Open the local app, enter Data Quality Explorer and expand the optional panel. Choose `python/examples/reporting.csv`, `python/examples/rules.json` and the optional `python/examples/controls.csv` with reference name `controls`. Enter the example's explicit evaluation time `2026-04-05T12:00:00Z`, confirm the local transfer and run the preview. The Python endpoint is fixed at `http://127.0.0.1:8765` in this panel. The app CSP allows only its exact `/api` path; the client rejects other ports, hosts and paths. This keeps the existing HTTPS/Ollama capabilities unchanged without a loopback-port wildcard. If port 8765 is occupied, stop your own conflicting process or use the standalone Studio/API/CLI on another port; this panel cannot connect to that other port. The report remains `non_gating`; production approval is available only through the API/CLI caller's trust process. The panel supports one optional control CSV; use the API/CLI for multiple references or larger files. Stop both local processes when finished.
+
+Default cross-origin access stays closed. `--allow-origin` accepts only exact HTTP `localhost`/`127.0.0.1` origins, at most eight; no wildcard, remote origin or HTTPS public-site origin is accepted. Host checks remain bound to 127.0.0.1. Preflight permits POST with Content-Type only. The client uses no credentials/cookies, rejects redirects and targets only the fixed literal `http://127.0.0.1:8765/api` endpoint. This origin allowlist is a browser boundary, not authentication against other local processes. The HTTP adapter cannot run a production gate, approve rules, load adapters or call a model. Each file is limited to 1 MiB, and the complete request to 2 MiB.
+
+Verification is split deliberately: real HTTP tests cover the allowlist and preview/API parity; mock-fetch unit tests cover the client; server-rendered React tests cover initial structure only. `node scripts/verify-local-python-bridge.mjs` runs the actual client against a temporary Python server and verifies a decimal boundary beyond JavaScript's exact-number range, consent and origin rejection. Node explicitly supplies the Origin header because it is not a browser. The helper stops its own temporary server. Those Node/mock/SSR checks are separate from actual browser evidence. The development-only `scripts/verify_browser_assurance.py` command runs sandbox-enabled isolated headless Chromium with native CSP/CORS, no request interception, no user profile or live provider. It verifies the actual React-to-Python preview, explicit consent, file rejection, edit invalidation, a genuine Python response paused across an input edit, origin rejection and CSP rejection of other ports/paths. It also checks rendered Studio invalidation and exact downloads. The Windows browser CI job installs Playwright 1.58.0 only as a test tool; it is not a package runtime dependency.
+
+```sh
+python -m pip install playwright==1.58.0
+python -m playwright install chromium
+npm run build
+python scripts/verify_browser_assurance.py --evidence-dir python/validation/browser-local
+```
+
+Run this test while port 8765 is free; it owns and closes only the servers it starts. Evidence includes Git identity, counts, request metadata, expected rejection console messages and screenshots using fictional inputs. It never enables `--no-sandbox`, wildcard origins or browser security bypasses. Dedicated KNIME integration is deferred and not a release blocker. Live providers, other browser engines and a full accessibility audit remain outside this verification.

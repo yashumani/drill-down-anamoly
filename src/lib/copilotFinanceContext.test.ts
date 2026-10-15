@@ -47,7 +47,7 @@ describe('CopilotKit finance context', () => {
         polarity: 'higher_is_better',
       } as any,
       timeSeries: null,
-      evidenceLedger: { id: 'ledger-1', items: [{ id: 'variance:run-1' }] },
+      evidenceLedger: { ledgerId: 'ledger-1', items: [{ id: 'variance:run-1' }] },
       externalContext: 'A product launch occurred.',
     });
 
@@ -55,6 +55,7 @@ describe('CopilotKit finance context', () => {
     expect(context.dataset.sessionId).toBe('dataset-1');
     expect(context.scope.calculationRunId).toBe('run-1');
     expect(context.drivers[0].dimension).toBe('product');
+    expect(context.evidence.ledgerId).toBe('ledger-1');
     expect(context.evidence.evidenceIds).toEqual(['variance:run-1']);
     expect(serialized).not.toContain('private@example.com');
     expect(serialized).not.toContain('customer_email');

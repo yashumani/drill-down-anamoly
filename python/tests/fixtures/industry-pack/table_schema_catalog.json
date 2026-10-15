@@ -1,0 +1,1509 @@
+[
+  {
+    "table": "clean/telecom/transaction_detail.csv",
+    "domain": "telecom",
+    "data_level": "transaction_detail",
+    "grain": [
+      "transaction_id",
+      "snapshot_id"
+    ],
+    "columns": {
+      "transaction_id": {
+        "type": "string",
+        "nullable": false
+      },
+      "event_date": {
+        "type": "date",
+        "nullable": false
+      },
+      "period_id": {
+        "type": "string",
+        "nullable": false
+      },
+      "scenario": {
+        "type": "string",
+        "nullable": false
+      },
+      "currency": {
+        "type": "string",
+        "nullable": false
+      },
+      "amount_scale": {
+        "type": "string",
+        "nullable": false
+      },
+      "snapshot_id": {
+        "type": "string",
+        "nullable": false
+      },
+      "loaded_at": {
+        "type": "timestamp_utc",
+        "nullable": false
+      },
+      "service_region": {
+        "type": "string",
+        "nullable": false
+      },
+      "service_revenue": {
+        "type": "decimal",
+        "nullable": false
+      },
+      "line_months": {
+        "type": "decimal",
+        "nullable": false
+      },
+      "disconnects": {
+        "type": "decimal",
+        "nullable": false
+      }
+    },
+    "description": "Fictional service charges, line exposure and disconnect activity; exposures are disjoint service-line months"
+  },
+  {
+    "table": "clean/telecom/grouped_data.csv",
+    "domain": "telecom",
+    "data_level": "grouped_data",
+    "grain": [
+      "period_id",
+      "scenario",
+      "currency",
+      "amount_scale",
+      "snapshot_id",
+      "service_region"
+    ],
+    "columns": {
+      "period_id": {
+        "type": "string",
+        "nullable": false
+      },
+      "scenario": {
+        "type": "string",
+        "nullable": false
+      },
+      "currency": {
+        "type": "string",
+        "nullable": false
+      },
+      "amount_scale": {
+        "type": "string",
+        "nullable": false
+      },
+      "snapshot_id": {
+        "type": "string",
+        "nullable": false
+      },
+      "loaded_at": {
+        "type": "timestamp_utc",
+        "nullable": false
+      },
+      "service_region": {
+        "type": "string",
+        "nullable": false
+      },
+      "service_revenue": {
+        "type": "decimal",
+        "nullable": false
+      },
+      "line_months": {
+        "type": "decimal",
+        "nullable": false
+      },
+      "disconnects": {
+        "type": "decimal",
+        "nullable": false
+      },
+      "disconnect_rate": {
+        "type": "decimal",
+        "nullable": false
+      }
+    },
+    "description": "Fictional service charges, line exposure and disconnect activity; exposures are disjoint service-line months"
+  },
+  {
+    "table": "clean/telecom/reporting_aggregates.csv",
+    "domain": "telecom",
+    "data_level": "reporting_aggregates",
+    "grain": [
+      "period_id",
+      "scenario",
+      "currency",
+      "amount_scale",
+      "snapshot_id",
+      "service_region",
+      "row_level"
+    ],
+    "columns": {
+      "period_id": {
+        "type": "string",
+        "nullable": false
+      },
+      "scenario": {
+        "type": "string",
+        "nullable": false
+      },
+      "currency": {
+        "type": "string",
+        "nullable": false
+      },
+      "amount_scale": {
+        "type": "string",
+        "nullable": false
+      },
+      "snapshot_id": {
+        "type": "string",
+        "nullable": false
+      },
+      "loaded_at": {
+        "type": "timestamp_utc",
+        "nullable": false
+      },
+      "service_region": {
+        "type": "string",
+        "nullable": false
+      },
+      "service_revenue": {
+        "type": "decimal",
+        "nullable": false
+      },
+      "line_months": {
+        "type": "decimal",
+        "nullable": false
+      },
+      "disconnects": {
+        "type": "decimal",
+        "nullable": false
+      },
+      "disconnect_rate": {
+        "type": "decimal",
+        "nullable": false
+      },
+      "row_level": {
+        "type": "string",
+        "nullable": false
+      },
+      "parent_id": {
+        "type": "string",
+        "nullable": true
+      }
+    },
+    "description": "Fictional service charges, line exposure and disconnect activity; exposures are disjoint service-line months"
+  },
+  {
+    "table": "clean/telecom/plan_baseline.csv",
+    "domain": "telecom",
+    "data_level": "plan_baseline",
+    "grain": [
+      "period_id",
+      "scenario",
+      "snapshot_id",
+      "metric"
+    ],
+    "columns": {
+      "period_id": {
+        "type": "string",
+        "nullable": false
+      },
+      "scenario": {
+        "type": "string",
+        "nullable": false
+      },
+      "currency": {
+        "type": "string",
+        "nullable": false
+      },
+      "amount_scale": {
+        "type": "string",
+        "nullable": false
+      },
+      "snapshot_id": {
+        "type": "string",
+        "nullable": false
+      },
+      "metric": {
+        "type": "string",
+        "nullable": false
+      },
+      "value": {
+        "type": "decimal",
+        "nullable": false
+      }
+    },
+    "description": "Fictional service charges, line exposure and disconnect activity; exposures are disjoint service-line months"
+  },
+  {
+    "table": "clean/telecom/company_controls.csv",
+    "domain": "telecom",
+    "data_level": "company_controls",
+    "grain": [
+      "period_id",
+      "scenario",
+      "snapshot_id",
+      "metric"
+    ],
+    "columns": {
+      "period_id": {
+        "type": "string",
+        "nullable": false
+      },
+      "scenario": {
+        "type": "string",
+        "nullable": false
+      },
+      "snapshot_id": {
+        "type": "string",
+        "nullable": false
+      },
+      "currency": {
+        "type": "string",
+        "nullable": true,
+        "null_semantics": "Not applicable for nonmonetary unit counts or exposures; required for currency measures"
+      },
+      "unit": {
+        "type": "string",
+        "nullable": false
+      },
+      "amount_scale": {
+        "type": "string",
+        "nullable": false
+      },
+      "metric": {
+        "type": "string",
+        "nullable": false
+      },
+      "expected_value": {
+        "type": "decimal",
+        "nullable": false
+      },
+      "control_origin": {
+        "type": "string",
+        "nullable": false
+      }
+    },
+    "description": "Fictional service charges, line exposure and disconnect activity; exposures are disjoint service-line months"
+  },
+  {
+    "table": "clean/telecom/coverage_roster.csv",
+    "domain": "telecom",
+    "data_level": "coverage_roster",
+    "grain": [
+      "period_id",
+      "scenario",
+      "snapshot_id",
+      "service_region"
+    ],
+    "columns": {
+      "period_id": {
+        "type": "string",
+        "nullable": false
+      },
+      "scenario": {
+        "type": "string",
+        "nullable": false
+      },
+      "snapshot_id": {
+        "type": "string",
+        "nullable": false
+      },
+      "service_region": {
+        "type": "string",
+        "nullable": false
+      }
+    },
+    "description": "Fictional service charges, line exposure and disconnect activity; exposures are disjoint service-line months"
+  },
+  {
+    "table": "clean/telecom/source_line_controls.csv",
+    "domain": "telecom",
+    "data_level": "source_line_controls",
+    "grain": [
+      "transaction_id",
+      "metric"
+    ],
+    "columns": {
+      "transaction_id": {
+        "type": "string",
+        "nullable": false
+      },
+      "metric": {
+        "type": "string",
+        "nullable": false
+      },
+      "expected_value": {
+        "type": "decimal",
+        "nullable": false
+      },
+      "currency": {
+        "type": "string",
+        "nullable": false
+      },
+      "amount_scale": {
+        "type": "string",
+        "nullable": false
+      },
+      "control_origin": {
+        "type": "string",
+        "nullable": false
+      }
+    },
+    "description": "Fictional service charges, line exposure and disconnect activity; exposures are disjoint service-line months"
+  },
+  {
+    "table": "clean/retail/transaction_detail.csv",
+    "domain": "retail",
+    "data_level": "transaction_detail",
+    "grain": [
+      "transaction_id",
+      "snapshot_id"
+    ],
+    "columns": {
+      "transaction_id": {
+        "type": "string",
+        "nullable": false
+      },
+      "event_date": {
+        "type": "date",
+        "nullable": false
+      },
+      "period_id": {
+        "type": "string",
+        "nullable": false
+      },
+      "scenario": {
+        "type": "string",
+        "nullable": false
+      },
+      "currency": {
+        "type": "string",
+        "nullable": false
+      },
+      "amount_scale": {
+        "type": "string",
+        "nullable": false
+      },
+      "snapshot_id": {
+        "type": "string",
+        "nullable": false
+      },
+      "loaded_at": {
+        "type": "timestamp_utc",
+        "nullable": false
+      },
+      "store_region": {
+        "type": "string",
+        "nullable": false
+      },
+      "net_sales": {
+        "type": "decimal",
+        "nullable": false
+      },
+      "cost_of_sales": {
+        "type": "decimal",
+        "nullable": false
+      },
+      "units_sold": {
+        "type": "decimal",
+        "nullable": false
+      }
+    },
+    "description": "Fictional net sales lines with allocated cost; net sales already excludes returns; no tax or receivable model"
+  },
+  {
+    "table": "clean/retail/grouped_data.csv",
+    "domain": "retail",
+    "data_level": "grouped_data",
+    "grain": [
+      "period_id",
+      "scenario",
+      "currency",
+      "amount_scale",
+      "snapshot_id",
+      "store_region"
+    ],
+    "columns": {
+      "period_id": {
+        "type": "string",
+        "nullable": false
+      },
+      "scenario": {
+        "type": "string",
+        "nullable": false
+      },
+      "currency": {
+        "type": "string",
+        "nullable": false
+      },
+      "amount_scale": {
+        "type": "string",
+        "nullable": false
+      },
+      "snapshot_id": {
+        "type": "string",
+        "nullable": false
+      },
+      "loaded_at": {
+        "type": "timestamp_utc",
+        "nullable": false
+      },
+      "store_region": {
+        "type": "string",
+        "nullable": false
+      },
+      "net_sales": {
+        "type": "decimal",
+        "nullable": false
+      },
+      "cost_of_sales": {
+        "type": "decimal",
+        "nullable": false
+      },
+      "units_sold": {
+        "type": "decimal",
+        "nullable": false
+      },
+      "gross_margin_rate": {
+        "type": "decimal",
+        "nullable": false
+      }
+    },
+    "description": "Fictional net sales lines with allocated cost; net sales already excludes returns; no tax or receivable model"
+  },
+  {
+    "table": "clean/retail/reporting_aggregates.csv",
+    "domain": "retail",
+    "data_level": "reporting_aggregates",
+    "grain": [
+      "period_id",
+      "scenario",
+      "currency",
+      "amount_scale",
+      "snapshot_id",
+      "store_region",
+      "row_level"
+    ],
+    "columns": {
+      "period_id": {
+        "type": "string",
+        "nullable": false
+      },
+      "scenario": {
+        "type": "string",
+        "nullable": false
+      },
+      "currency": {
+        "type": "string",
+        "nullable": false
+      },
+      "amount_scale": {
+        "type": "string",
+        "nullable": false
+      },
+      "snapshot_id": {
+        "type": "string",
+        "nullable": false
+      },
+      "loaded_at": {
+        "type": "timestamp_utc",
+        "nullable": false
+      },
+      "store_region": {
+        "type": "string",
+        "nullable": false
+      },
+      "net_sales": {
+        "type": "decimal",
+        "nullable": false
+      },
+      "cost_of_sales": {
+        "type": "decimal",
+        "nullable": false
+      },
+      "units_sold": {
+        "type": "decimal",
+        "nullable": false
+      },
+      "gross_margin_rate": {
+        "type": "decimal",
+        "nullable": false
+      },
+      "row_level": {
+        "type": "string",
+        "nullable": false
+      },
+      "parent_id": {
+        "type": "string",
+        "nullable": true
+      }
+    },
+    "description": "Fictional net sales lines with allocated cost; net sales already excludes returns; no tax or receivable model"
+  },
+  {
+    "table": "clean/retail/plan_baseline.csv",
+    "domain": "retail",
+    "data_level": "plan_baseline",
+    "grain": [
+      "period_id",
+      "scenario",
+      "snapshot_id",
+      "metric"
+    ],
+    "columns": {
+      "period_id": {
+        "type": "string",
+        "nullable": false
+      },
+      "scenario": {
+        "type": "string",
+        "nullable": false
+      },
+      "currency": {
+        "type": "string",
+        "nullable": false
+      },
+      "amount_scale": {
+        "type": "string",
+        "nullable": false
+      },
+      "snapshot_id": {
+        "type": "string",
+        "nullable": false
+      },
+      "metric": {
+        "type": "string",
+        "nullable": false
+      },
+      "value": {
+        "type": "decimal",
+        "nullable": false
+      }
+    },
+    "description": "Fictional net sales lines with allocated cost; net sales already excludes returns; no tax or receivable model"
+  },
+  {
+    "table": "clean/retail/company_controls.csv",
+    "domain": "retail",
+    "data_level": "company_controls",
+    "grain": [
+      "period_id",
+      "scenario",
+      "snapshot_id",
+      "metric"
+    ],
+    "columns": {
+      "period_id": {
+        "type": "string",
+        "nullable": false
+      },
+      "scenario": {
+        "type": "string",
+        "nullable": false
+      },
+      "snapshot_id": {
+        "type": "string",
+        "nullable": false
+      },
+      "currency": {
+        "type": "string",
+        "nullable": true,
+        "null_semantics": "Not applicable for nonmonetary unit counts or exposures; required for currency measures"
+      },
+      "unit": {
+        "type": "string",
+        "nullable": false
+      },
+      "amount_scale": {
+        "type": "string",
+        "nullable": false
+      },
+      "metric": {
+        "type": "string",
+        "nullable": false
+      },
+      "expected_value": {
+        "type": "decimal",
+        "nullable": false
+      },
+      "control_origin": {
+        "type": "string",
+        "nullable": false
+      }
+    },
+    "description": "Fictional net sales lines with allocated cost; net sales already excludes returns; no tax or receivable model"
+  },
+  {
+    "table": "clean/retail/coverage_roster.csv",
+    "domain": "retail",
+    "data_level": "coverage_roster",
+    "grain": [
+      "period_id",
+      "scenario",
+      "snapshot_id",
+      "store_region"
+    ],
+    "columns": {
+      "period_id": {
+        "type": "string",
+        "nullable": false
+      },
+      "scenario": {
+        "type": "string",
+        "nullable": false
+      },
+      "snapshot_id": {
+        "type": "string",
+        "nullable": false
+      },
+      "store_region": {
+        "type": "string",
+        "nullable": false
+      }
+    },
+    "description": "Fictional net sales lines with allocated cost; net sales already excludes returns; no tax or receivable model"
+  },
+  {
+    "table": "clean/retail/source_line_controls.csv",
+    "domain": "retail",
+    "data_level": "source_line_controls",
+    "grain": [
+      "transaction_id",
+      "metric"
+    ],
+    "columns": {
+      "transaction_id": {
+        "type": "string",
+        "nullable": false
+      },
+      "metric": {
+        "type": "string",
+        "nullable": false
+      },
+      "expected_value": {
+        "type": "decimal",
+        "nullable": false
+      },
+      "currency": {
+        "type": "string",
+        "nullable": false
+      },
+      "amount_scale": {
+        "type": "string",
+        "nullable": false
+      },
+      "control_origin": {
+        "type": "string",
+        "nullable": false
+      }
+    },
+    "description": "Fictional net sales lines with allocated cost; net sales already excludes returns; no tax or receivable model"
+  },
+  {
+    "table": "clean/manufacturing/transaction_detail.csv",
+    "domain": "manufacturing",
+    "data_level": "transaction_detail",
+    "grain": [
+      "transaction_id",
+      "snapshot_id"
+    ],
+    "columns": {
+      "transaction_id": {
+        "type": "string",
+        "nullable": false
+      },
+      "event_date": {
+        "type": "date",
+        "nullable": false
+      },
+      "period_id": {
+        "type": "string",
+        "nullable": false
+      },
+      "scenario": {
+        "type": "string",
+        "nullable": false
+      },
+      "currency": {
+        "type": "string",
+        "nullable": false
+      },
+      "amount_scale": {
+        "type": "string",
+        "nullable": false
+      },
+      "snapshot_id": {
+        "type": "string",
+        "nullable": false
+      },
+      "loaded_at": {
+        "type": "timestamp_utc",
+        "nullable": false
+      },
+      "plant": {
+        "type": "string",
+        "nullable": false
+      },
+      "production_cost": {
+        "type": "decimal",
+        "nullable": false
+      },
+      "units_started": {
+        "type": "decimal",
+        "nullable": false
+      },
+      "good_units": {
+        "type": "decimal",
+        "nullable": false
+      }
+    },
+    "description": "Fictional closed production batches; started units all have final good/reject disposition; cost is incurred production cost, not revenue"
+  },
+  {
+    "table": "clean/manufacturing/grouped_data.csv",
+    "domain": "manufacturing",
+    "data_level": "grouped_data",
+    "grain": [
+      "period_id",
+      "scenario",
+      "currency",
+      "amount_scale",
+      "snapshot_id",
+      "plant"
+    ],
+    "columns": {
+      "period_id": {
+        "type": "string",
+        "nullable": false
+      },
+      "scenario": {
+        "type": "string",
+        "nullable": false
+      },
+      "currency": {
+        "type": "string",
+        "nullable": false
+      },
+      "amount_scale": {
+        "type": "string",
+        "nullable": false
+      },
+      "snapshot_id": {
+        "type": "string",
+        "nullable": false
+      },
+      "loaded_at": {
+        "type": "timestamp_utc",
+        "nullable": false
+      },
+      "plant": {
+        "type": "string",
+        "nullable": false
+      },
+      "production_cost": {
+        "type": "decimal",
+        "nullable": false
+      },
+      "units_started": {
+        "type": "decimal",
+        "nullable": false
+      },
+      "good_units": {
+        "type": "decimal",
+        "nullable": false
+      },
+      "first_pass_yield": {
+        "type": "decimal",
+        "nullable": false
+      }
+    },
+    "description": "Fictional closed production batches; started units all have final good/reject disposition; cost is incurred production cost, not revenue"
+  },
+  {
+    "table": "clean/manufacturing/reporting_aggregates.csv",
+    "domain": "manufacturing",
+    "data_level": "reporting_aggregates",
+    "grain": [
+      "period_id",
+      "scenario",
+      "currency",
+      "amount_scale",
+      "snapshot_id",
+      "plant",
+      "row_level"
+    ],
+    "columns": {
+      "period_id": {
+        "type": "string",
+        "nullable": false
+      },
+      "scenario": {
+        "type": "string",
+        "nullable": false
+      },
+      "currency": {
+        "type": "string",
+        "nullable": false
+      },
+      "amount_scale": {
+        "type": "string",
+        "nullable": false
+      },
+      "snapshot_id": {
+        "type": "string",
+        "nullable": false
+      },
+      "loaded_at": {
+        "type": "timestamp_utc",
+        "nullable": false
+      },
+      "plant": {
+        "type": "string",
+        "nullable": false
+      },
+      "production_cost": {
+        "type": "decimal",
+        "nullable": false
+      },
+      "units_started": {
+        "type": "decimal",
+        "nullable": false
+      },
+      "good_units": {
+        "type": "decimal",
+        "nullable": false
+      },
+      "first_pass_yield": {
+        "type": "decimal",
+        "nullable": false
+      },
+      "row_level": {
+        "type": "string",
+        "nullable": false
+      },
+      "parent_id": {
+        "type": "string",
+        "nullable": true
+      }
+    },
+    "description": "Fictional closed production batches; started units all have final good/reject disposition; cost is incurred production cost, not revenue"
+  },
+  {
+    "table": "clean/manufacturing/plan_baseline.csv",
+    "domain": "manufacturing",
+    "data_level": "plan_baseline",
+    "grain": [
+      "period_id",
+      "scenario",
+      "snapshot_id",
+      "metric"
+    ],
+    "columns": {
+      "period_id": {
+        "type": "string",
+        "nullable": false
+      },
+      "scenario": {
+        "type": "string",
+        "nullable": false
+      },
+      "currency": {
+        "type": "string",
+        "nullable": false
+      },
+      "amount_scale": {
+        "type": "string",
+        "nullable": false
+      },
+      "snapshot_id": {
+        "type": "string",
+        "nullable": false
+      },
+      "metric": {
+        "type": "string",
+        "nullable": false
+      },
+      "value": {
+        "type": "decimal",
+        "nullable": false
+      }
+    },
+    "description": "Fictional closed production batches; started units all have final good/reject disposition; cost is incurred production cost, not revenue"
+  },
+  {
+    "table": "clean/manufacturing/company_controls.csv",
+    "domain": "manufacturing",
+    "data_level": "company_controls",
+    "grain": [
+      "period_id",
+      "scenario",
+      "snapshot_id",
+      "metric"
+    ],
+    "columns": {
+      "period_id": {
+        "type": "string",
+        "nullable": false
+      },
+      "scenario": {
+        "type": "string",
+        "nullable": false
+      },
+      "snapshot_id": {
+        "type": "string",
+        "nullable": false
+      },
+      "currency": {
+        "type": "string",
+        "nullable": true,
+        "null_semantics": "Not applicable for nonmonetary unit counts or exposures; required for currency measures"
+      },
+      "unit": {
+        "type": "string",
+        "nullable": false
+      },
+      "amount_scale": {
+        "type": "string",
+        "nullable": false
+      },
+      "metric": {
+        "type": "string",
+        "nullable": false
+      },
+      "expected_value": {
+        "type": "decimal",
+        "nullable": false
+      },
+      "control_origin": {
+        "type": "string",
+        "nullable": false
+      }
+    },
+    "description": "Fictional closed production batches; started units all have final good/reject disposition; cost is incurred production cost, not revenue"
+  },
+  {
+    "table": "clean/manufacturing/coverage_roster.csv",
+    "domain": "manufacturing",
+    "data_level": "coverage_roster",
+    "grain": [
+      "period_id",
+      "scenario",
+      "snapshot_id",
+      "plant"
+    ],
+    "columns": {
+      "period_id": {
+        "type": "string",
+        "nullable": false
+      },
+      "scenario": {
+        "type": "string",
+        "nullable": false
+      },
+      "snapshot_id": {
+        "type": "string",
+        "nullable": false
+      },
+      "plant": {
+        "type": "string",
+        "nullable": false
+      }
+    },
+    "description": "Fictional closed production batches; started units all have final good/reject disposition; cost is incurred production cost, not revenue"
+  },
+  {
+    "table": "clean/manufacturing/source_line_controls.csv",
+    "domain": "manufacturing",
+    "data_level": "source_line_controls",
+    "grain": [
+      "transaction_id",
+      "metric"
+    ],
+    "columns": {
+      "transaction_id": {
+        "type": "string",
+        "nullable": false
+      },
+      "metric": {
+        "type": "string",
+        "nullable": false
+      },
+      "expected_value": {
+        "type": "decimal",
+        "nullable": false
+      },
+      "currency": {
+        "type": "string",
+        "nullable": false
+      },
+      "amount_scale": {
+        "type": "string",
+        "nullable": false
+      },
+      "control_origin": {
+        "type": "string",
+        "nullable": false
+      }
+    },
+    "description": "Fictional closed production batches; started units all have final good/reject disposition; cost is incurred production cost, not revenue"
+  },
+  {
+    "table": "clean/saas/transaction_detail.csv",
+    "domain": "saas",
+    "data_level": "transaction_detail",
+    "grain": [
+      "transaction_id",
+      "snapshot_id"
+    ],
+    "columns": {
+      "transaction_id": {
+        "type": "string",
+        "nullable": false
+      },
+      "event_date": {
+        "type": "date",
+        "nullable": false
+      },
+      "period_id": {
+        "type": "string",
+        "nullable": false
+      },
+      "scenario": {
+        "type": "string",
+        "nullable": false
+      },
+      "currency": {
+        "type": "string",
+        "nullable": false
+      },
+      "amount_scale": {
+        "type": "string",
+        "nullable": false
+      },
+      "snapshot_id": {
+        "type": "string",
+        "nullable": false
+      },
+      "loaded_at": {
+        "type": "timestamp_utc",
+        "nullable": false
+      },
+      "customer_segment": {
+        "type": "string",
+        "nullable": false
+      },
+      "recognized_revenue": {
+        "type": "decimal",
+        "nullable": false
+      },
+      "paid_seat_months": {
+        "type": "decimal",
+        "nullable": false
+      },
+      "support_tickets": {
+        "type": "decimal",
+        "nullable": false
+      }
+    },
+    "description": "Fictional monthly recognition lines; seats are disjoint seat-month exposure; recognized revenue is not cash receipts or ARR"
+  },
+  {
+    "table": "clean/saas/grouped_data.csv",
+    "domain": "saas",
+    "data_level": "grouped_data",
+    "grain": [
+      "period_id",
+      "scenario",
+      "currency",
+      "amount_scale",
+      "snapshot_id",
+      "customer_segment"
+    ],
+    "columns": {
+      "period_id": {
+        "type": "string",
+        "nullable": false
+      },
+      "scenario": {
+        "type": "string",
+        "nullable": false
+      },
+      "currency": {
+        "type": "string",
+        "nullable": false
+      },
+      "amount_scale": {
+        "type": "string",
+        "nullable": false
+      },
+      "snapshot_id": {
+        "type": "string",
+        "nullable": false
+      },
+      "loaded_at": {
+        "type": "timestamp_utc",
+        "nullable": false
+      },
+      "customer_segment": {
+        "type": "string",
+        "nullable": false
+      },
+      "recognized_revenue": {
+        "type": "decimal",
+        "nullable": false
+      },
+      "paid_seat_months": {
+        "type": "decimal",
+        "nullable": false
+      },
+      "support_tickets": {
+        "type": "decimal",
+        "nullable": false
+      },
+      "revenue_per_seat_month": {
+        "type": "decimal",
+        "nullable": false
+      }
+    },
+    "description": "Fictional monthly recognition lines; seats are disjoint seat-month exposure; recognized revenue is not cash receipts or ARR"
+  },
+  {
+    "table": "clean/saas/reporting_aggregates.csv",
+    "domain": "saas",
+    "data_level": "reporting_aggregates",
+    "grain": [
+      "period_id",
+      "scenario",
+      "currency",
+      "amount_scale",
+      "snapshot_id",
+      "customer_segment",
+      "row_level"
+    ],
+    "columns": {
+      "period_id": {
+        "type": "string",
+        "nullable": false
+      },
+      "scenario": {
+        "type": "string",
+        "nullable": false
+      },
+      "currency": {
+        "type": "string",
+        "nullable": false
+      },
+      "amount_scale": {
+        "type": "string",
+        "nullable": false
+      },
+      "snapshot_id": {
+        "type": "string",
+        "nullable": false
+      },
+      "loaded_at": {
+        "type": "timestamp_utc",
+        "nullable": false
+      },
+      "customer_segment": {
+        "type": "string",
+        "nullable": false
+      },
+      "recognized_revenue": {
+        "type": "decimal",
+        "nullable": false
+      },
+      "paid_seat_months": {
+        "type": "decimal",
+        "nullable": false
+      },
+      "support_tickets": {
+        "type": "decimal",
+        "nullable": false
+      },
+      "revenue_per_seat_month": {
+        "type": "decimal",
+        "nullable": false
+      },
+      "row_level": {
+        "type": "string",
+        "nullable": false
+      },
+      "parent_id": {
+        "type": "string",
+        "nullable": true
+      }
+    },
+    "description": "Fictional monthly recognition lines; seats are disjoint seat-month exposure; recognized revenue is not cash receipts or ARR"
+  },
+  {
+    "table": "clean/saas/plan_baseline.csv",
+    "domain": "saas",
+    "data_level": "plan_baseline",
+    "grain": [
+      "period_id",
+      "scenario",
+      "snapshot_id",
+      "metric"
+    ],
+    "columns": {
+      "period_id": {
+        "type": "string",
+        "nullable": false
+      },
+      "scenario": {
+        "type": "string",
+        "nullable": false
+      },
+      "currency": {
+        "type": "string",
+        "nullable": false
+      },
+      "amount_scale": {
+        "type": "string",
+        "nullable": false
+      },
+      "snapshot_id": {
+        "type": "string",
+        "nullable": false
+      },
+      "metric": {
+        "type": "string",
+        "nullable": false
+      },
+      "value": {
+        "type": "decimal",
+        "nullable": false
+      }
+    },
+    "description": "Fictional monthly recognition lines; seats are disjoint seat-month exposure; recognized revenue is not cash receipts or ARR"
+  },
+  {
+    "table": "clean/saas/company_controls.csv",
+    "domain": "saas",
+    "data_level": "company_controls",
+    "grain": [
+      "period_id",
+      "scenario",
+      "snapshot_id",
+      "metric"
+    ],
+    "columns": {
+      "period_id": {
+        "type": "string",
+        "nullable": false
+      },
+      "scenario": {
+        "type": "string",
+        "nullable": false
+      },
+      "snapshot_id": {
+        "type": "string",
+        "nullable": false
+      },
+      "currency": {
+        "type": "string",
+        "nullable": true,
+        "null_semantics": "Not applicable for nonmonetary unit counts or exposures; required for currency measures"
+      },
+      "unit": {
+        "type": "string",
+        "nullable": false
+      },
+      "amount_scale": {
+        "type": "string",
+        "nullable": false
+      },
+      "metric": {
+        "type": "string",
+        "nullable": false
+      },
+      "expected_value": {
+        "type": "decimal",
+        "nullable": false
+      },
+      "control_origin": {
+        "type": "string",
+        "nullable": false
+      }
+    },
+    "description": "Fictional monthly recognition lines; seats are disjoint seat-month exposure; recognized revenue is not cash receipts or ARR"
+  },
+  {
+    "table": "clean/saas/coverage_roster.csv",
+    "domain": "saas",
+    "data_level": "coverage_roster",
+    "grain": [
+      "period_id",
+      "scenario",
+      "snapshot_id",
+      "customer_segment"
+    ],
+    "columns": {
+      "period_id": {
+        "type": "string",
+        "nullable": false
+      },
+      "scenario": {
+        "type": "string",
+        "nullable": false
+      },
+      "snapshot_id": {
+        "type": "string",
+        "nullable": false
+      },
+      "customer_segment": {
+        "type": "string",
+        "nullable": false
+      }
+    },
+    "description": "Fictional monthly recognition lines; seats are disjoint seat-month exposure; recognized revenue is not cash receipts or ARR"
+  },
+  {
+    "table": "clean/saas/source_line_controls.csv",
+    "domain": "saas",
+    "data_level": "source_line_controls",
+    "grain": [
+      "transaction_id",
+      "metric"
+    ],
+    "columns": {
+      "transaction_id": {
+        "type": "string",
+        "nullable": false
+      },
+      "metric": {
+        "type": "string",
+        "nullable": false
+      },
+      "expected_value": {
+        "type": "decimal",
+        "nullable": false
+      },
+      "currency": {
+        "type": "string",
+        "nullable": false
+      },
+      "amount_scale": {
+        "type": "string",
+        "nullable": false
+      },
+      "control_origin": {
+        "type": "string",
+        "nullable": false
+      }
+    },
+    "description": "Fictional monthly recognition lines; seats are disjoint seat-month exposure; recognized revenue is not cash receipts or ARR"
+  },
+  {
+    "table": "clean/saas/period_end_balances.csv",
+    "domain": "saas",
+    "data_level": "balance_reporting",
+    "grain": [
+      "period_id",
+      "scenario",
+      "snapshot_id",
+      "currency"
+    ],
+    "columns": {
+      "period_id": {
+        "type": "string",
+        "nullable": false
+      },
+      "as_of_date": {
+        "type": "date",
+        "nullable": false
+      },
+      "scenario": {
+        "type": "string",
+        "nullable": false
+      },
+      "snapshot_id": {
+        "type": "string",
+        "nullable": false
+      },
+      "currency": {
+        "type": "string",
+        "nullable": false
+      },
+      "amount_scale": {
+        "type": "string",
+        "nullable": false
+      },
+      "arr": {
+        "type": "decimal",
+        "nullable": false
+      }
+    },
+    "description": "Separate nonadditive point-in-time ARR example"
+  },
+  {
+    "table": "clean/saas/quarter_end_balance.csv",
+    "domain": "saas",
+    "data_level": "balance_reporting",
+    "grain": [
+      "period_id",
+      "scenario",
+      "snapshot_id",
+      "currency"
+    ],
+    "columns": {
+      "period_id": {
+        "type": "string",
+        "nullable": false
+      },
+      "scenario": {
+        "type": "string",
+        "nullable": false
+      },
+      "snapshot_id": {
+        "type": "string",
+        "nullable": false
+      },
+      "currency": {
+        "type": "string",
+        "nullable": false
+      },
+      "amount_scale": {
+        "type": "string",
+        "nullable": false
+      },
+      "arr": {
+        "type": "decimal",
+        "nullable": false
+      },
+      "selected_month": {
+        "type": "string",
+        "nullable": false
+      }
+    },
+    "description": "Separate nonadditive point-in-time ARR example"
+  },
+  {
+    "table": "references/calendar.csv",
+    "domain": "common",
+    "data_level": "reference",
+    "grain": [
+      "period_id"
+    ],
+    "columns": {
+      "period_id": {
+        "type": "string",
+        "nullable": false
+      },
+      "start_date": {
+        "type": "date",
+        "nullable": false
+      },
+      "end_date": {
+        "type": "date",
+        "nullable": false
+      },
+      "period_state": {
+        "type": "enum_closed_open",
+        "nullable": false
+      },
+      "complete": {
+        "type": "boolean_string_true_false",
+        "nullable": false
+      }
+    },
+    "description": "Explicit Gregorian monthly close/completeness reference; V12 changes March only"
+  }
+]

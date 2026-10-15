@@ -1,0 +1,7 @@
+period_id,scenario,currency,amount_scale,snapshot_id,loaded_at,plant,production_cost,units_started,good_units,first_pass_yield
+2026-01,Actual,USD,1,s1,2026-04-04T12:00:00Z,plant_a,100,100,90,0.900000
+2026-01,Actual,USD,1,s1,2026-04-04T12:00:00Z,plant_b,900,900,810,0.900000
+2026-02,Actual,USD,1,s1,2026-04-04T12:00:00Z,plant_a,200,100,90,0.900000
+2026-02,Actual,USD,1,s1,2026-04-04T12:00:00Z,plant_b,1800,900,810,0.900000
+2026-03,Actual,USD,1,s1,2026-04-04T12:00:00Z,plant_a,300,100,90,0.900000
+2026-03,Actual,USD,1,s1,2026-04-04T12:00:00Z,plant_b,2700,900,810,0.900000

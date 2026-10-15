@@ -1,0 +1,13 @@
+transaction_id,event_date,period_id,scenario,currency,amount_scale,snapshot_id,loaded_at,service_region,service_revenue,line_months,disconnects
+tel-01-001,2026-01-05,2026-01,Actual,USD,1,s1,2026-04-04T12:00:00Z,north,40,1,0
+tel-01-002,2026-01-06,2026-01,Actual,USD,1,s1,2026-04-04T12:00:00Z,north,60,1,0
+tel-01-003,2026-01-07,2026-01,Actual,USD,1,s1,2026-04-04T12:00:00Z,south,300,3,1
+tel-01-004,2026-01-08,2026-01,Actual,USD,1,s1,2026-04-04T12:00:00Z,south,600,5,0
+tel-02-001,2026-02-05,2026-02,Actual,USD,1,s1,2026-04-04T12:00:00Z,north,80,1,0
+tel-02-002,2026-02-06,2026-02,Actual,USD,1,s1,2026-04-04T12:00:00Z,north,120,1,0
+tel-02-003,2026-02-07,2026-02,Actual,USD,1,s1,2026-04-04T12:00:00Z,south,600,3,1
+tel-02-004,2026-02-08,2026-02,Actual,USD,1,s1,2026-04-04T12:00:00Z,south,1200,5,0
+tel-03-001,2026-03-05,2026-03,Actual,USD,1,s1,2026-04-04T12:00:00Z,north,120,1,0
+tel-03-002,2026-03-06,2026-03,Actual,USD,1,s1,2026-04-04T12:00:00Z,north,180,1,0
+tel-03-003,2026-03-07,2026-03,Actual,USD,1,s1,2026-04-04T12:00:00Z,south,900,3,1
+tel-03-004,2026-03-08,2026-03,Actual,USD,1,s1,2026-04-04T12:00:00Z,south,1800,5,0

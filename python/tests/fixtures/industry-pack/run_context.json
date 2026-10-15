@@ -1,0 +1,18 @@
+{
+  "run_at": "2026-04-05T12:00:00Z",
+  "timezone": "UTC",
+  "freshness_hours": 48,
+  "selected_actual_snapshot": "s1",
+  "selected_plan_snapshot": "p1",
+  "comparison": "Actual_vs_Plan_complete_months",
+  "report_currency": "USD",
+  "amount_scale": "1",
+  "amount_tolerance": "0.00",
+  "ratio_absolute_tolerance": "0.000001",
+  "approval_state": "synthetic_test_only_not_production_approved",
+  "periods": [
+    "2026-01",
+    "2026-02",
+    "2026-03"
+  ]
+}
