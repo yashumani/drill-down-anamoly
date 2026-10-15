@@ -22,5 +22,9 @@ jobs:
         run: python scripts/record_ci_identity.py
       - name: Install locked test tools
         run: npm ci --ignore-scripts --no-audit --no-fund
-      - name: Test delayed Studio export snapshot
-        run: npm test -- scripts/studio-export.test.mjs
+      - name: Test application and Studio regressions
+        run: npm test
+      - name: Build existing application
+        run: npm run build
+      - name: Enforce existing bundle budgets
+        run: npm run check:bundle

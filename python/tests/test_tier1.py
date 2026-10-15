@@ -251,6 +251,15 @@ class ContractBoundaryTests(unittest.TestCase):
         with self.assertRaises(ConfigError): evaluate([{'x': 1}], self.config, evaluation_time='2026-01-01')
         with self.assertRaises(ConfigError): evaluate([{'x': 1}], self.config, diagnostic_limit=21)
 
+    def test_reference_cells_are_included_in_evaluation_work_limit(self):
+        # 400,000 reference cells x 128 checks exceeds the documented 50m budget.
+        refs = {'roster': [dict((f'field{i}', n) for i in range(100)) for n in range(4000)]}
+        config = bundle(*(rule('coverage', {'fields': ['field0'], 'reference': 'roster'},
+                              id=f'coverage{i}') for i in range(128)))
+        with patch('reporting_assurance.engine.run', side_effect=AssertionError('checks_must_not_start')):
+            with self.assertRaisesRegex(ConfigError, '^evaluation_work_limit$'):
+                evaluate([{'field0': 0}], config, references=refs)
+
     def test_malformed_parameter_types_are_config_errors(self):
         valid = [rule('types', {'fields': {'x': {'type': 'string', 'nullable': False}}}),
                  rule('range', {'field': 'x', 'min': '0'}), rule('coverage', {'fields': ['x'], 'expected': [['A']]})]
@@ -276,6 +285,15 @@ class ContractBoundaryTests(unittest.TestCase):
             path = Path(directory) / 'synthetic.csv'
             path.write_text('a,b\n,0\n')
             self.assertEqual(read_csv(path, types={'b': 'integer'}, null_token=''), [{'a': None, 'b': 0}])
+
+    def test_invalid_csv_type_option_does_not_silently_disable_conversion(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / 'synthetic.csv'
+            path.write_text('id,amount\n001,10.50\n', encoding='utf-8')
+            for invalid in [False, [], '', 0, ()]:
+                with self.subTest(option_type=type(invalid).__name__):
+                    with self.assertRaises(ConfigError): read_csv(path, types=invalid)
+            self.assertEqual(read_csv(path, types=None)[0]['id'], '001')
 
     def test_csv_identifiers_decimal_null_and_empty_are_preserved(self):
         with tempfile.TemporaryDirectory() as directory:

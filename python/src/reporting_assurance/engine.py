@@ -173,8 +173,6 @@ def evaluate(rows, bundle, *, evaluation_time=None, references=None, mode="previ
         try: at = instant(evaluation_time)
         except (ValueError, OverflowError, TypeError): raise ConfigError("invalid_evaluation_time") from None
     table(rows)
-    if sum(len(row) for row in rows) * len(config["rules"]) > 50_000_000:
-        raise ConfigError("evaluation_work_limit")
     if references is None: references = {}
     if type(references) is not dict or len(references) > 32: raise ConfigError("reference_limit_or_shape")
     total_reference_rows = 0
@@ -182,6 +180,11 @@ def evaluate(rows, bundle, *, evaluation_time=None, references=None, mode="previ
         if type(name) is not str or not 0 < len(name) <= 128: raise ConfigError("invalid_reference_name")
         table(records); total_reference_rows += len(records)
     if total_reference_rows > MAX_ROWS: raise ConfigError("reference_row_limit")
+    # Conservative bound includes all caller tables, even currently unused references.
+    cells = sum(len(row) for row in rows)
+    cells += sum(len(row) for records in references.values() for row in records)
+    if cells * len(config["rules"]) > 50_000_000:
+        raise ConfigError("evaluation_work_limit")
     approval = config.get("approval", {})
     approved = (config["provenance"]["kind"] == "approved_domain_rules" and approval.get("digest") == digest
                 and digest in trusted_digests)
