@@ -11,7 +11,7 @@ function harness(){
   let request,release;
   function element(id){
     if(!elements.has(id))elements.set(id,{value:'',textContent:'',hidden:false,disabled:false,files:[],events:{},
-      addEventListener(name,fn){this.events[name]=fn;},replaceChildren(){},append(){},
+      addEventListener(name,fn){this.events[name]=fn;},replaceChildren(){this.textContent='';},append(){},
       click(){if(this.events.click)return this.events.click();if(this.href)downloads.push(blobs.get(this.href));}});
     return elements.get(id);
   }
@@ -25,6 +25,15 @@ function harness(){
 }
 
 describe('Studio export validation snapshot',()=>{
+  it.each(['csv','types','rules','controls','evaluation-time'])('replaces obsolete success status immediately when %s changes',id=>{
+    const ui=harness();ui.element('message').hidden=false;
+    ui.element('message').textContent='Preview evaluated: 10 pass. Gate status: non-gating.';
+    ui.element('facts').textContent='old profile counts';
+    ui.element(id).events.input();
+    expect(ui.element('message').textContent).toBe('Inputs changed. Preview the current table and rules.');
+    if(id==='csv'||id==='types')expect(ui.element('facts').textContent).toBe('');
+  });
+
   it('keeps rule edits made while an imported file is still being read',async()=>{
     const ui=harness();ui.element('rules').value='{"revision":"before"}';
     let finish;

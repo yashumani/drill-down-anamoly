@@ -1,4 +1,5 @@
 /** Optional local transport. Rule execution remains exclusively in Python. */
+export const LOCAL_PYTHON_ORIGIN = 'http://127.0.0.1:8765';
 export const MAX_LOCAL_FILE_BYTES = 1_048_576;
 const MAX_BODY_BYTES = 2_097_152;
 const outcomes = ['pass', 'fail', 'not_evaluated', 'error'] as const;
@@ -40,7 +41,7 @@ export function isLocalBrowserOrigin(value: string): boolean {
 export function localPythonApiUrl(value: string): string {
   try {
     const url = new URL(value);
-    if (url.protocol !== 'http:' || url.hostname !== '127.0.0.1' || !url.port || Number(url.port) < 1
+    if (url.protocol !== 'http:' || url.hostname !== '127.0.0.1' || url.port !== '8765'
       || (value !== url.origin && value !== `${url.origin}/`)) throw new Error();
     return `${url.origin}/api`;
   } catch { throw new Error('invalid_local_python_endpoint'); }

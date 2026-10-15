@@ -8,7 +8,7 @@ import { requestPythonPreview } from '../src/lib/pythonAssuranceClient.ts';
 const root = fileURLToPath(new URL('..', import.meta.url));
 const origin = 'http://localhost:5173';
 const python = process.env.REPORTING_ASSURANCE_TEST_PYTHON || 'python';
-const child = spawn(python, ['-u', '-m', 'reporting_assurance', 'studio', '--port', '0', '--allow-origin', origin], {
+const child = spawn(python, ['-u', '-m', 'reporting_assurance', 'studio', '--port', '8765', '--allow-origin', origin], {
   cwd: root, windowsHide: true, env: { ...process.env, PYTHONPATH: join(root, 'python', 'src') },
   stdio: ['ignore', 'pipe', 'pipe'],
 });
