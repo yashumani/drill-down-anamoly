@@ -16,6 +16,8 @@ with zipfile.ZipFile(wheel) as archive:
     assert 'reporting_assurance/schemas/rule-bundle-v1.json' in names
     assert 'reporting_assurance/schemas/report-v1.json' in names
     assert 'reporting_assurance/studio.html' in names
+    assert 'reporting_assurance/schemas/explanation-report-v1.json' in names
+    assert 'reporting_assurance/schemas/interpretation-selection-v1.json' in names
     assert not any('/tests/' in n or 'node_modules' in n for n in names)
 env = dict(os.environ)
 env.pop('PYTHONPATH', None)
@@ -43,6 +45,14 @@ with tempfile.TemporaryDirectory(prefix='reporting-assurance-wheel-') as directo
     nested=json.loads(run('-I','-m','reporting_assurance',*args,'--include-analysis').stdout)
     assert nested['tier1']==api and nested['analyses'][0]['groups'][0]['total']=='100'
     assert nested['analyses'][0]['outcome']=='pass'
+    explained=json.loads(run('-I','-m','reporting_assurance',*args,'--include-analysis','--explain').stdout)
+    assert explained['deterministic']==nested
+    assert explained['interpretation']['method']=='controlled_templates'
+    assert not explained['interpretation']['adapter_called']
+    example=json.loads(run('-I',root/'python/examples/run_explanation.py').stdout)
+    assert example['local']==explained
+    assert example['offline_mock']['deterministic']==nested
+    assert example['offline_mock']['interpretation']['model_verification']=='not_verified'
     # No Node/model/KNIME runtime dependencies were installed or needed.
     print(json.dumps({'wheel':wheel.name, 'sha256':hashlib.sha256(wheel.read_bytes()).hexdigest(),
                       'python':sys.version.split()[0], 'clean_install':True, 'api_cli_entrypoint_parity':True,
