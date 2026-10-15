@@ -3,7 +3,7 @@ import csv
 from pathlib import Path
 from decimal import Decimal, InvalidOperation
 import re
-from .contracts import ConfigError, MAX_ROWS, MAX_COLUMNS, MAX_CELL_CHARS
+from .contracts import ConfigError, MAX_ROWS, MAX_COLUMNS, MAX_CELL_CHARS, reference_types_from_roles
 from .table import table, iso_date, instant
 
 
@@ -53,3 +53,21 @@ def read_csv(path, *, types=None, null_token="\\N"):
                 rows.append(row)
     except (csv.Error, UnicodeError): raise ConfigError("invalid_csv") from None
     return table(rows)
+
+
+
+def reference_csv_types(bundle, reference, columns, primary_types):
+    """Reference schemas are separate from the primary table's schema.
+
+    Explicit bundle declarations are approval-bound. Registered operators also
+    define required native types: control/baseline measures are Decimal and
+    calendar complete is bool. No types are inferred from observed values.
+    """
+    declared = bundle.get('reference_types', {}).get(reference, {})
+    required = reference_types_from_roles(bundle).get(reference, {})
+    # Retain compatible legacy mappings for shared keys. Reference declarations
+    # override primary mappings; primary and reference columns are independent.
+    result = {field: kind for field, kind in primary_types.items() if field in columns}
+    result.update(declared)
+    result.update({field: kind for field, kind in required.items() if field in columns})
+    return result

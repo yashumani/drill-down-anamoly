@@ -154,9 +154,30 @@ def _bounded_tree(value, depth=0, budget=None):
     else: scalar(value)
 
 
+
+def reference_types_from_roles(bundle):
+    """Native reference types required by registered operations, never data inference."""
+    result = {}
+    def declare(reference, field, kind):
+        mapping = result.setdefault(reference, {})
+        require(field not in mapping or mapping[field] == kind, "conflicting_reference_types")
+        mapping[field] = kind
+    for rule in bundle["rules"]:
+        if rule["operator"] == "reconcile":
+            p = rule["params"]
+            declare(p["reference"], p["control_measure"], "decimal")
+    for analysis in bundle.get("analysis", {}).get("analyses", []):
+        if analysis["operator"] == "variance":
+            p = analysis["params"]
+            declare(p["reference"], p["baseline_measure"], "decimal")
+            declare(p["calendar_reference"], "complete", "boolean")
+            declare(p["calendar_reference"], "period_state", "string")
+    return result
+
+
 def validate_bundle(bundle):
     _bounded_tree(bundle)
-    exact(bundle, ["schema_version", "revision", "provenance", "rules"], ["approval", "analysis"])
+    exact(bundle, ["schema_version", "revision", "provenance", "rules"], ["approval", "analysis", "reference_types"])
     require(bundle["schema_version"] == "1.0", "unsupported_schema_version")
     require(type(bundle["revision"]) is str and ID.fullmatch(bundle["revision"]), "invalid_revision")
     exact(bundle["provenance"], ["author", "source", "kind"])
@@ -183,9 +204,23 @@ def validate_bundle(bundle):
         for dep in graph[node]: visit(dep)
         active.remove(node); visited.add(node)
     for node in graph: visit(node)
+    if "reference_types" in bundle:
+        references = bundle["reference_types"]
+        require(type(references) is dict and len(references) <= 32, "invalid_reference_types")
+        for reference, fields in references.items():
+            name(reference)
+            require(type(fields) is dict and 0 < len(fields) <= MAX_COLUMNS, "invalid_reference_types")
+            for field, kind in fields.items():
+                name(field)
+                require(type(kind) is str and kind in TYPES, "invalid_reference_types")
     if "analysis" in bundle:
         from .analysis import validate_analysis
         validate_analysis(bundle["analysis"], ids)
+    role_types = reference_types_from_roles(bundle)
+    for reference, fields in bundle.get("reference_types", {}).items():
+        for field, kind in fields.items():
+            required_kind = role_types.get(reference, {}).get(field)
+            require(required_kind is None or required_kind == kind, "conflicting_reference_types")
     if "approval" in bundle:
         a = bundle["approval"]
         exact(a, ["status", "revision", "digest", "approved_by"])

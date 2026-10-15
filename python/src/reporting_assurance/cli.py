@@ -4,7 +4,7 @@ import json
 import sys
 from pathlib import Path
 from .contracts import ConfigError, load_bundle, bundle_digest, MAX_CONFIG_BYTES
-from .adapters import read_csv
+from .adapters import read_csv, reference_csv_types
 from .engine import evaluate
 
 
@@ -47,10 +47,7 @@ def main(argv=None):
             try:
                 with Path(filename).open(encoding="utf-8-sig", newline="") as h: header = next(csv.reader(h), [])
             except (csv.Error, UnicodeError): raise ConfigError("invalid_csv") from None
-            ref_types = {f: t for f, t in types.items() if f in header}
-            for r in config["rules"]:
-                if r["operator"] == "reconcile" and r["params"]["reference"] == name:
-                    ref_types[r["params"]["control_measure"]] = "decimal"
+            ref_types = reference_csv_types(config, name, header, types)
             refs[name] = read_csv(filename, types=ref_types)
         report = evaluate(rows, config, evaluation_time=args.evaluation_time, references=refs,
                           mode=args.mode, trusted_digests=args.trusted_digest, diagnostic_limit=args.diagnostic_limit)
