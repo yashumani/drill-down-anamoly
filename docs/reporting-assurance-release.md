@@ -24,12 +24,12 @@ This is an installable, bounded alpha alongside the existing app. It is not full
 
 | Usable outcome | Acceptance / current status | Next action |
 | --- | --- | --- |
-| Preserve existing Tier 1/2 and app readiness | Verified locally: 96 Python tests, 103 JavaScript tests, direct HTTP integration, build and unchanged budgets | Verify final wheel and pushed source CI |
-| Optional Tier 3 grounded interpretation | Verified on sourceaabf680: 15 independent Tier 3 tests and all eight Python push jobs; no live provider | Final async-contract guard verified in both clean wheels; inspect final source CI |
-| Installed Python/CLI end-to-end workflow | Verified from final clean wheels on Windows 3.9.21/3.12.14: all 96 methods plus complete API/CLI examples | Inspect exact pushed source CI |
-| Existing app can explicitly use local Python | HTTP/client path verified locally, React structure tested; actual browser blocked | Verify final wheel/app/source CI and retain browser limitation |
-| Immutable pushed source and relevant CI | Prior checkpoint verified; new source pending | Commit/push and inspect exact-source jobs |
-| Actual browser, KNIME and live-model evidence | Browser blocked by provided Windows runtime; KNIME and live model unverified | Preserve explicit limitations; no bypass or external calls |
+| Preserve existing Tier 1/2 and app readiness | Verified: 96 Python tests, 103 JavaScript tests, direct HTTP integration, clean wheels, build and unchanged budgets | Complete within tested fixture/runtime scope |
+| Optional Tier 3 grounded interpretation | Verified: controlled templates, 15 independent methods, immutable selection/mandatory blockers, synchronous adapter boundary; offline mocks only | Live provider/free-form explanation is not verified or supplied |
+| Installed Python/CLI end-to-end workflow | Verified from final clean wheels on Windows 3.9.21/3.12.14 and all eight supported CI combinations; API/CLI/example parity and zero runtime dependencies | Use caller-owned approval/trust as documented |
+| Existing app can explicitly use local Python | Verified HTTP/client transport, precision and React structure; actual browser remains blocked | Restore the provided browser runtime for visual/interactive acceptance |
+| Immutable pushed source and relevant CI | Code57cb790 verified: Python38673066821 all8 jobs and app38673066612 including real HTTP integration pass; source identity recorded | Latest documentation-head CI and exact SHA are recorded in draft PR23 |
+| Actual browser, KNIME and live-model evidence | Browser blocked by runtime0x80070003; actual KNIME and live model unverified | Actual environments and provider authorization are needed; no bypass, credentials or external model calls were used |
 
 ## Current local acceptance
 
@@ -51,7 +51,7 @@ This follow-up rejects false/empty invalid CSV conversion options, invalidates s
 
 ## Durable remote evidence and identity
 
-Remote runs must be attributed to both event and actual checkout. A PR merge checkout is not the feature branch source commit. CI now records event, checked-out SHA and GITHUB_SHA and asserts identity. Feature-branch push CI verifies the Python matrix and full existing application/Studio test/build/budget checks. Current follow-up push results are recorded in the draft PR and implementation handoff after inspection.
+Remote runs must be attributed to both event and actual checkout. A PR merge checkout is not the feature branch source commit. CI now records event, checked-out SHA and GITHUB_SHA and asserts identity. Feature-branch push CI verifies the Python matrix and full existing application/Studio test/build/budget checks, including direct local client/Python HTTP integration. All code57cb790 acceptance jobs were inspected as successful. The final documentation-head push is separately inspected and recorded with its exact SHA in the draft PR and implementation handoff.
 
 Verified earlier source-push checkpoints:
 
@@ -62,6 +62,7 @@ Verified earlier source-push checkpoints:
 | `269fa7f6b8eaf238a85a797cb6589f03ef109655` | Python https://github.com/yashumani/drill-down-anamoly/actions/runs/38665457275 : all eight jobs passed. Studio JavaScript https://github.com/yashumani/drill-down-anamoly/actions/runs/38665457371 passed. |
 | `24c2624aa3d4aebe1d7bbd242e89e456b611aede` | Python https://github.com/yashumani/drill-down-anamoly/actions/runs/38668332463 : all eight jobs passed; app https://github.com/yashumani/drill-down-anamoly/actions/runs/38668332505 passed full tests/build/budgets. |
 | `aabf680e7ed604d0b6ba4a11d16d41e61cacb5ed` | Python https://github.com/yashumani/drill-down-anamoly/actions/runs/38670470837 : all eight jobs passed with Tier 3; app https://github.com/yashumani/drill-down-anamoly/actions/runs/38670470826 passed. |
+| `57cb790d94c8ccd535f5a1803ee218bcd7104011` | Python https://github.com/yashumani/drill-down-anamoly/actions/runs/38673066821 : all eight jobs and acceptance steps passed; app https://github.com/yashumani/drill-down-anamoly/actions/runs/38673066612 passed 103 tests, direct client/Python HTTP integration, build and original budgets. |
 
 The supported platform/version claim is limited to verified matrix/local combinations; macOS, actual KNIME and other Python releases are not claimed compatible. Prior existing-app and invalid-workflow failures are preserved in history, not suppressed.
 
@@ -84,6 +85,10 @@ The 15 new independent methods cover explicit adapter opt-in, no IO/network in d
 
 ## Local preview bridge acceptance
 
-Five real loopback HTTP methods cover exact opt-in local origins, preflight without credentials/wildcards, preview/direct-API parity, rejected production/trust/adapter fields, rejected foreign origins/ports/headers/methods/hosts, duplicate Origin headers and invalid startup origins. Twenty client unit methods and two server-rendered component methods bring the app suite to 103 tests; they are not browser proof. Direct Node client/Python HTTP integration passes, preserving the independent boundary 9007199254740993.00010 versus .00011 and rejecting a different local origin. App build and unchanged size budgets pass locally before final source verification. The CLI startup error is concise and does not print a traceback for an invalid origin.
+Five real loopback HTTP methods cover exact opt-in local origins, preflight without credentials/wildcards, preview/direct-API parity, rejected production/trust/adapter fields, rejected foreign origins/ports/headers/methods/hosts, duplicate Origin headers and invalid startup origins. Twenty client unit methods and two server-rendered component methods bring the app suite to 103 tests; they are not browser proof. Direct Node client/Python HTTP integration passes, preserving the independent boundary 9007199254740993.00010 versus .00011 and rejecting a different local origin. App build and unchanged size budgets pass locally and in exact-source push CI. The CLI startup error is concise and does not print a traceback for an invalid origin.
 
 The synchronous Tier 3 adapter boundary also rejects async functions/awaitables without creating an event loop or leaving an unawaited native coroutine; offline regression cases cover both forms. This is contract rejection, not async/live-provider verification.
+
+## Remaining external acceptance
+
+The unblocked software checklist above is verified; this is not full-product or production acceptance. Actual browser rendering/interactions/downloads need the provided Windows runtime restored, actual KNIME needs its runnable node environment, and live-model verification needs a caller-authorized provider adapter/environment. None can be inferred from unit/HTTP/SSR/mock tests. No model credentials or persistent service were created. The optional local workflow is documented in python/README.md; use `python -m reporting_assurance` instead of the executable name when the chosen Python environment's Scripts directory is not on PATH. No automatic monitoring is implied after a run ends.
