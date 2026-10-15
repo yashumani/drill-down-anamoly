@@ -1,1 +1,1 @@
-python/tests/fixtures/industry-pack/** -text
+python/tests/fixtures/industry-pack/** -text whitespace=cr-at-eol

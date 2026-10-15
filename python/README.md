@@ -2,7 +2,7 @@
 
 An installable Python module for existing Python and KNIME reporting workflows. Tier 1 uses deterministic rules on reporting aggregates, grouped data or transaction detail. The package runs without Node, a server, UI, model or KNIME. It has no runtime dependencies.
 
-This is a bounded alpha release. Existing browser-app behavior and its finance contract remain separate; the Python executor is the intended authoritative rule executor for future integration. Optional AI and a rule-generation UI are unimplemented. See the current release evidence in `docs/reporting-assurance-release.md`.
+This is a bounded alpha release. Existing browser-app behavior and its finance contract remain separate; the Python executor is the intended authoritative rule executor for future integration. Optional AI is unimplemented. An optional local Rule Studio provides draft authoring; its browser/visual verification remains blocked in this environment. See the current release evidence in `docs/reporting-assurance-release.md`.
 
 ## Install and run
 
@@ -75,3 +75,13 @@ Exact sums/subtractions use bounded Decimal precision sufficient for supported i
 The independent four-sector acceptance adapter is `python/tests/fixture_adapter.py`. It maps catalog types and declared selections into the exact v1 JSON contract, preserves the pack's synthetic provenance, and replaces exactly one named file for each fault. The fixture explanatory statuses `unverified` and `skipped` map to `not_evaluated`, with distinct evidence/prerequisite reasons. Internal parent/child identities use `control_scope=internal`; separately supplied company and source-line controls use caller-declared `independent` scope. The engine does not authenticate that declaration.
 
 The package layout and script entry point follow the [Python Packaging User Guide](https://packaging.python.org/en/latest/guides/writing-pyproject-toml/). The distribution name is provisional and no name reservation or registry publication is claimed.
+
+## Optional local Rule Studio
+
+```sh
+reporting-assurance studio --port 0
+```
+
+Open the printed loopback URL. The Studio profiles counts, proposes editable nonblocking draft rules, previews through the same Python executor, and exports the exact validated JSON in the editor. It never approves a bundle or executes a production gate. Its server binds only 127.0.0.1, rejects foreign Host/Origin requests, uses no remote assets/models, and retains no saved table between requests. Temporary CSV adapter files are removed. The Studio caps CSV at 1 MiB and requests at 2 MiB; use the API/CLI for larger documented inputs. Core import and evaluation do not start or require the server.
+
+Seven HTTP integration tests cover the profile → draft → preview → export-validation flow, API parity, exact bundle digest, declared date types, malformed requests and cross-origin rejection. Actual browser rendering, keyboard/mobile behavior and browser download completion remain unverified: this executor's computer-use runtime exits with a missing Windows platform-directory error. KNIME remains unverified; the known KNIME folder contains only a quickstart PDF, not a runnable installation.
