@@ -6,6 +6,7 @@ from the original evidence packet, never the mutable copy passed to an adapter.
 """
 from copy import deepcopy
 import hashlib
+import inspect
 import json
 
 from .contracts import ConfigError, exact, require, _bounded_tree
@@ -181,8 +182,15 @@ def explain(rows, bundle, *, evaluation_time=None, references=None, mode='previe
         if not allow_adapter:
             return finish('not_evaluated', 'adapter_authorization_required')
         try:
+            select_evidence = adapter.select_evidence
+            if inspect.iscoroutinefunction(select_evidence) or inspect.isasyncgenfunction(select_evidence):
+                return finish('error', 'async_adapter_not_supported')
             called = True
-            selection = adapter.select_evidence(deepcopy(packet))
+            selection = select_evidence(deepcopy(packet))
+            if inspect.isawaitable(selection) or inspect.isasyncgen(selection):
+                if inspect.iscoroutine(selection):
+                    selection.close()
+                return finish('error', 'async_adapter_not_supported')
         except Exception:
             # Never echo exception text, user data or provider responses.
             return finish('error', 'adapter_execution_failed')

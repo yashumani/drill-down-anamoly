@@ -24,6 +24,8 @@ jobs:
         run: npm ci --ignore-scripts --no-audit --no-fund
       - name: Test application and Studio regressions
         run: npm test
+      - name: Verify explicit local client and Python HTTP bridge
+        run: node scripts/verify-local-python-bridge.mjs
       - name: Build existing application
         run: npm run build
       - name: Enforce existing bundle budgets

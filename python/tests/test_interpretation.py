@@ -8,6 +8,8 @@ import subprocess
 import sys
 import tempfile
 import unittest
+import warnings
+import gc
 from unittest.mock import patch
 
 from reporting_assurance import ConfigError, explain, load_selection, evaluate
@@ -87,6 +89,8 @@ class InterpretationTests(unittest.TestCase):
             self.assertNotIn(value, packet)
         self.assertEqual((rows, config), before)
         self.assertEqual(result['interpretation']['reason'], 'adapter_selection_validated')
+        self.assertEqual(result['interpretation']['method'], 'caller_adapter')
+        json.dumps(result, allow_nan=False)
 
     def test_adapter_mutation_cannot_invent_rendered_facts_or_change_results(self):
         class MutatingAdapter:
@@ -179,6 +183,20 @@ class InterpretationTests(unittest.TestCase):
         class EmptyAdapter:
             def select_evidence(self, packet):
                 return None
+        class AsyncAdapter:
+            async def select_evidence(self, packet):
+                return plan(packet)
+        class DeferredAdapter:
+            def select_evidence(self, packet):
+                return AsyncAdapter().select_evidence(packet)
+        for adapter in [AsyncAdapter(), DeferredAdapter()]:
+            with warnings.catch_warnings(record=True) as caught:
+                warnings.simplefilter('always', RuntimeWarning)
+                asynchronous = explain([{'amount': 1}], configuration(), adapter=adapter, allow_adapter=True)
+                gc.collect()
+            self.assertEqual(asynchronous['interpretation']['outcome'], 'error')
+            self.assertEqual(asynchronous['interpretation']['reason'], 'async_adapter_not_supported')
+            self.assertFalse(any('never awaited' in str(item.message) for item in caught))
         for adapter in [FailingAdapter(), EmptyAdapter()]:
             result = explain([{'amount': 1}], configuration(), adapter=adapter, allow_adapter=True)
             self.assertEqual(result['interpretation']['outcome'], 'error')

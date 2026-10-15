@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { LocalPythonAssurancePanel } from './LocalPythonAssurancePanel';
 import type { ReactNode } from 'react';
 import type { DataRow } from '../types';
 import type { ColumnQualityProfile, DataQualityReport, QualityIssue } from '../lib/dataQuality';
@@ -60,6 +61,8 @@ export function DataQualityPanel({ rows, report, onLoadCleanDemo, onLoadQualityD
       <div className="quality-title"><span className="eyebrow">DATA QUALITY EXPLORER</span><h2>{report.analysisReady ? 'Data is ready for exploratory analysis' : 'Quality issues should be reviewed first'}</h2><p>{report.blockers} blocker{report.blockers === 1 ? '' : 's'}, {report.warnings} warning{report.warnings === 1 ? '' : 's'}, and {report.columns.length} profiled columns across {report.rowCount.toLocaleString()} rows.</p></div>
       <div className="quality-actions"><button type="button" className="quiet-button" onClick={onLoadCleanDemo}>Clean demo</button><button type="button" className="quiet-button" onClick={onLoadQualityDemo}>Quality-issue demo</button><button type="button" onClick={() => downloadReport(report)}>Export report</button></div>
     </div>
+
+    <LocalPythonAssurancePanel />
 
     <nav className="quality-tabs" aria-label="Data quality sections">{([
       ['overview', 'Overview'],

@@ -2,7 +2,7 @@
 
 An installable Python module for existing Python and KNIME reporting workflows. Tier 1 uses deterministic rules on reporting aggregates, grouped data or transaction detail. The package runs without Node, a server, UI, model or KNIME. It has no runtime dependencies.
 
-This is a bounded alpha release. Existing browser-app behavior and its finance contract remain separate; the Python executor is the intended authoritative rule executor for future integration. An optional Tier 3 evidence-selection interface is available; live models and free-form AI interpretation remain unverified and unimplemented by this package. An optional local Rule Studio provides draft authoring; its browser/visual verification remains blocked in this environment. See the current release evidence in `docs/reporting-assurance-release.md`.
+This is a bounded alpha release. Existing browser-app behavior and its finance contract remain separate; the Python executor remains authoritative for its declarative rules. An additive local preview bridge is described below; existing browser exploration remains separate. An optional Tier 3 evidence-selection interface is available; live models and free-form AI interpretation remain unverified and unimplemented by this package. An optional local Rule Studio provides draft authoring; its browser/visual verification remains blocked in this environment. See the current release evidence in `docs/reporting-assurance-release.md`.
 
 ## Install and run
 
@@ -82,7 +82,7 @@ The package layout and script entry point follow the [Python Packaging User Guid
 reporting-assurance studio --port 0
 ```
 
-Open the printed loopback URL. The Studio profiles counts, proposes editable nonblocking draft rules, previews through the same Python executor, and exports the exact validated JSON in the editor. It never approves a bundle or executes a production gate. Its server binds only 127.0.0.1, rejects foreign Host/Origin requests, uses no remote assets/models, and retains no saved table between requests. Temporary CSV adapter files are removed. The Studio caps CSV at 1 MiB and requests at 2 MiB; use the API/CLI for larger documented inputs. Core import and evaluation do not start or require the server.
+Open the printed loopback URL. The Studio profiles counts, proposes editable nonblocking draft rules, previews through the same Python executor, and exports the exact validated JSON in the editor. It never approves a bundle or executes a production gate. Its server binds only 127.0.0.1, rejects foreign Host/Origin requests by default, uses no remote assets/models, and retains no saved table between requests. Temporary CSV adapter files are removed. The Studio caps CSV at 1 MiB and requests at 2 MiB; use the API/CLI for larger documented inputs. Core import and evaluation do not start or require the server.
 
 Seven HTTP integration tests cover the profile → draft → preview → export-validation flow, API parity, exact bundle digest, declared date types, malformed requests and cross-origin rejection. Actual browser rendering, keyboard/mobile behavior and browser download completion remain unverified: this executor's computer-use runtime exits with a missing Windows platform-directory error. KNIME remains unverified; the known KNIME folder contains only a quickstart PDF, not a runnable installation.
 
@@ -117,7 +117,7 @@ A caller-owned Python adapter may implement `select_evidence(packet)` and return
 
 Only IDs from that exact packet are accepted. All mandatory gate, blocker/unavailable/error facts and limitations must be included; they lead the rendered narrative. Unknown IDs, stale digests, duplicates, extra prose/numbers/approval fields and omitted mandatory evidence are rejected. The package renders the original facts, never model-supplied prose or an adapter-mutated packet. This deliberately limits the adapter to selecting/ordering verified evidence; free-form explanations, causal diagnosis and new claims are not supported. Evidence digests bind a plan to content; they do not authenticate its author or prove source truth.
 
-Adapter code is invoked only with explicit `allow_adapter=True`. Before that flag, the library does not inspect the adapter. The caller owns its code, provider authorization, credentials, timeouts, costs and external transmission. This package supplies no provider SDK, credential storage, dynamic adapter import or model client. Tests and `python/examples/run_explanation.py` use offline mock adapters only. `model_verification` remains `not_verified`; there is no live-model success claim. An adapter error is redacted and cannot change the deterministic report or its gate.
+The adapter contract is synchronous: return the JSON selection directly. Async functions, async generators and awaitable results are rejected; the engine never creates an event loop or awaits model code. Native coroutine results are closed without running them. Process async providers outside this call and replay their bounded selection. Adapter code is invoked only with explicit `allow_adapter=True`. Before that flag, the library does not inspect the adapter. The caller owns its code, provider authorization, credentials, timeouts, costs and external transmission. This package supplies no provider SDK, credential storage, dynamic adapter import or model client. Tests and `python/examples/run_explanation.py` use offline mock adapters only. `model_verification` remains `not_verified`; there is no live-model success claim. An adapter error is redacted and cannot change the deterministic report or its gate.
 
 Complete installed CLI workflow, from the repository root with the synthetic examples:
 
@@ -128,3 +128,22 @@ python python/examples/run_explanation.py
 ```
 
 Add the fictional example's trusted digest and `--mode production` only to exercise that test approval. Real workflows obtain their own trusted digests independently. Add `--include-numeric-evidence` only when the interpretation recipient may receive aggregate values. The CLI never loads Python adapters or contacts a model. `--interpretation-plan LOCAL_JSON` replays a caller-supplied offline selection through the same validation. A stale/malformed plan gives an error sidecar and exit 2 while preserving the deterministic gate. Exit 0 still includes non-gating preview; it is not a production approval. Invalid primary/rule input remains an input error. See the installed API example for the mock adapter and an offline plan to save/replay.
+
+## Optional existing-app local preview bridge
+
+The existing app's Data Quality Explorer now has a collapsed **Optional Python rule preview** panel. It submits explicitly chosen original UTF-8 CSV and exact rule JSON to the same Python executor. It preserves identifiers, decimal text and null tokens by avoiding JavaScript numeric conversion; invalid UTF-8 is rejected. The exploration profile and its score remain separate from the Python rule report. Nothing is sent automatically or stored in browser storage by this panel.
+
+For this optional local app path only, start two terminals from the repository root:
+
+```sh
+# Installed Python module; this command explicitly allows exactly this local browser origin.
+reporting-assurance studio --port 8765 --allow-origin http://127.0.0.1:5173
+# Existing browser app requires its existing Node dependencies; core Python does not.
+npm run dev -- --host 127.0.0.1 --port 5173 --strictPort
+```
+
+Open the local app, enter Data Quality Explorer and expand the optional panel. Choose `python/examples/reporting.csv`, `python/examples/rules.json` and the optional `python/examples/controls.csv` with reference name `controls`. Enter the example's explicit evaluation time `2026-04-05T12:00:00Z`, confirm the local transfer and run the preview. The Python endpoint is `http://127.0.0.1:8765`. The report remains `non_gating`; production approval is available only through the API/CLI caller's trust process. The panel supports one optional control CSV; use the API/CLI for multiple references or larger files. Stop both local processes when finished.
+
+Default cross-origin access stays closed. `--allow-origin` accepts only exact HTTP `localhost`/`127.0.0.1` origins, at most eight; no wildcard, remote origin or HTTPS public-site origin is accepted. Host checks remain bound to 127.0.0.1. Preflight permits POST with Content-Type only. The client uses no credentials/cookies, rejects redirects and targets only a literal 127.0.0.1 endpoint with an explicit port. This origin allowlist is a browser boundary, not authentication against other local processes. The HTTP adapter cannot run a production gate, approve rules, load adapters or call a model. Each file is limited to 1 MiB, and the complete request to 2 MiB.
+
+Verification is split deliberately: real HTTP tests cover the allowlist and preview/API parity; mock-fetch unit tests cover the client; server-rendered React tests cover initial structure only. `node scripts/verify-local-python-bridge.mjs` runs the actual client against a temporary Python server and verifies a decimal boundary beyond JavaScript's exact-number range, consent and origin rejection. Node explicitly supplies the Origin header because it is not a browser. The helper stops its own temporary server. These checks do **not** verify actual browser rendering, keyboard/mobile behavior, browser security policy or downloads. The provided Windows browser runtime remains unavailable; no alternative browser automation was used.

@@ -23,7 +23,11 @@ analysis=analyze(rows,config,evaluation_time='2026-04-05T12:00:00Z')
 Draft202012Validator(analysis_schema).validate(analysis)
 explanation=explain(rows,config,evaluation_time='2026-04-05T12:00:00Z',include_analysis=True)
 Draft202012Validator(explanation_schema).validate(explanation)
-for additional in [explain(rows,config,selection={}),explain(rows,config,adapter=object()),
+class OfflineSchemaAdapter:
+    def select_evidence(self,packet):
+        return dict(selection_version='1.0',evidence_digest=packet['evidence_digest'],fact_ids=packet['mandatory_fact_ids'])
+for additional in [explain(rows,config,adapter=OfflineSchemaAdapter(),allow_adapter=True),
+                   explain(rows,config,selection={}),explain(rows,config,adapter=object()),
                    explain(rows,config,include_analysis=True,include_numeric_evidence=True)]:
     Draft202012Validator(explanation_schema).validate(additional)
 selection=dict(selection_version='1.0',evidence_digest=explanation['evidence']['evidence_digest'],fact_ids=explanation['evidence']['mandatory_fact_ids'])
