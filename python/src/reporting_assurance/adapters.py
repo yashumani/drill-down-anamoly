@@ -13,7 +13,7 @@ def read_csv(path, *, types=None, null_token="\\N"):
     Invalid typed cells remain strings so the types rule reports failure.
     No type inference; no floats. String identifiers keep leading zeros.
     """
-    types = types or {}
+    if types is None: types = {}
     if type(types) is not dict or any(t not in ("string", "integer", "decimal", "boolean", "date", "datetime") for t in types.values()):
         raise ConfigError("invalid_csv_types")
     if type(null_token) is not str or len(null_token) > 32: raise ConfigError("invalid_null_token")

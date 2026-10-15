@@ -21,10 +21,62 @@ function harness(){
   const context={document,Blob,URL:{createObjectURL(blob){const url='blob:'+blobs.size;blobs.set(url,blob);return url;},revokeObjectURL(){}},
     fetch:(_url,options)=>{request=JSON.parse(options.body);return new Promise(resolve=>{release=resolve;});}};
   vm.runInNewContext(script,context);
-  return {element,downloads,request:()=>request,resolve:()=>release({ok:true,json:async()=>({valid:true,bundle_digest:'a'.repeat(64)})})};
+  return {element,downloads,request:()=>request,resolve:(data={valid:true,bundle_digest:'a'.repeat(64)})=>release({ok:true,json:async()=>data})};
 }
 
 describe('Studio export validation snapshot',()=>{
+  it('keeps rule edits made while an imported file is still being read',async()=>{
+    const ui=harness();ui.element('rules').value='{"revision":"before"}';
+    let finish;
+    ui.element('rules-file').files=[{size:10,text:()=>new Promise(resolve=>{finish=resolve;})}];
+    const pending=ui.element('rules-file').events.change();
+    ui.element('rules').value='{"revision":"keep-my-edit"}';
+    finish('{"revision":"from-file"}');await pending;
+    expect(ui.element('rules').value).toBe('{"revision":"keep-my-edit"}');
+    expect(ui.element('message').textContent).toContain('Your edits were kept');
+  });
+
+  it.each(['profile','suggest'])('does not apply a stale %s response or overwrite newer rule edits',async(operation)=>{
+    const ui=harness();ui.element('rules').value='{"revision":"before"}';
+    const pending=ui.element(operation).events.click();
+    ui.element('csv').value+='changed-during-request';
+    ui.element('rules').value='{"revision":"keep-my-edit"}';
+    const observed={row_count:1,column_count:1,columns:[{null_count:0}]};
+    ui.resolve({profile:observed,observed,bundle:{revision:'stale-suggestion'}});
+    await pending;
+    expect(ui.element('rules').value).toBe('{"revision":"keep-my-edit"}');
+    expect(ui.element('facts').hidden).toBe(true);
+    expect(ui.element('message').textContent).toContain('Inputs changed while');
+  });
+
+  it('hides old observed counts when CSV or conversion types change',()=>{
+    const ui=harness();ui.element('facts').hidden=false;ui.element('profile-detail').hidden=false;
+    ui.element('csv').events.input();
+    expect(ui.element('facts').hidden).toBe(true);
+    expect(ui.element('profile-detail').hidden).toBe(true);
+  });
+
+  it('does not render stale preview evidence after the table changes during a delayed response',async()=>{
+    const ui=harness();ui.element('rules').value='{"revision":"before"}';
+    const pending=ui.element('preview').events.click();
+    expect(ui.request().operation).toBe('preview');
+    ui.element('csv').value+='changed-during-preview';
+    ui.resolve({report:{results:[],outcome_counts:{pass:1},bundle_digest:'stale-digest'}});
+    await pending;
+    expect(ui.element('report-json').textContent).toBe('');
+    expect(ui.element('evidence-details').hidden).toBe(true);
+    expect(ui.element('message').textContent).toContain('Inputs changed while the preview was running');
+  });
+
+  it('invalidates already displayed evidence when rules are edited',()=>{
+    const ui=harness();ui.element('report-json').textContent='previous evidence';
+    ui.element('evidence-details').hidden=false;
+    ui.element('rules').events.input();
+    expect(ui.element('report-json').textContent).toBe('');
+    expect(ui.element('evidence-details').hidden).toBe(true);
+  });
+
+
   it('downloads the same immutable text that was validated when editing continues during a delayed response',async()=>{
     const ui=harness();const validated='{"schema_version":"1.0","revision":"before"}\n';
     ui.element('rules').value=validated;

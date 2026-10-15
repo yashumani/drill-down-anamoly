@@ -1,13 +1,13 @@
 import type { DataQualityReport } from './dataQuality';
+import type { EvidenceLedger } from './evidenceLedger';
 import type { DatasetSession } from './datasetSession';
 import type { MetricDefinition } from './metricSemantics';
 import type { FinanceTimeSeriesResult } from './timeIntelligence';
 import type { InvestigationResult, Predicate } from '../types';
 
-interface EvidenceLedgerLike {
-  id: string;
+type EvidenceLedgerLike = Pick<EvidenceLedger, 'ledgerId'> & {
   items: Array<{ id: string }>;
-}
+};
 
 export interface CopilotFinanceContextInput {
   actualKey: string;
@@ -135,7 +135,7 @@ export function buildCopilotFinanceContext(input: CopilotFinanceContextInput) {
     },
     externalHypotheses: input.externalContext?.trim() ? input.externalContext.trim().slice(0, 2500) : null,
     evidence: {
-      ledgerId: input.evidenceLedger.id,
+      ledgerId: input.evidenceLedger.ledgerId,
       evidenceIds: input.evidenceLedger.items.slice(0, 40).map((item) => item.id),
     },
     limitations: Array.isArray(result.warnings) ? result.warnings.slice(0, 12) : [],
