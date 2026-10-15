@@ -1,0 +1,5 @@
+transaction_id,metric,expected_value,currency,amount_scale,control_origin
+man-01-001,production_cost,40,USD,1,hand_authored_synthetic_source_ledger
+man-01-002,production_cost,60,USD,1,hand_authored_synthetic_source_ledger
+man-01-003,production_cost,300,USD,1,hand_authored_synthetic_source_ledger
+man-01-004,production_cost,600,USD,1,hand_authored_synthetic_source_ledger

@@ -1,0 +1,242 @@
+[
+  {
+    "variant_id": "V01_mixed_subtotal_double_count",
+    "rule_id": "parent_child_reconciliation",
+    "status": "fail",
+    "table": "clean/telecom/reporting_aggregates.csv",
+    "expected": "1000",
+    "observed": "2000",
+    "explanation": "January children 100 + 900 = 1000. Adding children and their original subtotal gives 2000, an invalid parent.",
+    "evidence_boundary": "Requires declared schema, semantics and relevant supplied reference; expectations are minimum required findings, not exhaustive cascade counts"
+  },
+  {
+    "variant_id": "V01_mixed_subtotal_double_count",
+    "rule_id": "independent_company_control",
+    "status": "fail",
+    "table": "clean/telecom/reporting_aggregates.csv",
+    "expected": "1000",
+    "observed": "2000",
+    "explanation": "January children 100 + 900 = 1000. Adding children and their original subtotal gives 2000, an invalid parent.",
+    "evidence_boundary": "Requires declared schema, semantics and relevant supplied reference; expectations are minimum required findings, not exhaustive cascade counts"
+  },
+  {
+    "variant_id": "V02_missing_group_offset_duplicate",
+    "rule_id": "composite_grain",
+    "status": "fail",
+    "table": "clean/telecom/grouped_data.csv",
+    "expected": "north and south exactly once",
+    "observed": "north twice; south missing",
+    "explanation": "January south renamed north. Two north keys now collide and south is absent, while company revenue remains 1000.",
+    "evidence_boundary": "Company aggregate alone cannot detect this error; roster and grouped data are required"
+  },
+  {
+    "variant_id": "V02_missing_group_offset_duplicate",
+    "rule_id": "expected_group_coverage",
+    "status": "fail",
+    "table": "clean/telecom/grouped_data.csv",
+    "expected": "north and south exactly once",
+    "observed": "north twice; south missing",
+    "explanation": "January south renamed north. Two north keys now collide and south is absent, while company revenue remains 1000.",
+    "evidence_boundary": "Company aggregate alone cannot detect this error; roster and grouped data are required"
+  },
+  {
+    "variant_id": "V03_unweighted_margin",
+    "rule_id": "ratio_of_sums",
+    "status": "fail",
+    "table": "clean/retail/reporting_aggregates.csv",
+    "expected": "0.470000",
+    "observed": "0.350000",
+    "explanation": "January group margins are 20% and 50%; their unweighted mean is 35%. Correct company margin is (1000-530)/1000 = 47%.",
+    "evidence_boundary": "Requires declared schema, semantics and relevant supplied reference; expectations are minimum required findings, not exhaustive cascade counts"
+  },
+  {
+    "variant_id": "V04_mixed_currency",
+    "rule_id": "currency_contract",
+    "status": "fail",
+    "table": "clean/telecom/grouped_data.csv",
+    "expected": "USD only",
+    "observed": "EUR for south",
+    "explanation": "January south is labelled EUR. No FX rate/basis is supplied, so a USD reconciliation must not sum it unchanged.",
+    "evidence_boundary": "Requires declared schema, semantics and relevant supplied reference; expectations are minimum required findings, not exhaustive cascade counts"
+  },
+  {
+    "variant_id": "V04_mixed_currency",
+    "rule_id": "cross_level_reconciliation",
+    "status": "unverified",
+    "table": "clean/telecom/grouped_data.csv",
+    "expected": "USD only",
+    "observed": "EUR for south",
+    "explanation": "January south is labelled EUR. No FX rate/basis is supplied, so a USD reconciliation must not sum it unchanged.",
+    "evidence_boundary": "Requires declared schema, semantics and relevant supplied reference; expectations are minimum required findings, not exhaustive cascade counts"
+  },
+  {
+    "variant_id": "V05_mixed_amount_scale",
+    "rule_id": "amount_scale_contract",
+    "status": "fail",
+    "table": "clean/retail/reporting_aggregates.csv",
+    "expected": "scale 1",
+    "observed": "scale 1000",
+    "explanation": "January company row declares thousands while children and controls declare units; matching raw numerals do not reconcile.",
+    "evidence_boundary": "Requires declared schema, semantics and relevant supplied reference; expectations are minimum required findings, not exhaustive cascade counts"
+  },
+  {
+    "variant_id": "V06_missing_reporting_group",
+    "rule_id": "expected_group_coverage",
+    "status": "fail",
+    "table": "clean/manufacturing/reporting_aggregates.csv",
+    "expected": "two March groups",
+    "observed": "one March group",
+    "explanation": "March plant_b row is removed while company row remains. Missing is not zero.",
+    "evidence_boundary": "Requires declared schema, semantics and relevant supplied reference; expectations are minimum required findings, not exhaustive cascade counts"
+  },
+  {
+    "variant_id": "V06_missing_reporting_group",
+    "rule_id": "parent_child_reconciliation",
+    "status": "fail",
+    "table": "clean/manufacturing/reporting_aggregates.csv",
+    "expected": "two March groups",
+    "observed": "one March group",
+    "explanation": "March plant_b row is removed while company row remains. Missing is not zero.",
+    "evidence_boundary": "Requires declared schema, semantics and relevant supplied reference; expectations are minimum required findings, not exhaustive cascade counts"
+  },
+  {
+    "variant_id": "V07_impossible_date",
+    "rule_id": "strict_calendar_date",
+    "status": "fail",
+    "table": "clean/retail/transaction_detail.csv",
+    "expected": "valid date in stated month",
+    "observed": "2026-02-30",
+    "explanation": "February 30 is not a Gregorian date.",
+    "evidence_boundary": "Requires declared schema, semantics and relevant supplied reference; expectations are minimum required findings, not exhaustive cascade counts"
+  },
+  {
+    "variant_id": "V08_stale_partition",
+    "rule_id": "partition_freshness",
+    "status": "fail",
+    "table": "clean/telecom/reporting_aggregates.csv",
+    "expected": "age <= 48 hours",
+    "observed": "96 hours",
+    "explanation": "January north load is 96 hours old at injected run time; other rows are 24 hours old. A maximum timestamp hides the stale row.",
+    "evidence_boundary": "Requires declared schema, semantics and relevant supplied reference; expectations are minimum required findings, not exhaustive cascade counts"
+  },
+  {
+    "variant_id": "V09_future_timestamp",
+    "rule_id": "future_timestamp",
+    "status": "fail",
+    "table": "clean/saas/reporting_aggregates.csv",
+    "expected": "timestamp <= run_at",
+    "observed": "run_at + 24 hours",
+    "explanation": "Loaded-at is 24 hours after the injected run clock; future tolerance is zero.",
+    "evidence_boundary": "Requires declared schema, semantics and relevant supplied reference; expectations are minimum required findings, not exhaustive cascade counts"
+  },
+  {
+    "variant_id": "V10_missing_plan_baseline",
+    "rule_id": "comparison_baseline",
+    "status": "unverified",
+    "table": "clean/retail/plan_baseline.csv",
+    "expected": "March Plan 3300",
+    "observed": "missing",
+    "explanation": "March Actual exists but Plan is missing. Actual validation can continue; March variance is unavailable, not Actual minus zero.",
+    "evidence_boundary": "Requires declared schema, semantics and relevant supplied reference; expectations are minimum required findings, not exhaustive cascade counts"
+  },
+  {
+    "variant_id": "V11_unselected_snapshot",
+    "rule_id": "snapshot_selection",
+    "status": "fail",
+    "table": "clean/saas/reporting_aggregates.csv",
+    "expected": "only s1",
+    "observed": "s1 plus s2",
+    "explanation": "A second January company snapshot is present in a table contracted to s1. Both snapshots must never be added. s2 is not an approved restatement.",
+    "evidence_boundary": "Requires declared schema, semantics and relevant supplied reference; expectations are minimum required findings, not exhaustive cascade counts"
+  },
+  {
+    "variant_id": "V12_incomplete_period",
+    "rule_id": "full_period_comparison",
+    "status": "skipped",
+    "table": "references/calendar.csv",
+    "expected": "closed complete month",
+    "observed": "open month",
+    "explanation": "March is explicitly open. Full-month Actual/Plan comparison is blocked; nominal values are not proof of a completed period.",
+    "evidence_boundary": "Requires declared schema, semantics and relevant supplied reference; expectations are minimum required findings, not exhaustive cascade counts"
+  },
+  {
+    "variant_id": "V13_summed_balance",
+    "rule_id": "balance_time_aggregation",
+    "status": "fail",
+    "table": "clean/saas/quarter_end_balance.csv",
+    "expected": "140",
+    "observed": "360",
+    "explanation": "January 100 + February 120 + March 140 = 360 is not quarter-end ARR. Select March balance 140.",
+    "evidence_boundary": "Requires declared schema, semantics and relevant supplied reference; expectations are minimum required findings, not exhaustive cascade counts"
+  },
+  {
+    "variant_id": "V14_offset_detail_errors",
+    "rule_id": "source_line_reconciliation",
+    "status": "fail",
+    "table": "clean/telecom/transaction_detail.csv",
+    "expected": "40 and 60",
+    "observed": "65 and 35",
+    "explanation": "Two January north charges change +25 and -25. Group/company totals remain correct. Independent synthetic source-line controls catch both.",
+    "evidence_boundary": "Aggregate-only validation cannot detect the offset; transaction detail and independent line controls are required"
+  },
+  {
+    "variant_id": "V15_missing_denominator",
+    "rule_id": "required_numeric_component",
+    "status": "fail",
+    "table": "clean/saas/reporting_aggregates.csv",
+    "expected": "10",
+    "observed": "null",
+    "explanation": "January company seat denominator is absent. Do not invent it or validate the stored rate from the rate alone.",
+    "evidence_boundary": "Requires declared schema, semantics and relevant supplied reference; expectations are minimum required findings, not exhaustive cascade counts"
+  },
+  {
+    "variant_id": "V15_missing_denominator",
+    "rule_id": "ratio_of_sums",
+    "status": "unverified",
+    "table": "clean/saas/reporting_aggregates.csv",
+    "expected": "10",
+    "observed": "null",
+    "explanation": "January company seat denominator is absent. Do not invent it or validate the stored rate from the rate alone.",
+    "evidence_boundary": "Requires declared schema, semantics and relevant supplied reference; expectations are minimum required findings, not exhaustive cascade counts"
+  },
+  {
+    "variant_id": "clean",
+    "rule_id": "telecom_fixture_arithmetic",
+    "status": "pass",
+    "table": "clean/telecom/",
+    "expected": "declared identities and controls match",
+    "observed": "checked in receipt",
+    "explanation": "Known synthetic arithmetic, coverage, dates and ratios are consistent; not proof of any real source system.",
+    "evidence_boundary": "Only the supplied synthetic scope; no engine or production approval certified"
+  },
+  {
+    "variant_id": "clean",
+    "rule_id": "retail_fixture_arithmetic",
+    "status": "pass",
+    "table": "clean/retail/",
+    "expected": "declared identities and controls match",
+    "observed": "checked in receipt",
+    "explanation": "Known synthetic arithmetic, coverage, dates and ratios are consistent; not proof of any real source system.",
+    "evidence_boundary": "Only the supplied synthetic scope; no engine or production approval certified"
+  },
+  {
+    "variant_id": "clean",
+    "rule_id": "manufacturing_fixture_arithmetic",
+    "status": "pass",
+    "table": "clean/manufacturing/",
+    "expected": "declared identities and controls match",
+    "observed": "checked in receipt",
+    "explanation": "Known synthetic arithmetic, coverage, dates and ratios are consistent; not proof of any real source system.",
+    "evidence_boundary": "Only the supplied synthetic scope; no engine or production approval certified"
+  },
+  {
+    "variant_id": "clean",
+    "rule_id": "saas_fixture_arithmetic",
+    "status": "pass",
+    "table": "clean/saas/",
+    "expected": "declared identities and controls match",
+    "observed": "checked in receipt",
+    "explanation": "Known synthetic arithmetic, coverage, dates and ratios are consistent; not proof of any real source system.",
+    "evidence_boundary": "Only the supplied synthetic scope; no engine or production approval certified"
+  }
+]

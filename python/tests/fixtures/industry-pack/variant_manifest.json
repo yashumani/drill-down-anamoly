@@ -1,0 +1,142 @@
+[
+  {
+    "variant_id": "V01_mixed_subtotal_double_count",
+    "base": "clean",
+    "replacement_source": "variants/V01_mixed_subtotal_double_count/reporting_aggregates.csv",
+    "replaces": "clean/telecom/reporting_aggregates.csv",
+    "expected_rule_ids": [
+      "parent_child_reconciliation",
+      "independent_company_control"
+    ]
+  },
+  {
+    "variant_id": "V02_missing_group_offset_duplicate",
+    "base": "clean",
+    "replacement_source": "variants/V02_missing_group_offset_duplicate/grouped_data.csv",
+    "replaces": "clean/telecom/grouped_data.csv",
+    "expected_rule_ids": [
+      "composite_grain",
+      "expected_group_coverage"
+    ]
+  },
+  {
+    "variant_id": "V03_unweighted_margin",
+    "base": "clean",
+    "replacement_source": "variants/V03_unweighted_margin/reporting_aggregates.csv",
+    "replaces": "clean/retail/reporting_aggregates.csv",
+    "expected_rule_ids": [
+      "ratio_of_sums"
+    ]
+  },
+  {
+    "variant_id": "V04_mixed_currency",
+    "base": "clean",
+    "replacement_source": "variants/V04_mixed_currency/grouped_data.csv",
+    "replaces": "clean/telecom/grouped_data.csv",
+    "expected_rule_ids": [
+      "currency_contract",
+      "cross_level_reconciliation"
+    ]
+  },
+  {
+    "variant_id": "V05_mixed_amount_scale",
+    "base": "clean",
+    "replacement_source": "variants/V05_mixed_amount_scale/reporting_aggregates.csv",
+    "replaces": "clean/retail/reporting_aggregates.csv",
+    "expected_rule_ids": [
+      "amount_scale_contract"
+    ]
+  },
+  {
+    "variant_id": "V06_missing_reporting_group",
+    "base": "clean",
+    "replacement_source": "variants/V06_missing_reporting_group/reporting_aggregates.csv",
+    "replaces": "clean/manufacturing/reporting_aggregates.csv",
+    "expected_rule_ids": [
+      "expected_group_coverage",
+      "parent_child_reconciliation"
+    ]
+  },
+  {
+    "variant_id": "V07_impossible_date",
+    "base": "clean",
+    "replacement_source": "variants/V07_impossible_date/transaction_detail.csv",
+    "replaces": "clean/retail/transaction_detail.csv",
+    "expected_rule_ids": [
+      "strict_calendar_date"
+    ]
+  },
+  {
+    "variant_id": "V08_stale_partition",
+    "base": "clean",
+    "replacement_source": "variants/V08_stale_partition/reporting_aggregates.csv",
+    "replaces": "clean/telecom/reporting_aggregates.csv",
+    "expected_rule_ids": [
+      "partition_freshness"
+    ]
+  },
+  {
+    "variant_id": "V09_future_timestamp",
+    "base": "clean",
+    "replacement_source": "variants/V09_future_timestamp/reporting_aggregates.csv",
+    "replaces": "clean/saas/reporting_aggregates.csv",
+    "expected_rule_ids": [
+      "future_timestamp"
+    ]
+  },
+  {
+    "variant_id": "V10_missing_plan_baseline",
+    "base": "clean",
+    "replacement_source": "variants/V10_missing_plan_baseline/plan_baseline.csv",
+    "replaces": "clean/retail/plan_baseline.csv",
+    "expected_rule_ids": [
+      "comparison_baseline"
+    ]
+  },
+  {
+    "variant_id": "V11_unselected_snapshot",
+    "base": "clean",
+    "replacement_source": "variants/V11_unselected_snapshot/reporting_aggregates.csv",
+    "replaces": "clean/saas/reporting_aggregates.csv",
+    "expected_rule_ids": [
+      "snapshot_selection"
+    ]
+  },
+  {
+    "variant_id": "V12_incomplete_period",
+    "base": "clean",
+    "replacement_source": "variants/V12_incomplete_period/calendar.csv",
+    "replaces": "references/calendar.csv",
+    "expected_rule_ids": [
+      "full_period_comparison"
+    ]
+  },
+  {
+    "variant_id": "V13_summed_balance",
+    "base": "clean",
+    "replacement_source": "variants/V13_summed_balance/quarter_end_balance.csv",
+    "replaces": "clean/saas/quarter_end_balance.csv",
+    "expected_rule_ids": [
+      "balance_time_aggregation"
+    ]
+  },
+  {
+    "variant_id": "V14_offset_detail_errors",
+    "base": "clean",
+    "replacement_source": "variants/V14_offset_detail_errors/transaction_detail.csv",
+    "replaces": "clean/telecom/transaction_detail.csv",
+    "expected_rule_ids": [
+      "source_line_reconciliation"
+    ]
+  },
+  {
+    "variant_id": "V15_missing_denominator",
+    "base": "clean",
+    "replacement_source": "variants/V15_missing_denominator/reporting_aggregates.csv",
+    "replaces": "clean/saas/reporting_aggregates.csv",
+    "expected_rule_ids": [
+      "required_numeric_component",
+      "ratio_of_sums"
+    ]
+  }
+]

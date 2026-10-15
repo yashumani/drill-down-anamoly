@@ -45,16 +45,16 @@ jobs:
               text = text.replace(setup_marker, "\n\n    {!copilotKitConfigured && <CopilotKitSetupCard />}" + setup_marker, 1)
           wrapper = '''
 
-const CopilotFinanceExperience = lazy(() => import('./CopilotFinanceExperience'));
-type ChatPanelProps = Parameters<typeof LegacyChatPanel>[0];
+          const CopilotFinanceExperience = lazy(() => import('./CopilotFinanceExperience'));
+          type ChatPanelProps = Parameters<typeof LegacyChatPanel>[0];
 
-export function ChatPanel(props: ChatPanelProps) {
-  if (!copilotKitConfigured) return <LegacyChatPanel {...props} />;
-  return <Suspense fallback={<aside className={`chat-panel chat-${props.displayMode ?? 'sidebar'}`}><div className="chat-head"><div><span className="chat-kicker">COPILOTKIT FP&A AGENT</span><h2>Connecting the evidence-first runtime…</h2></div></div></aside>}>
-    <CopilotFinanceExperience {...props} />
-  </Suspense>;
-}
-'''
+          export function ChatPanel(props: ChatPanelProps) {
+            if (!copilotKitConfigured) return <LegacyChatPanel {...props} />;
+            return <Suspense fallback={<aside className={`chat-panel chat-${props.displayMode ?? 'sidebar'}`}><div className="chat-head"><div><span className="chat-kicker">COPILOTKIT FP&A AGENT</span><h2>Connecting the evidence-first runtime…</h2></div></div></aside>}>
+              <CopilotFinanceExperience {...props} />
+            </Suspense>;
+          }
+          '''
           if 'type ChatPanelProps = Parameters<typeof LegacyChatPanel>[0];' not in text:
               text = text.rstrip() + wrapper
           chat.write_text(text, encoding='utf-8')
@@ -85,13 +85,13 @@ export function ChatPanel(props: ChatPanelProps) {
           anchor = '## Product workspaces\n'
           section = '''## CopilotKit agent orchestration
 
-The optional CopilotKit integration supplies an AG-UI runtime, compact evidence context, and validated frontend actions for dimension selection, drill, back, and reset. Deterministic finance calculations remain authoritative, and raw uploaded rows are not registered as agent context.
+          The optional CopilotKit integration supplies an AG-UI runtime, compact evidence context, and validated frontend actions for dimension selection, drill, back, and reset. Deterministic finance calculations remain authoritative, and raw uploaded rows are not registered as agent context.
 
-GitHub Pages hosts only the React client. Run or deploy `services/copilotkit-runtime`, then connect its HTTPS endpoint from the AI workspace. When no runtime is configured, the deterministic Finance Guide and existing local/BYO model path remain available.
+          GitHub Pages hosts only the React client. Run or deploy `services/copilotkit-runtime`, then connect its HTTPS endpoint from the AI workspace. When no runtime is configured, the deterministic Finance Guide and existing local/BYO model path remain available.
 
-See `docs/copilotkit-integration.md`.
+          See `docs/copilotkit-integration.md`.
 
-'''
+          '''
           if '## CopilotKit agent orchestration' not in text:
               text = text.replace(anchor, section + anchor, 1)
           readme.write_text(text, encoding='utf-8')

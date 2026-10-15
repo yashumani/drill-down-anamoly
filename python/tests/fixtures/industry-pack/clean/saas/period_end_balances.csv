@@ -1,0 +1,4 @@
+period_id,as_of_date,scenario,snapshot_id,currency,amount_scale,arr
+2026-01,2026-01-31,Actual,s1,USD,1,100
+2026-02,2026-02-28,Actual,s1,USD,1,120
+2026-03,2026-03-31,Actual,s1,USD,1,140

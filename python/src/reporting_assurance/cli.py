@@ -1,0 +1,102 @@
+"""Local-only API/CLI parity. Errors are fixed codes and never include source values."""
+import argparse
+import json
+import stat
+import sys
+from pathlib import Path
+from .contracts import ConfigError, load_bundle, bundle_digest, MAX_CONFIG_BYTES
+from .adapters import read_csv, reference_csv_types
+from .engine import evaluate
+
+
+def main(argv=None):
+    argv = list(sys.argv[1:] if argv is None else argv)
+    if argv and argv[0] == "studio":
+        from .studio import main as studio_main
+        return studio_main(argv[1:])
+    parser = argparse.ArgumentParser(prog="reporting-assurance")
+    parser.add_argument("--rules", required=True)
+    parser.add_argument("--csv")
+    parser.add_argument("--evaluation-time")
+    parser.add_argument("--mode", choices=["preview", "production"], default="preview")
+    parser.add_argument("--trusted-digest", action="append", default=[])
+    parser.add_argument("--reference", action="append", default=[], metavar="NAME=LOCAL_CSV")
+    parser.add_argument("--diagnostic-limit", type=int, default=0)
+    parser.add_argument("--digest-only", action="store_true")
+    parser.add_argument("--include-analysis", action="store_true", help="Run the bounded Tier 2 specification embedded in the rule bundle")
+    parser.add_argument("--explain", action="store_true", help="Add local controlled interpretation; never calls a model")
+    parser.add_argument("--include-numeric-evidence", action="store_true", help="Explicitly include aggregate Tier 2 values in the interpretation packet")
+    parser.add_argument("--interpretation-plan", metavar="LOCAL_JSON", help="Replay a bounded offline evidence selection; never loads executable adapters")
+    args = parser.parse_args(argv)
+    try:
+        if (args.interpretation_plan is not None or args.include_numeric_evidence) and not args.explain:
+            raise ConfigError("explain_required")
+        if args.digest_only and args.explain:
+            raise ConfigError("incompatible_cli_options")
+        path = Path(args.rules)
+        if path.stat().st_size > MAX_CONFIG_BYTES: raise ConfigError("config_resource_limit")
+        config = load_bundle(path.read_text(encoding="utf-8"))
+        if args.digest_only:
+            print(bundle_digest(config)); return 0
+        if not args.csv: raise ConfigError("csv_required")
+        types = {}
+        for r in config["rules"]:
+            if r["operator"] == "types":
+                for field, spec in r["params"]["fields"].items():
+                    if field in types and types[field] != spec["type"]: raise ConfigError("conflicting_csv_types")
+                    types[field] = spec["type"]
+        rows = read_csv(args.csv, types=types)
+        refs = {}
+        for ref in args.reference:
+            name, sep, filename = ref.partition("=")
+            if not sep or not name or name in refs: raise ConfigError("invalid_reference_argument")
+            # Reference columns may differ from the primary table. Convert only columns actually present.
+            import csv
+            try:
+                with Path(filename).open(encoding="utf-8-sig", newline="") as h: header = next(csv.reader(h), [])
+            except (csv.Error, UnicodeError): raise ConfigError("invalid_csv") from None
+            ref_types = reference_csv_types(config, name, header, types)
+            refs[name] = read_csv(filename, types=ref_types)
+        if args.include_analysis and "analysis" not in config:
+            raise ConfigError("analysis_spec_required")
+        options = dict(evaluation_time=args.evaluation_time, references=refs, mode=args.mode,
+                       trusted_digests=args.trusted_digest, diagnostic_limit=args.diagnostic_limit)
+        if args.explain:
+            from .interpretation import explain, load_selection, MAX_SELECTION_BYTES
+            selection = None
+            if args.interpretation_plan is not None:
+                try:
+                    plan_path = Path(args.interpretation_plan)
+                    info = plan_path.stat()
+                    if not stat.S_ISREG(info.st_mode) or info.st_size > MAX_SELECTION_BYTES:
+                        raise ConfigError("selection_resource_limit_or_shape")
+                    # Bound the read as well as stat: a file may grow between the two.
+                    with plan_path.open("rb") as handle:
+                        encoded = handle.read(MAX_SELECTION_BYTES + 1)
+                    if len(encoded) > MAX_SELECTION_BYTES:
+                        raise ConfigError("selection_resource_limit")
+                    selection = load_selection(encoded.decode("utf-8"))
+                except (ConfigError, OSError, UnicodeError, ValueError, OverflowError):
+                    # Every optional-plan loading failure gets an error sidecar.
+                    # Primary/rule/reference failures still remain input errors.
+                    selection = {}
+            report = explain(rows, config, include_analysis=args.include_analysis,
+                include_numeric_evidence=args.include_numeric_evidence, selection=selection, **options)
+            deterministic = report["deterministic"]
+        elif args.include_analysis:
+            from .analysis import analyze
+            report = deterministic = analyze(rows, config, **options)
+        else:
+            report = deterministic = evaluate(rows, config, **options)
+        gate = deterministic.get("tier1", deterministic)["gate"]
+        print(json.dumps(report, sort_keys=True, ensure_ascii=True, allow_nan=False))
+        if args.explain and report["interpretation"]["outcome"] != "pass":
+            return 2  # Interpretation execution failed; the deterministic gate is unchanged.
+        return {"pass": 0, "non_gating": 0, "fail": 1, "blocked": 2}[gate]
+    except ConfigError as exc:
+        print(json.dumps({"outcome": "error", "reason": str(exc)})); return 2
+    except (OSError, UnicodeError, ValueError, OverflowError):
+        print(json.dumps({"outcome": "error", "reason": "input_unavailable_or_invalid"})); return 2
+
+
+if __name__ == "__main__": sys.exit(main())

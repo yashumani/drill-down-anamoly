@@ -1,0 +1,5 @@
+transaction_id,metric,expected_value,currency,amount_scale,control_origin
+saa-01-001,recognized_revenue,40,USD,1,hand_authored_synthetic_source_ledger
+saa-01-002,recognized_revenue,60,USD,1,hand_authored_synthetic_source_ledger
+saa-01-003,recognized_revenue,300,USD,1,hand_authored_synthetic_source_ledger
+saa-01-004,recognized_revenue,600,USD,1,hand_authored_synthetic_source_ledger

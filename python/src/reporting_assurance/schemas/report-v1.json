@@ -1,0 +1,173 @@
+{
+  "type": "object",
+  "properties": {
+    "report_version": {
+      "const": "1.0"
+    },
+    "engine_version": {
+      "type": "string"
+    },
+    "mode": {
+      "enum": [
+        "preview",
+        "production"
+      ]
+    },
+    "bundle_digest": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "approval_valid_in_caller_trust": {
+      "type": "boolean"
+    },
+    "gate": {
+      "enum": [
+        "pass",
+        "fail",
+        "blocked",
+        "non_gating"
+      ]
+    },
+    "gate_reason": {
+      "type": "string"
+    },
+    "evaluation_time": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "row_count": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 100000
+    },
+    "rule_count": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 128
+    },
+    "outcome_counts": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "results": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "outcome": {
+            "enum": [
+              "pass",
+              "fail",
+              "not_evaluated",
+              "error"
+            ]
+          },
+          "reason": {
+            "type": "string",
+            "pattern": "^[a-z0-9_]+$"
+          },
+          "counts": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "id": {
+            "type": "string",
+            "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,63}$"
+          },
+          "operator": {
+            "enum": [
+              "required_fields",
+              "types",
+              "unique",
+              "allowed_values",
+              "range",
+              "coverage",
+              "freshness",
+              "consistency",
+              "row_level",
+              "reconcile"
+            ]
+          },
+          "severity": {
+            "enum": [
+              "info",
+              "warning",
+              "critical"
+            ]
+          },
+          "required": {
+            "type": "boolean"
+          },
+          "blocking": {
+            "type": "boolean"
+          },
+          "diagnostics": {
+            "type": "object",
+            "properties": {
+              "row_indices": {
+                "type": "array",
+                "maxItems": 20,
+                "items": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "truncated": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "row_indices",
+              "truncated"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "outcome",
+          "reason",
+          "counts",
+          "id",
+          "operator",
+          "severity",
+          "required",
+          "blocking"
+        ],
+        "additionalProperties": false
+      },
+      "maxItems": 128
+    },
+    "limitations": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "required": [
+    "report_version",
+    "engine_version",
+    "mode",
+    "bundle_digest",
+    "approval_valid_in_caller_trust",
+    "gate",
+    "gate_reason",
+    "evaluation_time",
+    "row_count",
+    "rule_count",
+    "outcome_counts",
+    "results",
+    "limitations"
+  ],
+  "additionalProperties": false,
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Reporting Assurance safe report v1"
+}

@@ -1,0 +1,39 @@
+name: Python reporting assurance
+
+on:
+  push:
+    branches: ["codex/multi-tier-reporting-assurance"]
+  pull_request:
+    branches: ["main"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  python:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python: ["3.9", "3.12", "3.13", "3.14"]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Record checked-out source identity
+        run: python scripts/record_ci_identity.py
+      - name: Install build-time tools only
+        run: python -m pip install build "setuptools>=77" wheel jsonschema
+      - name: Build wheel and source distribution
+        run: python -m build --outdir python/dist
+      - name: Verify clean wheel API, CLI and dependency isolation
+        run: python scripts/verify_python_wheel.py
+      - name: Validate schemas with independent validator
+        run: python scripts/verify_python_schemas.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: reporting-assurance-${{ matrix.os }}-${{ matrix.python }}
+          path: python/dist/*

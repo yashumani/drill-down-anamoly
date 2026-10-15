@@ -168,7 +168,8 @@ export default function CopilotFinanceExperience({
   }, [onAction]);
 
   const { agent, isReady } = useAgent({
-    agentId: copilotKitAgentId,
+    agentId: `fpa-view-${datasetSession.sessionId}`,
+    runtimeAgentId: copilotKitAgentId,
     threadId: `fpa-${datasetSession.sessionId}`,
     updates: [UseAgentUpdate.OnMessagesChanged, UseAgentUpdate.OnRunStatusChanged],
     throttleMs: 100,

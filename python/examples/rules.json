@@ -1,0 +1,297 @@
+{
+  "schema_version": "1.0",
+  "revision": "fictional-aggregate-v1",
+  "provenance": {
+    "author": "fictional-example-owner",
+    "source": "hand-authored synthetic release example",
+    "kind": "approved_domain_rules"
+  },
+  "rules": [
+    {
+      "id": "required_fields",
+      "operator": "required_fields",
+      "params": {
+        "fields": [
+          "id",
+          "period",
+          "scenario",
+          "currency",
+          "unit",
+          "scale",
+          "snapshot",
+          "level",
+          "loaded_at",
+          "amount"
+        ]
+      },
+      "severity": "critical",
+      "required": true,
+      "blocking": true,
+      "depends_on": []
+    },
+    {
+      "id": "types",
+      "operator": "types",
+      "params": {
+        "fields": {
+          "id": {
+            "type": "string",
+            "nullable": false
+          },
+          "period": {
+            "type": "date",
+            "nullable": false
+          },
+          "scenario": {
+            "type": "string",
+            "nullable": false
+          },
+          "currency": {
+            "type": "string",
+            "nullable": false
+          },
+          "unit": {
+            "type": "string",
+            "nullable": false
+          },
+          "scale": {
+            "type": "string",
+            "nullable": false
+          },
+          "snapshot": {
+            "type": "string",
+            "nullable": false
+          },
+          "level": {
+            "type": "string",
+            "nullable": false
+          },
+          "loaded_at": {
+            "type": "datetime",
+            "nullable": false
+          },
+          "amount": {
+            "type": "decimal",
+            "nullable": false
+          }
+        }
+      },
+      "severity": "critical",
+      "required": true,
+      "blocking": true,
+      "depends_on": []
+    },
+    {
+      "id": "unique",
+      "operator": "unique",
+      "params": {
+        "fields": [
+          "id",
+          "period"
+        ]
+      },
+      "severity": "critical",
+      "required": true,
+      "blocking": true,
+      "depends_on": []
+    },
+    {
+      "id": "currency",
+      "operator": "allowed_values",
+      "params": {
+        "field": "currency",
+        "values": [
+          "USD"
+        ]
+      },
+      "severity": "critical",
+      "required": true,
+      "blocking": true,
+      "depends_on": []
+    },
+    {
+      "id": "range",
+      "operator": "range",
+      "params": {
+        "field": "amount",
+        "min": "0"
+      },
+      "severity": "critical",
+      "required": true,
+      "blocking": true,
+      "depends_on": []
+    },
+    {
+      "id": "coverage",
+      "operator": "coverage",
+      "params": {
+        "fields": [
+          "id",
+          "period"
+        ],
+        "expected": [
+          [
+            "001",
+            "2026-03-31"
+          ],
+          [
+            "002",
+            "2026-03-31"
+          ]
+        ]
+      },
+      "severity": "critical",
+      "required": true,
+      "blocking": true,
+      "depends_on": []
+    },
+    {
+      "id": "freshness",
+      "operator": "freshness",
+      "params": {
+        "field": "loaded_at",
+        "partition_by": [
+          "id",
+          "period"
+        ],
+        "expected_partitions": [
+          [
+            "001",
+            "2026-03-31"
+          ],
+          [
+            "002",
+            "2026-03-31"
+          ]
+        ],
+        "max_age_seconds": 172800
+      },
+      "severity": "critical",
+      "required": true,
+      "blocking": true,
+      "depends_on": []
+    },
+    {
+      "id": "consistency",
+      "operator": "consistency",
+      "params": {
+        "fields": [
+          "scenario",
+          "currency",
+          "unit",
+          "scale",
+          "snapshot"
+        ],
+        "within": [
+          "period"
+        ],
+        "expected": {
+          "scenario": "Actual",
+          "currency": "USD",
+          "unit": "currency",
+          "scale": "1",
+          "snapshot": "s1"
+        }
+      },
+      "severity": "critical",
+      "required": true,
+      "blocking": true,
+      "depends_on": []
+    },
+    {
+      "id": "row_level",
+      "operator": "row_level",
+      "params": {
+        "field": "level",
+        "allowed_levels": [
+          "detail"
+        ],
+        "within": [
+          "period"
+        ]
+      },
+      "severity": "critical",
+      "required": true,
+      "blocking": true,
+      "depends_on": []
+    },
+    {
+      "id": "reconcile",
+      "operator": "reconcile",
+      "params": {
+        "measure": "amount",
+        "control_measure": "amount",
+        "reference": "controls",
+        "group_by": [],
+        "semantic_fields": {
+          "period": "period",
+          "scenario": "scenario",
+          "currency": "currency",
+          "unit": "unit",
+          "scale": "scale",
+          "snapshot": "snapshot"
+        },
+        "aggregation": "sum",
+        "measure_kind": "flow",
+        "row_level": {
+          "field": "level",
+          "value": "detail"
+        },
+        "tolerance": "0",
+        "control_scope": "independent"
+      },
+      "severity": "critical",
+      "required": true,
+      "blocking": true,
+      "depends_on": [
+        "types",
+        "unique",
+        "coverage",
+        "consistency",
+        "row_level"
+      ]
+    }
+  ],
+  "approval": {
+    "status": "approved",
+    "revision": "fictional-aggregate-v1",
+    "digest": "7f57281d495396507733fc152b3953d86ee2b756ba80fdde8b55b98c7eb10df9",
+    "approved_by": "fictional-example-owner"
+  },
+  "analysis": {
+    "analysis_version": "1.0",
+    "analyses": [
+      {
+        "id": "amount_summary",
+        "operator": "summary",
+        "depends_on": [
+          "types",
+          "unique",
+          "coverage",
+          "consistency",
+          "row_level"
+        ],
+        "params": {
+          "measure_kind": "flow",
+          "measure": "amount",
+          "group_by": [],
+          "semantic_fields": {
+            "period": "period",
+            "scenario": "scenario",
+            "currency": "currency",
+            "unit": "unit",
+            "scale": "scale",
+            "snapshot": "snapshot"
+          },
+          "row_level": {
+            "field": "level",
+            "value": "detail"
+          },
+          "expected_periods": [
+            "2026-03-31"
+          ]
+        }
+      }
+    ]
+  }
+}

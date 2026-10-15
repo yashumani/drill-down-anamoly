@@ -1,0 +1,7 @@
+period_id,scenario,currency,amount_scale,snapshot_id,loaded_at,service_region,service_revenue,line_months,disconnects,disconnect_rate
+2026-01,Actual,USD,1,s1,2026-04-04T12:00:00Z,north,100,2,0,0.000000
+2026-01,Actual,USD,1,s1,2026-04-04T12:00:00Z,north,900,8,1,0.125000
+2026-02,Actual,USD,1,s1,2026-04-04T12:00:00Z,north,200,2,0,0.000000
+2026-02,Actual,USD,1,s1,2026-04-04T12:00:00Z,south,1800,8,1,0.125000
+2026-03,Actual,USD,1,s1,2026-04-04T12:00:00Z,north,300,2,0,0.000000
+2026-03,Actual,USD,1,s1,2026-04-04T12:00:00Z,south,2700,8,1,0.125000
