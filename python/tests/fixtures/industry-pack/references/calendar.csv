@@ -1,0 +1,4 @@
+period_id,start_date,end_date,period_state,complete
+2026-01,2026-01-01,2026-01-31,closed,true
+2026-02,2026-02-01,2026-02-28,closed,true
+2026-03,2026-03-01,2026-03-31,closed,true

@@ -194,3 +194,7 @@ This public repository is suitable for demonstrations and controlled masked-data
 - protected main branch and release approvals.
 
 See `docs/architecture-remediation-status.md`.
+
+## Multi-Tier Reporting Assurance Python module
+
+The independent Python alpha package runs deterministic reporting rules in existing workflows without the browser app, Node, KNIME or a model. Start with [installation, API/CLI examples and boundaries](python/README.md). See [current verification and limitations](docs/reporting-assurance-release.md). The browser UI has not yet been integrated with the Python executor.

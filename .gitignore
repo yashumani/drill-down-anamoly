@@ -4,3 +4,12 @@ coverage/
 *.tsbuildinfo
 .vite/
 .DS_Store
+
+# Python assurance build and test artifacts
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+.venv*/
+python/dist/
+python/validation/

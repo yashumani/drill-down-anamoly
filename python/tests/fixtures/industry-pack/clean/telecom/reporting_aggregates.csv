@@ -1,0 +1,10 @@
+period_id,scenario,currency,amount_scale,snapshot_id,loaded_at,service_region,service_revenue,line_months,disconnects,disconnect_rate,row_level,parent_id
+2026-01,Actual,USD,1,s1,2026-04-04T12:00:00Z,north,100,2,0,0.000000,group,ALL
+2026-01,Actual,USD,1,s1,2026-04-04T12:00:00Z,south,900,8,1,0.125000,group,ALL
+2026-01,Actual,USD,1,s1,2026-04-04T12:00:00Z,ALL,1000,10,1,0.100000,company,
+2026-02,Actual,USD,1,s1,2026-04-04T12:00:00Z,north,200,2,0,0.000000,group,ALL
+2026-02,Actual,USD,1,s1,2026-04-04T12:00:00Z,south,1800,8,1,0.125000,group,ALL
+2026-02,Actual,USD,1,s1,2026-04-04T12:00:00Z,ALL,2000,10,1,0.100000,company,
+2026-03,Actual,USD,1,s1,2026-04-04T12:00:00Z,north,300,2,0,0.000000,group,ALL
+2026-03,Actual,USD,1,s1,2026-04-04T12:00:00Z,south,2700,8,1,0.125000,group,ALL
+2026-03,Actual,USD,1,s1,2026-04-04T12:00:00Z,ALL,3000,10,1,0.100000,company,

@@ -1,0 +1,7 @@
+period_id,scenario,snapshot_id,plant
+2026-01,Actual,s1,plant_a
+2026-01,Actual,s1,plant_b
+2026-02,Actual,s1,plant_a
+2026-02,Actual,s1,plant_b
+2026-03,Actual,s1,plant_a
+2026-03,Actual,s1,plant_b

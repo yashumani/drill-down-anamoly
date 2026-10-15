@@ -1,0 +1,5 @@
+transaction_id,metric,expected_value,currency,amount_scale,control_origin
+ret-01-001,net_sales,40,USD,1,hand_authored_synthetic_source_ledger
+ret-01-002,net_sales,60,USD,1,hand_authored_synthetic_source_ledger
+ret-01-003,net_sales,300,USD,1,hand_authored_synthetic_source_ledger
+ret-01-004,net_sales,600,USD,1,hand_authored_synthetic_source_ledger

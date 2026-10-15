@@ -1,0 +1,5 @@
+include python/README.md
+recursive-include python/tests *.py *.csv *.json *.md *.sha256
+recursive-include python/examples *.py *.csv *.json *.txt
+include scripts/verify_python_wheel.py
+include scripts/verify_python_schemas.py

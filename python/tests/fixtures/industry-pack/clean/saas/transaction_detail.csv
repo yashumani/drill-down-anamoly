@@ -1,0 +1,13 @@
+transaction_id,event_date,period_id,scenario,currency,amount_scale,snapshot_id,loaded_at,customer_segment,recognized_revenue,paid_seat_months,support_tickets
+saa-01-001,2026-01-05,2026-01,Actual,USD,1,s1,2026-04-04T12:00:00Z,small,40,1,2
+saa-01-002,2026-01-06,2026-01,Actual,USD,1,s1,2026-04-04T12:00:00Z,small,60,1,1
+saa-01-003,2026-01-07,2026-01,Actual,USD,1,s1,2026-04-04T12:00:00Z,large,300,3,2
+saa-01-004,2026-01-08,2026-01,Actual,USD,1,s1,2026-04-04T12:00:00Z,large,600,5,3
+saa-02-001,2026-02-05,2026-02,Actual,USD,1,s1,2026-04-04T12:00:00Z,small,80,1,2
+saa-02-002,2026-02-06,2026-02,Actual,USD,1,s1,2026-04-04T12:00:00Z,small,120,1,1
+saa-02-003,2026-02-07,2026-02,Actual,USD,1,s1,2026-04-04T12:00:00Z,large,600,3,2
+saa-02-004,2026-02-08,2026-02,Actual,USD,1,s1,2026-04-04T12:00:00Z,large,1200,5,3
+saa-03-001,2026-03-05,2026-03,Actual,USD,1,s1,2026-04-04T12:00:00Z,small,120,1,2
+saa-03-002,2026-03-06,2026-03,Actual,USD,1,s1,2026-04-04T12:00:00Z,small,180,1,1
+saa-03-003,2026-03-07,2026-03,Actual,USD,1,s1,2026-04-04T12:00:00Z,large,900,3,2
+saa-03-004,2026-03-08,2026-03,Actual,USD,1,s1,2026-04-04T12:00:00Z,large,1800,5,3
