@@ -1,0 +1,10 @@
+{
+  "exceptions": [
+    {
+      "id": "GHSA-mrhx-c7xc-m3w5",
+      "package": "zod",
+      "reason": "Zod memory exhaustion on oversized constrained collections, fixed only in zod 4.6.6. CopilotKit 1.x (latest 1.90.2) and @a2ui/web_core still require zod 3, so no stable upgrade clears it. In this app zod only validates CopilotKit tool arguments in the viewer's own browser. Remove once CopilotKit 2.0 (zod 4) is adopted.",
+      "reviewBy": "2027-01-31"
+    }
+  ]
+}
