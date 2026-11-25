@@ -232,7 +232,9 @@ function summarize(articles: NewsArticle[], company: string) {
   return `${company || 'Company'} news scan found ${active.length} direct company articles and ${passive.length} competitor/market articles. The public-news tone is ${tone}${topTags.length ? `, with recurring themes around ${topTags.join(', ')}` : ''}.`;
 }
 
-export function createDemoNewsAnalysis(company = 'Example Carrier A', competitors = 'Example Carrier B, Example Carrier C, Example Carrier D, Example Carrier E'): NewsAnalysisResult {
+export function createDemoNewsAnalysis(): NewsAnalysisResult {
+  const company = 'Example Carrier A';
+  const competitors = 'Example Carrier B, Example Carrier C, Example Carrier D, Example Carrier E';
   const { activeQuery, passiveQuery } = buildQueries(company, competitors);
   const articles = dedupe(demoNewsArticles.map((article) => decorate({
     title: templateCompany(article.title, company),
@@ -246,7 +248,7 @@ export function createDemoNewsAnalysis(company = 'Example Carrier A', competitor
   })));
   const activeCount = articles.filter((a) => a.angle === 'active').length;
   const passiveCount = articles.filter((a) => a.angle === 'passive').length;
-  const headlineSummary = summarize(articles, company);
+  const headlineSummary = 'Fictional demo. ' + summarize(articles, company);
   const contextText = buildContextText({
     provider: 'demo',
     company,
@@ -268,7 +270,7 @@ function buildContextText({
 }: Pick<NewsAnalysisResult, 'provider' | 'company' | 'activeQuery' | 'passiveQuery' | 'articles' | 'headlineSummary'>) {
   const top = articles.slice(0, 8).map((a, i) => `${i + 1}. [${a.angle}; ${a.sentiment}; ${a.tags.join(', ') || 'untagged'}] ${a.title} — ${a.source}${a.publishedAt ? ` (${a.publishedAt})` : ''}`).join('\n');
   return [
-    `PUBLIC NEWS CONTEXT FOR ${company}`,
+    `${provider === 'demo' ? 'FICTIONAL DEMO CONTEXT' : 'PUBLIC NEWS CONTEXT'} FOR ${company}`,
     `Provider: ${provider}`,
     `Active/direct query: ${activeQuery}`,
     `Passive/competitor-market query: ${passiveQuery}`,
@@ -279,7 +281,9 @@ function buildContextText({
 }
 
 export async function analyzeExternalNews(options: NewsAnalysisOptions): Promise<NewsAnalysisResult> {
-  const company = options.company.trim() || 'Example Carrier A';
+  if (options.provider === 'demo') return createDemoNewsAnalysis();
+  const company = options.company.trim();
+  if (!company) throw new Error('Enter a company to scan live news.');
   const { activeQuery, passiveQuery } = buildQueries(company, options.competitors);
 
   const [active, passive] = await Promise.all([

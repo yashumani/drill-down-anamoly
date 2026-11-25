@@ -33,7 +33,7 @@ export function NewsIntelPanel({
   const [competitors, setCompetitors] = useState(defaultCompetitors);
   const [days, setDays] = useState(30);
   const [apiKey, setApiKey] = useState('');
-  const [result, setResult] = useState<NewsAnalysisResult | null>(() => createDemoNewsAnalysis(defaultCompany, defaultCompetitors));
+  const [result, setResult] = useState<NewsAnalysisResult | null>(() => createDemoNewsAnalysis());
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
 
@@ -50,7 +50,7 @@ export function NewsIntelPanel({
   }
 
   function loadDemo() {
-    const demo = createDemoNewsAnalysis(defaultCompany, defaultCompetitors);
+    const demo = createDemoNewsAnalysis();
     setProvider('demo');
     setCompany(defaultCompany);
     setCompetitors(defaultCompetitors);
@@ -83,12 +83,12 @@ export function NewsIntelPanel({
 
     <div className="demo-actions">
       <button type="button" className="quiet-button" onClick={loadDemo}>Load fictional demo news</button>
-      <span>Includes active company coverage and passive competitor-market examples.</span>
+      <span>Uses fictional companies; the events are not real news.</span>
     </div>
 
     <div className="news-form">
-      <label>Company<input value={company} onChange={(e) => setCompany(e.target.value)} placeholder="Example Carrier A" /></label>
-      <label>Competitors / market terms<input value={competitors} onChange={(e) => setCompetitors(e.target.value)} placeholder="Example Carrier B, Example Carrier C, Example Carrier D" /></label>
+      <label>Company<input value={company} onChange={(e) => setCompany(e.target.value)} placeholder="Company name" /></label>
+      <label>Competitors / market terms<input value={competitors} onChange={(e) => setCompetitors(e.target.value)} placeholder="Competitors or keywords" /></label>
       <div className="settings-row">
         <label>Provider<select value={provider} onChange={(e) => setProvider(e.target.value as NewsProvider)}>{providers.map((p) => <option key={p.id} value={p.id}>{p.label}</option>)}</select></label>
         <label>Lookback days<input type="number" min={1} max={90} value={days} onChange={(e) => setDays(Number(e.target.value) || 30)} /></label>
